@@ -1,0 +1,7 @@
+{
+  "name": "Campus OS",
+  "description": "School Administration Management System featuring student management, digital absence tracking, lost & found, multilingual RTL support, and Campus AI assistant.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

@@ -1,0 +1,502 @@
+import React, { useState } from 'react';
+import {
+  PackageSearch,
+  Plus,
+  Search,
+  Filter,
+  CheckCircle,
+  Archive,
+  Trash2,
+  Edit,
+  Eye,
+  MapPin,
+  Calendar,
+  User,
+  ArrowUpDown,
+  Tag,
+  CheckCheck,
+} from 'lucide-react';
+import { useApp } from '../../context/AppContext';
+import { LostFoundItem, ItemCategory, ItemStatus } from '../../types';
+import { calculateLostFoundStats, formatDateWithPattern } from '../../utils/analytics';
+import { EmptyState } from '../common/EmptyState';
+import { ConfirmModal } from '../common/ConfirmModal';
+import { ItemModal } from './ItemModal';
+import { ClaimModal } from './ClaimModal';
+
+export const LostFoundView: React.FC = () => {
+  const {
+    lostFoundItems,
+    deleteLostFoundItem,
+    archiveItem,
+    settings,
+    t,
+  } = useApp();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+
+  // Modals
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportType, setReportType] = useState<'lost' | 'found'>('found');
+  const [itemToEdit, setItemToEdit] = useState<LostFoundItem | null>(null);
+  const [itemToClaim, setItemToClaim] = useState<LostFoundItem | null>(null);
+  const [itemToView, setItemToView] = useState<LostFoundItem | null>(null);
+  const [itemToDelete, setItemToDelete] = useState<LostFoundItem | null>(null);
+
+  const stats = calculateLostFoundStats(lostFoundItems);
+
+  const categories: ItemCategory[] = [
+    'Electronics',
+    'Clothing',
+    'Bags',
+    'Books',
+    'Accessories',
+    'School Supplies',
+    'Other',
+  ];
+
+  // Filtering & Sorting
+  const filteredItems = lostFoundItems
+    .filter((item) => {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch =
+        q === '' ||
+        item.itemName.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q) ||
+        item.location.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q);
+
+      const matchesCategory =
+        selectedCategory === 'all' || item.category === selectedCategory;
+
+      const matchesStatus =
+        selectedStatus === 'all' || item.status === selectedStatus;
+
+      return matchesSearch && matchesCategory && matchesStatus;
+    })
+    .sort((a, b) => {
+      const dateA = new Date(a.dateReported).getTime();
+      const dateB = new Date(b.dateReported).getTime();
+      return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
+  const statCards = [
+    { label: t.totalReported, value: stats.totalReported, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
+    { label: t.lostItems, value: stats.lostCount, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40' },
+    { label: t.foundItems, value: stats.foundCount, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
+    { label: t.claimedItems, value: stats.claimedCount, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+  ];
+
+  return (
+    <div className="space-y-6 pb-12">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            {t.lostFoundTitle}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+            {t.lostFoundSubtitle}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              setItemToEdit(null);
+              setReportType('lost');
+              setIsReportModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/40 text-xs md:text-sm font-medium transition-colors cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t.reportLostItem}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setItemToEdit(null);
+              setReportType('found');
+              setIsReportModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm font-medium transition-colors shadow-xs cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{t.reportFoundItem}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 4 Statistics Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {statCards.map((c) => (
+          <div
+            key={c.label}
+            className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between"
+          >
+            <div>
+              <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold block">
+                {c.label}
+              </span>
+              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
+                {c.value}
+              </p>
+            </div>
+            <div className={`w-3 h-3 rounded-full ${c.color.replace('text-', 'bg-')}`} />
+          </div>
+        ))}
+      </div>
+
+      {/* Main Content Area */}
+      {lostFoundItems.length === 0 ? (
+        <EmptyState
+          icon={PackageSearch}
+          title={t.noItemsTitle}
+          description={t.noItemsDesc}
+          actionButton={{
+            label: t.reportFoundItem,
+            onClick: () => {
+              setItemToEdit(null);
+              setReportType('found');
+              setIsReportModalOpen(true);
+            },
+            icon: Plus,
+          }}
+        />
+      ) : (
+        <div className="space-y-4">
+          {/* Controls Bar: Search & Filter */}
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="w-4 h-4 text-slate-400 absolute inset-y-0 start-3 my-auto pointer-events-none" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search items by name, location, keyword..."
+                className="w-full ps-9 pe-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* Category Filter */}
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+
+              {/* Status Filter */}
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Statuses</option>
+                <option value="found">Found (Unclaimed)</option>
+                <option value="lost">Lost</option>
+                <option value="claimed">Claimed</option>
+                <option value="archived">Archived</option>
+              </select>
+
+              {/* Sort Order */}
+              <button
+                type="button"
+                onClick={() => setSortOrder(sortOrder === 'newest' ? 'oldest' : 'newest')}
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-100 cursor-pointer"
+                title="Toggle Sort Order"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5" />
+                <span>{sortOrder === 'newest' ? 'Newest' : 'Oldest'}</span>
+              </button>
+
+              <span className="text-xs text-slate-400">
+                {filteredItems.length} items
+              </span>
+            </div>
+          </div>
+
+          {/* Cards Grid */}
+          {filteredItems.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center text-xs text-slate-400 border border-slate-200 dark:border-slate-800">
+              No lost & found items found matching your filters.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all"
+                >
+                  <div>
+                    {/* Image / Header bar */}
+                    {item.imageUrl ? (
+                      <div className="h-40 w-full overflow-hidden bg-slate-100 dark:bg-slate-800 relative">
+                        <img
+                          src={item.imageUrl}
+                          alt={item.itemName}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-3 end-3">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase backdrop-blur-md shadow-xs ${
+                              item.status === 'claimed'
+                                ? 'bg-emerald-600/90 text-white'
+                                : item.status === 'lost'
+                                ? 'bg-rose-600/90 text-white'
+                                : 'bg-amber-600/90 text-white'
+                            }`}
+                          >
+                            {item.status}
+                          </span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
+                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                          <Tag className="w-3.5 h-3.5" />
+                          <span>{item.category}</span>
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            item.status === 'claimed'
+                              ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
+                              : item.status === 'lost'
+                              ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'
+                              : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400'
+                          }`}
+                        >
+                          {item.status}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Card Content */}
+                    <div className="p-5 space-y-3">
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-tight">
+                          {item.itemName}
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                          {item.description || 'No detailed description provided.'}
+                        </p>
+                      </div>
+
+                      <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800/60">
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span className="truncate">{item.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>{formatDateWithPattern(item.dateReported, settings.dateFormat)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <User className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span className="truncate">Reported by: {item.reporterName}</span>
+                        </div>
+                      </div>
+
+                      {item.status === 'claimed' && (
+                        <div className="p-2.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 text-xs">
+                          <span className="font-semibold text-emerald-800 dark:text-emerald-300 block">
+                            Claimed by {item.claimedBy}
+                          </span>
+                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                            On {item.claimedAt} {item.claimNotes ? `· ${item.claimNotes}` : ''}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions Footer */}
+                  <div className="p-3 bg-slate-50/60 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setItemToView(item)}
+                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{t.view} Details</span>
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {item.status !== 'claimed' && item.status !== 'archived' && (
+                        <button
+                          type="button"
+                          onClick={() => setItemToClaim(item)}
+                          className="px-2.5 py-1 text-xs font-semibold rounded bg-emerald-600 hover:bg-emerald-700 text-white transition-colors cursor-pointer"
+                        >
+                          {t.markAsClaimed}
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setItemToEdit(item);
+                          setIsReportModalOpen(true);
+                        }}
+                        className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded cursor-pointer"
+                        title={t.edit}
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+
+                      {item.status !== 'archived' && (
+                        <button
+                          type="button"
+                          onClick={() => archiveItem(item.id)}
+                          className="p-1.5 text-slate-400 hover:text-amber-600 rounded cursor-pointer"
+                          title={t.archiveItem}
+                        >
+                          <Archive className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setItemToDelete(item)}
+                        className="p-1.5 text-slate-400 hover:text-red-600 rounded cursor-pointer"
+                        title={t.delete}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Item Modal (Create/Edit) */}
+      <ItemModal
+        isOpen={isReportModalOpen}
+        onClose={() => {
+          setIsReportModalOpen(false);
+          setItemToEdit(null);
+        }}
+        reportType={reportType}
+        itemToEdit={itemToEdit}
+      />
+
+      {/* Claim Modal */}
+      <ClaimModal
+        isOpen={Boolean(itemToClaim)}
+        onClose={() => setItemToClaim(null)}
+        item={itemToClaim}
+      />
+
+      {/* Item Details View Modal */}
+      {itemToView && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                  {itemToView.itemName}
+                </h3>
+                <span className="text-xs text-slate-400">
+                  {itemToView.category} · {itemToView.reportType.toUpperCase()}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setItemToView(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {itemToView.imageUrl && (
+                <img
+                  src={itemToView.imageUrl}
+                  alt={itemToView.itemName}
+                  className="w-full h-48 object-cover rounded-xl"
+                />
+              )}
+
+              <div>
+                <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
+                  Description
+                </span>
+                <p className="text-xs text-slate-700 dark:text-slate-300 mt-1">
+                  {itemToView.description || 'No description provided.'}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800">
+                  <span className="text-slate-400 block text-[11px]">Location</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {itemToView.location}
+                  </span>
+                </div>
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800">
+                  <span className="text-slate-400 block text-[11px]">Date</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">
+                    {formatDateWithPattern(itemToView.dateReported, settings.dateFormat)}
+                  </span>
+                </div>
+              </div>
+
+              {itemToView.status === 'claimed' && (
+                <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs">
+                  <span className="font-bold text-emerald-800 dark:text-emerald-300 block mb-1">
+                    Claim Verification Record
+                  </span>
+                  <p className="text-emerald-700 dark:text-emerald-400">
+                    Claimed by: {itemToView.claimedBy} on {itemToView.claimedAt}
+                  </p>
+                  {itemToView.claimedStudentId && (
+                    <p className="text-emerald-600 dark:text-emerald-400">
+                      Student ID: {itemToView.claimedStudentId}
+                    </p>
+                  )}
+                  {itemToView.claimNotes && (
+                    <p className="text-emerald-600 dark:text-emerald-400 mt-1">
+                      Notes: {itemToView.claimNotes}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Item Confirmation Modal */}
+      <ConfirmModal
+        isOpen={Boolean(itemToDelete)}
+        title="Delete Item Record"
+        message={`Are you sure you want to permanently delete "${itemToDelete?.itemName}" from the Lost & Found inventory?`}
+        confirmLabel={t.delete}
+        isDestructive={true}
+        onConfirm={() => {
+          if (itemToDelete) {
+            deleteLostFoundItem(itemToDelete.id);
+            setItemToDelete(null);
+          }
+        }}
+        onCancel={() => setItemToDelete(null)}
+      />
+    </div>
+  );
+};

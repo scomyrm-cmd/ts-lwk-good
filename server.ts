@@ -365,6 +365,131 @@ app.get('/api/admin/audit-logs', requireAdmin as any, (req: AuthenticatedRequest
 });
 
 // ==========================================
+// 4B. ADMIN USER MANAGEMENT ENDPOINTS
+// ==========================================
+
+// Admin: Get all user accounts
+app.get('/api/admin/users', requireAdmin as any, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const users = db.getAllUsers();
+    return res.json({ users });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to retrieve user accounts.' });
+  }
+});
+
+// Admin: Create new user account with name, username, email, password, and role
+app.post('/api/admin/users', requireAdmin as any, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { username, email, password, displayName, role } = req.body || {};
+
+    if (!username || !email || !password || !displayName) {
+      return res.status(400).json({ error: 'Full name, username, email, and password are required.' });
+    }
+
+    const cleanUsername = String(username).trim().toLowerCase();
+    const cleanEmail = String(email).trim().toLowerCase();
+
+    if (cleanUsername.length < 3) {
+      return res.status(400).json({ error: 'Username must be at least 3 characters long.' });
+    }
+
+    if (String(password).length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(cleanEmail)) {
+      return res.status(400).json({ error: 'Please provide a valid email address.' });
+    }
+
+    if (db.findUserByUsername(cleanUsername)) {
+      return res.status(400).json({ error: 'Username is already taken. Please choose another.' });
+    }
+
+    if (db.findUserByEmail(cleanEmail)) {
+      return res.status(400).json({ error: 'An account with this email address already exists.' });
+    }
+
+    const targetRole = role === 'admin' ? 'admin' : 'user';
+
+    const newUser = db.createUser({
+      username: sanitizeInput(cleanUsername),
+      email: sanitizeInput(cleanEmail),
+      password: String(password),
+      displayName: sanitizeInput(displayName),
+      role: targetRole,
+    });
+
+    db.logAudit({
+      adminId: req.user!.id,
+      adminUsername: req.user!.username,
+      action: 'create_user_account',
+      details: `Created user account '${newUser.username}' (${newUser.displayName}) with role '${newUser.role}'`,
+    });
+
+    const { passwordHash, ...safeUser } = newUser;
+    return res.status(201).json({ success: true, user: safeUser });
+  } catch (err: any) {
+    console.error('Error creating user account:', err.message);
+    return res.status(500).json({ error: 'Failed to create user account.' });
+  }
+});
+
+// Admin: Delete user account
+app.delete('/api/admin/users/:id', requireAdmin as any, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const result = db.deleteUser(id, req.user!.id);
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    db.logAudit({
+      adminId: req.user!.id,
+      adminUsername: req.user!.username,
+      action: 'delete_user_account',
+      details: `Deleted user account with ID '${id}'`,
+    });
+
+    return res.json({ success: true, message: 'User account deleted successfully.' });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to delete user account.' });
+  }
+});
+
+// Admin: Update user account
+app.patch('/api/admin/users/:id', requireAdmin as any, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { displayName, email, role, password } = req.body || {};
+
+    const updates: any = {};
+    if (displayName) updates.displayName = sanitizeInput(displayName);
+    if (email) updates.email = sanitizeInput(email);
+    if (role === 'admin' || role === 'user') updates.role = role;
+    if (password && String(password).trim().length >= 6) updates.password = String(password).trim();
+
+    const result = db.updateUser(id, updates);
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    db.logAudit({
+      adminId: req.user!.id,
+      adminUsername: req.user!.username,
+      action: 'update_user_account',
+      details: `Updated user account with ID '${id}'`,
+    });
+
+    return res.json({ success: true, user: result.user });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to update user account.' });
+  }
+});
+
+// ==========================================
 // 5. CAMPUS AI MULTILINGUAL ENDPOINT
 // ==========================================
 

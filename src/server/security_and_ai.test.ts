@@ -136,3 +136,33 @@ test('db.createUser enforces normal user role on registration', () => {
   assert.equal(testUser.role, 'user');
   assert.equal(testUser.passwordHash.startsWith('$2'), true); // Valid bcrypt hash
 });
+
+// 6. Admin User Management & Role Creation
+test('admin can create users with specific roles and retrieve safe user list', () => {
+  const newStaff = db.createUser({
+    username: 'vice_principal_' + Date.now(),
+    email: `vice_${Date.now()}@campus-os.edu`,
+    password: 'StaffPassword2025!',
+    displayName: 'Vice Principal Sarah',
+    role: 'admin',
+  });
+
+  assert.equal(newStaff.role, 'admin');
+  assert.equal(newStaff.displayName, 'Vice Principal Sarah');
+
+  const allUsers = db.getAllUsers();
+  assert.equal(Array.isArray(allUsers), true);
+  const found = allUsers.find((u) => u.id === newStaff.id);
+  assert.ok(found);
+  assert.equal((found as any).passwordHash, undefined); // passwordHash must never be exposed
+
+  // Prevent self-deletion of active admin
+  const deleteSelf = db.deleteUser(newStaff.id, newStaff.id);
+  assert.equal(deleteSelf.success, false);
+  assert.equal(deleteSelf.error?.includes('active administrator account'), true);
+
+  // Successfully delete account when performed by another admin
+  const deleteSuccess = db.deleteUser(newStaff.id, 'other_admin_id');
+  assert.equal(deleteSuccess.success, true);
+});
+

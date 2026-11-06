@@ -155,6 +155,8 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   displayName: string;
+  createdAt?: string;
+  lastLogin?: string;
 }
 
 export interface UserReport {

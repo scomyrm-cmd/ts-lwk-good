@@ -39,6 +39,18 @@ interface AppContextType {
   // Excel Export
   exportStudentsToExcel: (filterClass?: string, filterStatus?: string) => Promise<{ success: boolean; error?: string }>;
 
+  // Admin User Management
+  users: AuthUser[];
+  fetchAdminUsers: () => Promise<void>;
+  createAdminUser: (userData: {
+    username: string;
+    email: string;
+    password: string;
+    displayName: string;
+    role: 'admin' | 'user';
+  }) => Promise<{ success: boolean; error?: string; user?: AuthUser }>;
+  deleteAdminUser: (userId: string) => Promise<{ success: boolean; error?: string }>;
+
   activeTab: string;
   setActiveTab: (tab: string) => void;
   settingsSubTab: string;
@@ -171,6 +183,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [users, setUsers] = useState<AuthUser[]>(() => {
+    try {
+      const saved = localStorage.getItem('campus_os_admin_users');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   const [activeTab, setActiveTab] = useState<string>(() => {
     const savedUser = localStorage.getItem('campus_os_user');
     if (savedUser) {
@@ -207,6 +228,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     checkSession();
   }, []);
+
+  useEffect(() => {
+    if (isAuthenticated && currentUser?.role === 'admin') {
+      fetchAdminUsers();
+    }
+  }, [isAuthenticated, currentUser?.role]);
 
   // Data states starting CLEAN by default as requested
   const [students, setStudents] = useState<Student[]>(() => {
@@ -628,6 +655,81 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const fetchAdminUsers = async () => {
+    try {
+      const token = localStorage.getItem('campus_os_token');
+      const res = await fetch('/api/admin/users', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.users)) {
+          setUsers(data.users);
+          localStorage.setItem('campus_os_admin_users', JSON.stringify(data.users));
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch admin users:', err);
+    }
+  };
+
+  const createAdminUser = async (userData: {
+    username: string;
+    email: string;
+    password: string;
+    displayName: string;
+    role: 'admin' | 'user';
+  }): Promise<{ success: boolean; error?: string; user?: AuthUser }> => {
+    try {
+      const token = localStorage.getItem('campus_os_token');
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Failed to create user account' };
+      }
+
+      if (data.success && data.user) {
+        setUsers((prev) => [data.user, ...prev.filter((u) => u.id !== data.user.id)]);
+        showToast(`User account '${data.user.username}' created successfully!`);
+        logActivity('settings_updated', `Created user account '${data.user.username}' with role '${data.user.role}'`);
+        return { success: true, user: data.user };
+      }
+      return { success: false, error: 'Failed to create user account' };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error creating user' };
+    }
+  };
+
+  const deleteAdminUser = async (userId: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const token = localStorage.getItem('campus_os_token');
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Failed to delete user account' };
+      }
+
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+      showToast('User account deleted successfully.');
+      logActivity('settings_updated', `Deleted user account ID '${userId}'`);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error deleting user' };
+    }
+  };
+
   const logActivity = (actionType: ActivityLogItem['actionType'], description: string) => {
     const item: ActivityLogItem = {
       id: 'act_' + Date.now() + Math.random().toString(36).substring(2, 6),
@@ -982,6 +1084,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         fetchUserReports,
         submitUserReport,
         exportStudentsToExcel,
+        users,
+        fetchAdminUsers,
+        createAdminUser,
+        deleteAdminUser,
         activeTab,
         setActiveTab,
         settingsSubTab,

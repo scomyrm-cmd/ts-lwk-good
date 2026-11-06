@@ -10,6 +10,7 @@ import {
   LogOut,
   Shield,
   X,
+  UserCog,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
@@ -36,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) =
     { id: 'students', label: t.navStudents, icon: Users },
     { id: 'attendance', label: t.navAttendance, icon: UserCheck },
     { id: 'lostfound', label: t.navLostFound, icon: PackageSearch },
+    { id: 'users', label: t.navUsers, icon: UserCog },
     { id: 'campus-ai', label: t.navCampusAI, icon: Sparkles, badge: 'AI' },
     { id: 'activity', label: t.navActivity, icon: History },
     { id: 'settings', label: t.navSettings, icon: Settings },

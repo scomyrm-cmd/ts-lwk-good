@@ -58,7 +58,23 @@ export interface Translations {
   navActivity: string;
   navSettings: string;
   navCampusAI: string;
+  navUsers: string;
   logout: string;
+
+  // User Management
+  usersTitle: string;
+  usersSubtitle: string;
+  addUser: string;
+  userRoleAdmin: string;
+  userRoleUser: string;
+  confirmDeleteUser: string;
+  generatePassword: string;
+
+  // AI Speech & Voice
+  aiVoiceSpeak: string;
+  aiVoiceListening: string;
+  aiVoiceStop: string;
+  aiAutoSpeak: string;
 
   // Top bar
   globalSearchPlaceholder: string;
@@ -277,6 +293,7 @@ export const translations: Record<Language, Translations> = {
     navActivity: 'Activity Log',
     navSettings: 'Settings',
     navCampusAI: 'Campus AI',
+    navUsers: 'User Management',
     logout: 'Sign Out',
 
     globalSearchPlaceholder: 'Search students, items, records (Ctrl+K)...',
@@ -465,6 +482,21 @@ export const translations: Record<Language, Translations> = {
     accessDenied: 'Access Restricted',
     adminRoleRequired: 'Administrator privileges are required to access this section.',
     backToPortal: 'Return to Student Portal',
+
+    // User Management
+    usersTitle: 'User Accounts',
+    usersSubtitle: 'Manage school administrators, staff, and student access accounts.',
+    addUser: 'Create Account',
+    userRoleAdmin: 'Administrator',
+    userRoleUser: 'Student / Parent',
+    confirmDeleteUser: 'Are you sure you want to delete this user account? This action cannot be undone.',
+    generatePassword: 'Generate Secure Password',
+
+    // AI Speech & Voice
+    aiVoiceSpeak: 'Read aloud',
+    aiVoiceListening: 'Listening... speak now',
+    aiVoiceStop: 'Stop speaking',
+    aiAutoSpeak: 'Auto-speak AI responses',
   },
 
   fr: {
@@ -502,6 +534,7 @@ export const translations: Record<Language, Translations> = {
     navActivity: "Journal d'Activité",
     navSettings: 'Paramètres',
     navCampusAI: 'Campus AI',
+    navUsers: 'Gestion des Utilisateurs',
     logout: 'Déconnexion',
 
     globalSearchPlaceholder: 'Rechercher élèves, objets, registres (Ctrl+K)...',
@@ -690,6 +723,21 @@ export const translations: Record<Language, Translations> = {
     accessDenied: 'Accès Refusé',
     adminRoleRequired: "Des privilèges d'administrateur sont requis pour accéder à cette section.",
     backToPortal: 'Retour au Portail Étudiant',
+
+    // User Management
+    usersTitle: 'Comptes Utilisateurs',
+    usersSubtitle: "Gérez les comptes d'accès pour les administrateurs, le personnel et les élèves.",
+    addUser: 'Créer un Compte',
+    userRoleAdmin: 'Administrateur',
+    userRoleUser: 'Élève / Parent',
+    confirmDeleteUser: 'Êtes-vous sûr de vouloir supprimer ce compte utilisateur ? Cette action est irréversible.',
+    generatePassword: 'Générer un Mot de Passe Sécurisé',
+
+    // AI Speech & Voice
+    aiVoiceSpeak: 'Lire à voix haute',
+    aiVoiceListening: 'Écoute en cours... parlez maintenant',
+    aiVoiceStop: 'Arrêter la lecture',
+    aiAutoSpeak: 'Lecture vocale automatique',
   },
 
   ar: {
@@ -727,6 +775,7 @@ export const translations: Record<Language, Translations> = {
     navActivity: 'سجل العمليات',
     navSettings: 'الإعدادات',
     navCampusAI: 'المساعد الذكي (Campus AI)',
+    navUsers: 'إدارة المستخدمين والحسابات',
     logout: 'تسجيل الخروج',
 
     globalSearchPlaceholder: 'البحث عن طالب، مفقودات، سجلات (Ctrl+K)...',
@@ -915,5 +964,20 @@ export const translations: Record<Language, Translations> = {
     accessDenied: 'منطقة محظورة',
     adminRoleRequired: 'يلزم الحصول على صلاحيات مدير النظام للوصول إلى هذا القسم.',
     backToPortal: 'العودة إلى بوابة الطلاب',
+
+    // User Management
+    usersTitle: 'حسابات المستخدمين',
+    usersSubtitle: 'إدارة وتعيين حسابات المشرفين والمسؤولين والطلاب وأولياء الأمور.',
+    addUser: 'إنشاء حساب جديد',
+    userRoleAdmin: 'مسؤول النظام (مدير)',
+    userRoleUser: 'طالب / ولي أمر',
+    confirmDeleteUser: 'هل أنت متأكد من رغبتك في حذف هذا الحساب؟ لا يمكن التراجع عن هذا الإجراء.',
+    generatePassword: 'توليد كلمة مرور قوية',
+
+    // AI Speech & Voice
+    aiVoiceSpeak: 'استماع صوتي',
+    aiVoiceListening: 'جاري الاستماع... تحدث الآن',
+    aiVoiceStop: 'إيقاف الصوت',
+    aiAutoSpeak: 'قراءة الإجابات صوتياً تلقائياً',
   },
 };

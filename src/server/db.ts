@@ -207,6 +207,79 @@ class DatabaseStore {
     return newUser;
   }
 
+  public getAllUsers(): Array<Omit<UserRecord, 'passwordHash'>> {
+    return this.data.users
+      .map(({ passwordHash, ...safe }) => safe)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  }
+
+  public deleteUser(id: string, currentAdminId?: string): { success: boolean; error?: string } {
+    const userIndex = this.data.users.findIndex((u) => u.id === id);
+    if (userIndex === -1) {
+      return { success: false, error: 'User account not found.' };
+    }
+
+    const targetUser = this.data.users[userIndex];
+    if (currentAdminId && targetUser.id === currentAdminId) {
+      return { success: false, error: 'You cannot delete your own active administrator account.' };
+    }
+
+    // Do not allow deleting the last remaining admin
+    if (targetUser.role === 'admin') {
+      const adminCount = this.data.users.filter((u) => u.role === 'admin').length;
+      if (adminCount <= 1) {
+        return { success: false, error: 'Cannot delete the only remaining administrator account.' };
+      }
+    }
+
+    this.data.users.splice(userIndex, 1);
+    this.persist();
+    return { success: true };
+  }
+
+  public updateUser(
+    id: string,
+    updates: {
+      displayName?: string;
+      email?: string;
+      role?: 'admin' | 'user';
+      password?: string;
+    }
+  ): { success: boolean; error?: string; user?: Omit<UserRecord, 'passwordHash'> } {
+    const user = this.findUserById(id);
+    if (!user) {
+      return { success: false, error: 'User not found.' };
+    }
+
+    if (updates.email) {
+      const cleanEmail = updates.email.trim().toLowerCase();
+      const existing = this.data.users.find(
+        (u) => u.email.toLowerCase() === cleanEmail && u.id !== id
+      );
+      if (existing) {
+        return { success: false, error: 'Email address already in use by another account.' };
+      }
+      user.email = cleanEmail;
+    }
+
+    if (updates.displayName !== undefined) {
+      user.displayName = updates.displayName.trim();
+    }
+
+    if (updates.role) {
+      user.role = updates.role;
+    }
+
+    if (updates.password && updates.password.trim().length >= 6) {
+      const salt = bcrypt.genSaltSync(10);
+      user.passwordHash = bcrypt.hashSync(updates.password, salt);
+    }
+
+    this.persist();
+    const { passwordHash, ...safe } = user;
+    return { success: true, user: safe };
+  }
+
   public updateLastLogin(id: string) {
     const user = this.findUserById(id);
     if (user) {

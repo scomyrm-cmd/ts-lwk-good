@@ -20,6 +20,7 @@ import { CampusAIView } from './components/ai/CampusAIView';
 import { CampusAIFloatingWidget } from './components/ai/CampusAIFloatingWidget';
 import { StudentModal } from './components/students/StudentModal';
 import { ItemModal } from './components/lostfound/ItemModal';
+import { UserManagementView } from './components/users/UserManagementView';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
 
 const AccessDeniedView: React.FC<{ onReturnToPortal: () => void }> = ({ onReturnToPortal }) => {
@@ -80,7 +81,7 @@ const MainLayout: React.FC = () => {
   }
 
   // 2. Role = 'admin' (Administrator Dashboard & Management)
-  const adminTabs = ['dashboard', 'students', 'attendance', 'lostfound', 'campus-ai', 'activity', 'settings'];
+  const adminTabs = ['dashboard', 'students', 'attendance', 'lostfound', 'users', 'campus-ai', 'activity', 'settings'];
   const isValidAdminTab = adminTabs.includes(activeTab);
 
   return (
@@ -108,6 +109,7 @@ const MainLayout: React.FC = () => {
           {activeTab === 'students' && <StudentsView />}
           {activeTab === 'attendance' && <AttendanceView />}
           {activeTab === 'lostfound' && <LostFoundView />}
+          {activeTab === 'users' && <UserManagementView />}
           {activeTab === 'campus-ai' && <CampusAIView />}
           {activeTab === 'activity' && <ActivityLogView />}
           {activeTab === 'settings' && <SettingsView />}

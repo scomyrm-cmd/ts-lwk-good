@@ -146,3 +146,30 @@ export interface Conversation {
   createdAt: string;
   updatedAt: string;
 }
+
+export type UserRole = 'admin' | 'user';
+
+export interface AuthUser {
+  id: string;
+  username: string;
+  email: string;
+  role: UserRole;
+  displayName: string;
+}
+
+export interface UserReport {
+  id: string;
+  userId: string;
+  userEmail: string;
+  userName: string;
+  type: 'lost' | 'found';
+  title: string;
+  category: string;
+  description: string;
+  location: string;
+  date: string;
+  contact: string;
+  status: 'pending' | 'reviewed' | 'resolved' | 'claimed';
+  adminNotes?: string;
+  createdAt: string;
+}

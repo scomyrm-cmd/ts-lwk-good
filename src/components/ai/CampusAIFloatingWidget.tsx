@@ -36,6 +36,10 @@ export const CampusAIFloatingWidget: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const isRtlText = (text: string) => {
+    return /[\u0600-\u06FF]/.test(text || '');
+  };
+
   const activeConv = conversations[0] || {
     id: 'floating_conv',
     title: 'School Administration Assistant',
@@ -255,7 +259,14 @@ export const CampusAIFloatingWidget: React.FC = () => {
                           : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-tl-none shadow-2xs'
                       }`}
                     >
-                      <div className="whitespace-pre-wrap">{msg.content}</div>
+                    <div
+                      dir={isRtlText(msg.content) ? 'rtl' : 'ltr'}
+                      className={`whitespace-pre-wrap font-sans ${
+                        isRtlText(msg.content) ? 'text-right' : 'text-start'
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
                     </div>
                   </div>
                 );

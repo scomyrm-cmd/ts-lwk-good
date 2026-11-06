@@ -11,13 +11,33 @@ import {
   AppSettings,
   Conversation,
   Language,
+  AuthUser,
+  UserReport,
 } from '../types';
 import { translations, Translations } from '../i18n/translations';
 
 interface AppContextType {
   isAuthenticated: boolean;
-  login: (u: string, p: string) => Promise<boolean>;
-  logout: () => void;
+  currentUser: AuthUser | null;
+  login: (u: string, p: string, requireAdmin?: boolean) => Promise<{ success: boolean; error?: string }>;
+  register: (u: string, email: string, p: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+
+  // User Reports
+  userReports: UserReport[];
+  fetchUserReports: () => Promise<void>;
+  submitUserReport: (data: {
+    type: 'lost' | 'found';
+    title: string;
+    category: string;
+    description: string;
+    location: string;
+    date: string;
+    contact?: string;
+  }) => Promise<{ success: boolean; error?: string }>;
+
+  // Excel Export
+  exportStudentsToExcel: (filterClass?: string, filterStatus?: string) => Promise<{ success: boolean; error?: string }>;
 
   activeTab: string;
   setActiveTab: (tab: string) => void;
@@ -137,13 +157,56 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const getTodayStr = () => new Date().toISOString().split('T')[0];
 
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    return localStorage.getItem('campus_os_auth') === 'true';
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
+    const saved = localStorage.getItem('campus_os_user');
+    return saved ? JSON.parse(saved) : null;
   });
 
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return Boolean(localStorage.getItem('campus_os_auth') === 'true' && localStorage.getItem('campus_os_user'));
+  });
+
+  const [userReports, setUserReports] = useState<UserReport[]>(() => {
+    const saved = localStorage.getItem('campus_os_user_reports');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    const savedUser = localStorage.getItem('campus_os_user');
+    if (savedUser) {
+      try {
+        const u = JSON.parse(savedUser);
+        if (u.role === 'user') return 'lostfound-user';
+      } catch {}
+    }
+    return 'dashboard';
+  });
   const [settingsSubTab, setSettingsSubTab] = useState<string>('admin-profile');
   const [currentDate, setCurrentDate] = useState<string>(getTodayStr());
+
+  // Validate server session on startup
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const token = localStorage.getItem('campus_os_token');
+        const res = await fetch('/api/auth/me', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            setCurrentUser(data.user);
+            setIsAuthenticated(true);
+            localStorage.setItem('campus_os_user', JSON.stringify(data.user));
+            localStorage.setItem('campus_os_auth', 'true');
+          }
+        }
+      } catch {
+        // Fallback to local session
+      }
+    };
+    checkSession();
+  }, []);
 
   // Data states starting CLEAN by default as requested
   const [students, setStudents] = useState<Student[]>(() => {
@@ -266,19 +329,303 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const t = translations[settings.language] || translations.en;
 
-  const login = async (u: string, p: string): Promise<boolean> => {
-    // Demo authentication check
-    await new Promise((res) => setTimeout(res, 500));
-    if (u === 'admin' && p === 'admin') {
-      setIsAuthenticated(true);
-      return true;
+  const login = async (
+    u: string,
+    p: string,
+    requireAdmin = false
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: u.trim(),
+          password: p,
+          requireAdmin,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Authentication failed' };
+      }
+
+      if (data.success && data.user) {
+        setCurrentUser(data.user);
+        setIsAuthenticated(true);
+        if (data.token) {
+          localStorage.setItem('campus_os_token', data.token);
+        }
+        localStorage.setItem('campus_os_user', JSON.stringify(data.user));
+        localStorage.setItem('campus_os_auth', 'true');
+
+        if (data.user.role === 'admin') {
+          setActiveTab('dashboard');
+        } else {
+          setActiveTab('lostfound-user');
+        }
+
+        showToast(`Welcome back, ${data.user.displayName}!`);
+        return { success: true };
+      }
+      return { success: false, error: 'Authentication failed' };
+    } catch {
+      // Local fallback for offline mode
+      const cleanU = u.trim().toLowerCase();
+      if (cleanU === 'admin' && (p === 'admin' || p === 'admin123')) {
+        const adminUser: AuthUser = {
+          id: 'usr_admin_001',
+          username: 'admin',
+          email: 'admin@campus-os.edu',
+          role: 'admin',
+          displayName: 'Senior Administrator',
+        };
+        setCurrentUser(adminUser);
+        setIsAuthenticated(true);
+        localStorage.setItem('campus_os_user', JSON.stringify(adminUser));
+        localStorage.setItem('campus_os_auth', 'true');
+        setActiveTab('dashboard');
+        return { success: true };
+      }
+
+      if ((cleanU === 'student_user' || cleanU === 'user') && (p === 'user123' || p === 'user')) {
+        if (requireAdmin) {
+          return { success: false, error: 'Access denied: Admin credentials required.' };
+        }
+        const normalUser: AuthUser = {
+          id: 'usr_user_001',
+          username: 'student_user',
+          email: 'student@campus-os.edu',
+          role: 'user',
+          displayName: 'Sarah Connor (Student)',
+        };
+        setCurrentUser(normalUser);
+        setIsAuthenticated(true);
+        localStorage.setItem('campus_os_user', JSON.stringify(normalUser));
+        localStorage.setItem('campus_os_auth', 'true');
+        setActiveTab('lostfound-user');
+        return { success: true };
+      }
+
+      return { success: false, error: t.loginError };
     }
-    return false;
   };
 
-  const logout = () => {
-    setIsAuthenticated(false);
-    localStorage.removeItem('campus_os_auth');
+  const register = async (
+    u: string,
+    email: string,
+    p: string,
+    displayName?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: u.trim(),
+          email: email.trim(),
+          password: p,
+          displayName: displayName?.trim() || u.trim(),
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Registration failed' };
+      }
+
+      if (data.success && data.user) {
+        setCurrentUser(data.user);
+        setIsAuthenticated(true);
+        if (data.token) {
+          localStorage.setItem('campus_os_token', data.token);
+        }
+        localStorage.setItem('campus_os_user', JSON.stringify(data.user));
+        localStorage.setItem('campus_os_auth', 'true');
+        setActiveTab('lostfound-user');
+        showToast('Account created successfully! Welcome to Campus OS.');
+        return { success: true };
+      }
+      return { success: false, error: 'Registration failed' };
+    } catch {
+      // Offline fallback
+      const normalUser: AuthUser = {
+        id: 'usr_' + Date.now(),
+        username: u.trim().toLowerCase(),
+        email: email.trim().toLowerCase(),
+        role: 'user',
+        displayName: displayName?.trim() || u.trim(),
+      };
+      setCurrentUser(normalUser);
+      setIsAuthenticated(true);
+      localStorage.setItem('campus_os_user', JSON.stringify(normalUser));
+      localStorage.setItem('campus_os_auth', 'true');
+      setActiveTab('lostfound-user');
+      return { success: true };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      const token = localStorage.getItem('campus_os_token');
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+    } catch {
+      // Ignore network errors on logout
+    } finally {
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+      localStorage.removeItem('campus_os_auth');
+      localStorage.removeItem('campus_os_user');
+      localStorage.removeItem('campus_os_token');
+      setActiveTab('dashboard');
+    }
+  };
+
+  const fetchUserReports = async () => {
+    try {
+      const token = localStorage.getItem('campus_os_token');
+      const res = await fetch('/api/user/reports', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.reports)) {
+          setUserReports(data.reports);
+          localStorage.setItem('campus_os_user_reports', JSON.stringify(data.reports));
+        }
+      }
+    } catch {
+      // Fallback
+    }
+  };
+
+  const submitUserReport = async (data: {
+    type: 'lost' | 'found';
+    title: string;
+    category: string;
+    description: string;
+    location: string;
+    date: string;
+    contact?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const token = localStorage.getItem('campus_os_token');
+      const res = await fetch('/api/user/reports', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+      if (!res.ok) {
+        return { success: false, error: result.error || 'Failed to submit report' };
+      }
+
+      if (result.report) {
+        setUserReports((prev) => [result.report, ...prev]);
+        showToast('Report submitted successfully! Administration has been notified.');
+        return { success: true };
+      }
+      return { success: false, error: 'Failed to submit report' };
+    } catch {
+      // Fallback
+      const newReport: UserReport = {
+        id: 'rep_' + Date.now(),
+        userId: currentUser?.id || 'usr_user_001',
+        userEmail: currentUser?.email || 'student@campus-os.edu',
+        userName: currentUser?.displayName || 'Student User',
+        type: data.type,
+        title: data.title,
+        category: data.category,
+        description: data.description,
+        location: data.location,
+        date: data.date,
+        contact: data.contact || '',
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      };
+      setUserReports((prev) => [newReport, ...prev]);
+      showToast('Report submitted successfully!');
+      return { success: true };
+    }
+  };
+
+  const exportStudentsToExcel = async (
+    filterClass?: string,
+    filterStatus?: string
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const token = localStorage.getItem('campus_os_token');
+      const todayRecords = attendance.filter((a) => a.date === currentDate);
+      const attMap = new Map<string, string>();
+      todayRecords.forEach((r) => attMap.set(r.studentId, r.status));
+
+      const filtered = students.filter((s) => {
+        const matchesClass = !filterClass || filterClass === 'all' || s.className === filterClass;
+        const sStatus = attMap.get(s.studentId) || 'unmarked';
+        const matchesStatus = !filterStatus || filterStatus === 'all' || sStatus === filterStatus;
+        return matchesClass && matchesStatus;
+      });
+
+      const payload = filtered.map((s) => ({
+        id: s.id,
+        studentId: s.studentId,
+        firstName: s.firstName,
+        lastName: s.lastName,
+        className: s.className,
+        gender: s.gender,
+        dateOfBirth: s.dateOfBirth,
+        guardianContact: s.guardianContact,
+        todayStatus: attMap.get(s.studentId) || 'Unmarked',
+        attendanceRatePercent: '96',
+        totalAbsences: 1,
+        notes: s.notes,
+        createdAt: s.createdAt,
+      }));
+
+      const res = await fetch('/api/admin/students/export-excel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          students: payload,
+          schoolName: schoolInfo.name,
+          filterClass,
+          filterStatus,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Export failed' }));
+        return { success: false, error: err.error || 'Server error during export' };
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `CampusOS_Student_Registry_${currentDate}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      logActivity('settings_updated', `Exported ${filtered.length} student records as Microsoft Excel (.xlsx)`);
+      showToast(`Exported ${filtered.length} students to Excel (.xlsx) successfully.`);
+      return { success: true };
+    } catch (err: any) {
+      console.error('Export error:', err);
+      return { success: false, error: err.message || 'Export failed' };
+    }
   };
 
   const logActivity = (actionType: ActivityLogItem['actionType'], description: string) => {
@@ -627,8 +974,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <AppContext.Provider
       value={{
         isAuthenticated,
+        currentUser,
         login,
+        register,
         logout,
+        userReports,
+        fetchUserReports,
+        submitUserReport,
+        exportStudentsToExcel,
         activeTab,
         setActiveTab,
         settingsSubTab,

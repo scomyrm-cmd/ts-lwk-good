@@ -179,23 +179,25 @@ export const CampusAIView: React.FC = () => {
     }
   };
 
+  const isRtlText = (text: string) => {
+    return /[\u0600-\u06FF]/.test(text || '');
+  };
+
   // Generate intelligent suggestions referencing real students in the database
   const sampleStudent = students[0];
-  const dynamicStudentPrompt = sampleStudent
-    ? `Tell me about student ${sampleStudent.firstName} ${sampleStudent.lastName} (${sampleStudent.studentId})`
-    : 'Tell me about student Marcus Vance (STU-1002)';
-
-  const dynamicDraftPrompt = sampleStudent
-    ? `Draft an absence letter to the parents of ${sampleStudent.firstName} ${sampleStudent.lastName}`
-    : 'Draft an absence notice for parents';
+  const studentName = sampleStudent
+    ? `${sampleStudent.firstName} ${sampleStudent.lastName}`
+    : 'Marcus Vance';
 
   const suggestedPrompts = [
-    dynamicStudentPrompt,
+    `Tell me about student ${studentName}`,
     'Who is marked absent today and what are their guardian contacts?',
-    'List all students enrolled in Grade 10-A',
-    dynamicDraftPrompt,
-    'Which students have the highest number of absences?',
-    'Summarize this week\'s school attendance rate and trends',
+    `Donne-moi le profil de l'élève ${studentName} et son assiduité`,
+    'Qui est absent aujourd\'hui et comment contacter leurs parents ?',
+    `عطيني معلومات كاملة على التلميذ ${studentName}`,
+    'شكون لي غايب اليوم وعطيني نمر تيليفون ديال والديهم (بالدارجة)',
+    `Draft an absence letter to the parents of ${studentName}`,
+    `كتب رسالة إشعار لولي أمر ${studentName} بالدارجة المغربية`,
   ];
 
   const getInitials = (name: string) => {
@@ -412,7 +414,14 @@ export const CampusAIView: React.FC = () => {
                         : 'bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/60 rounded-tl-none'
                     }`}
                   >
-                    <div className="whitespace-pre-wrap font-sans">{msg.content}</div>
+                    <div
+                      dir={isRtlText(msg.content) ? 'rtl' : 'ltr'}
+                      className={`whitespace-pre-wrap font-sans ${
+                        isRtlText(msg.content) ? 'text-right' : 'text-start'
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
 
                     {!isUser && (
                       <div className="mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">

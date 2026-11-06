@@ -4,6 +4,7 @@ import {
   Search,
   Filter,
   Download,
+  FileSpreadsheet,
   Plus,
   MoreVertical,
   Eye,
@@ -30,6 +31,7 @@ export const StudentsView: React.FC = () => {
     currentDate,
     deleteStudent,
     openAIChat,
+    exportStudentsToExcel,
     settings,
     t,
   } = useApp();
@@ -37,6 +39,8 @@ export const StudentsView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClass, setSelectedClass] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [isExportConfirmOpen, setIsExportConfirmOpen] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [studentToEdit, setStudentToEdit] = useState<Student | null>(null);
@@ -106,14 +110,27 @@ export const StudentsView: React.FC = () => {
 
         <div className="flex items-center gap-2.5">
           {students.length > 0 && (
-            <button
-              type="button"
-              onClick={handleExportCsv}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium transition-colors cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              <span>{t.exportCsv}</span>
-            </button>
+            <>
+              <button
+                type="button"
+                data-testid="export-excel-btn"
+                onClick={() => setIsExportConfirmOpen(true)}
+                disabled={isExportingExcel}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                <span>{isExportingExcel ? t.exportingExcel : t.exportExcel}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleExportCsv}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium transition-colors cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>{t.exportCsv}</span>
+              </button>
+            </>
           )}
 
           <button
@@ -385,6 +402,25 @@ export const StudentsView: React.FC = () => {
           setStudentToEdit(st);
           setIsAddModalOpen(true);
         }}
+      />
+
+      {/* Excel Export Confirmation Modal */}
+      <ConfirmModal
+        isOpen={isExportConfirmOpen}
+        title={t.exportConfirmTitle}
+        message={`${t.exportConfirmDesc} (${filteredStudents.length} records selected)`}
+        confirmLabel={t.exportExcel}
+        isDestructive={false}
+        onConfirm={async () => {
+          setIsExportingExcel(true);
+          try {
+            await exportStudentsToExcel(selectedClass, selectedStatus);
+          } finally {
+            setIsExportingExcel(false);
+            setIsExportConfirmOpen(false);
+          }
+        }}
+        onCancel={() => setIsExportConfirmOpen(false)}
       />
 
       {/* Delete Confirmation Modal */}

@@ -29,6 +29,27 @@ export interface Translations {
   today: string;
   yesterday: string;
 
+  // Portals & Roles
+  adminPortal: string;
+  normalUserPortal: string;
+  adminLoginBtn: string;
+  userLoginBtn: string;
+  registerBtn: string;
+  registerTitle: string;
+  alreadyHaveAccount: string;
+  needAccount: string;
+  adminAccessOnly: string;
+  exportExcel: string;
+  exportingExcel: string;
+  exportConfirmTitle: string;
+  exportConfirmDesc: string;
+  myReports: string;
+  submitReport: string;
+  lostFoundCatalog: string;
+  accessDenied: string;
+  adminRoleRequired: string;
+  backToPortal: string;
+
   // Navigation
   navDashboard: string;
   navStudents: string;
@@ -423,7 +444,27 @@ export const translations: Record<Language, Translations> = {
     rememberMe: 'Remember me',
     loginButton: 'Sign In to Campus OS',
     loginError: 'Invalid username or password. Please try again.',
-    demoNotice: 'Demo session active. Use admin / admin to access the management portal.',
+    demoNotice: 'Use admin / admin123 for Administrator, or student_user / user123 for Normal User.',
+
+    adminPortal: 'Administrator Portal',
+    normalUserPortal: 'Student & Parent Portal',
+    adminLoginBtn: 'Admin Login',
+    userLoginBtn: 'Student / Parent Login',
+    registerBtn: 'Create Account',
+    registerTitle: 'Create Student / Parent Account',
+    alreadyHaveAccount: 'Already have an account? Sign in',
+    needAccount: "Don't have an account? Sign up",
+    adminAccessOnly: 'Restricted Access — Authorized School Administrators Only',
+    exportExcel: 'Export Excel (.xlsx)',
+    exportingExcel: 'Generating Excel (.xlsx)...',
+    exportConfirmTitle: 'Export Student Registry to Excel',
+    exportConfirmDesc: 'You are about to export official student records into an Excel (.xlsx) file with full attendance and guardian data.',
+    myReports: 'My Submitted Reports',
+    submitReport: 'Submit New Report',
+    lostFoundCatalog: 'Lost & Found Catalog',
+    accessDenied: 'Access Restricted',
+    adminRoleRequired: 'Administrator privileges are required to access this section.',
+    backToPortal: 'Return to Student Portal',
   },
 
   fr: {
@@ -628,7 +669,27 @@ export const translations: Record<Language, Translations> = {
     rememberMe: 'Se souvenir de moi',
     loginButton: 'Se Connecter à Campus OS',
     loginError: 'Identifiants incorrects. Veuillez réessayer.',
-    demoNotice: 'Session de démonstration active. Utilisez admin / admin pour accéder au portail.',
+    demoNotice: 'Utilisez admin / admin123 pour Administrateur, ou student_user / user123 pour Utilisateur.',
+
+    adminPortal: "Portail d'Administration",
+    normalUserPortal: 'Portail Étudiants & Parents',
+    adminLoginBtn: 'Connexion Administrateur',
+    userLoginBtn: 'Connexion Étudiant / Parent',
+    registerBtn: 'Créer un Compte',
+    registerTitle: 'Créer un Compte Étudiant / Parent',
+    alreadyHaveAccount: 'Vous avez déjà un compte ? Connectez-vous',
+    needAccount: 'Pas encore de compte ? Inscrivez-vous',
+    adminAccessOnly: 'Accès Réservé — Administrateurs Autorisés Uniquement',
+    exportExcel: 'Exporter Excel (.xlsx)',
+    exportingExcel: 'Génération Excel (.xlsx)...',
+    exportConfirmTitle: 'Exporter le Registre des Élèves vers Excel',
+    exportConfirmDesc: 'Vous êtes sur le point de générer un classeur Excel (.xlsx) officiel avec les données de présence et tuteurs.',
+    myReports: 'Mes Signalements',
+    submitReport: 'Déposer un Signalement',
+    lostFoundCatalog: 'Catalogue Objets Perdus & Trouvés',
+    accessDenied: 'Accès Refusé',
+    adminRoleRequired: "Des privilèges d'administrateur sont requis pour accéder à cette section.",
+    backToPortal: 'Retour au Portail Étudiant',
   },
 
   ar: {
@@ -833,6 +894,26 @@ export const translations: Record<Language, Translations> = {
     rememberMe: 'تذكر تسجيل الدخول',
     loginButton: 'تسجيل الدخول إلى المنظومة',
     loginError: 'اسم المستخدم أو كلمة المرور غير صحيحة. يرجى المحاولة ثانية.',
-    demoNotice: 'جلسة المعاينة نشطة. استخدم admin / admin للدخول للإدارة.',
+    demoNotice: 'استخدم admin / admin123 للمسؤول، أو student_user / user123 لحساب المستخدم العادي.',
+
+    adminPortal: 'بوابة الإدارة المدرسية',
+    normalUserPortal: 'بوابة الطلاب وأولياء الأمور',
+    adminLoginBtn: 'تسجيل دخول الإدارة',
+    userLoginBtn: 'دخول الطلاب وأولياء الأمور',
+    registerBtn: 'إنشاء حساب جديد',
+    registerTitle: 'تسجيل حساب طالب / ولي أمر',
+    alreadyHaveAccount: 'لديك حساب بالفعل؟ تسجيل الدخول',
+    needAccount: 'ليس لديك حساب؟ أنشئ حساباً جديداً',
+    adminAccessOnly: 'منطقة مخصصة للمسؤولين المعتمدين والمشرفين التربويين فقط',
+    exportExcel: 'تصدير إكسيل (.xlsx)',
+    exportingExcel: 'جاري إنشاء ملف إكسيل (.xlsx)...',
+    exportConfirmTitle: 'تأكيد تصدير سجل الطلاب إلى إكسيل',
+    exportConfirmDesc: 'أنت على وشك تصدير السجل المدرسي الرسمي مع تفاصيل الحضور وهواتف أولياء الأمور إلى ملف Excel مؤمن.',
+    myReports: 'بلاغاتي المسجلة',
+    submitReport: 'تقديم بلاغ عن غرض',
+    lostFoundCatalog: 'دليل المفقودات والمعثورات',
+    accessDenied: 'منطقة محظورة',
+    adminRoleRequired: 'يلزم الحصول على صلاحيات مدير النظام للوصول إلى هذا القسم.',
+    backToPortal: 'العودة إلى بوابة الطلاب',
   },
 };

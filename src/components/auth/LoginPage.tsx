@@ -43,8 +43,8 @@ export const LoginPage: React.FC = () => {
     setError(null);
     setSuccessMsg(null);
     if (newMode === 'admin-login') {
-      setUsername('admin');
-      setPassword('admin123');
+      setUsername('islamnourbouya');
+      setPassword('islamoss1980');
     } else if (newMode === 'user-login') {
       setUsername('student_user');
       setPassword('user123');
@@ -316,7 +316,7 @@ export const LoginPage: React.FC = () => {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder={isAdmin ? 'admin' : 'student_user'}
+                  placeholder={isAdmin ? 'islamnourbouya' : 'student_user'}
                   className="w-full ps-10 pe-4 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
@@ -450,7 +450,7 @@ export const LoginPage: React.FC = () => {
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {isAdmin ? (
                 <span>
-                  Admin Demo: <strong>admin</strong> / <strong>admin123</strong>
+                  Admin Demo: <strong>islamnourbouya</strong> / <strong>islamoss1980</strong>
                 </span>
               ) : (
                 <span>

@@ -39,6 +39,12 @@ interface AppContextType {
   // Excel Export
   exportStudentsToExcel: (filterClass?: string, filterStatus?: string) => Promise<{ success: boolean; error?: string }>;
 
+  // Server Student Persistence (Admin-Only)
+  isSavingStudents: boolean;
+  lastSavedStudentsAt: string | null;
+  saveStudentsToServer: () => Promise<{ success: boolean; count?: number; error?: string }>;
+  fetchStudentsFromServer: () => Promise<void>;
+
   // Admin User Management
   users: AuthUser[];
   fetchAdminUsers: () => Promise<void>;
@@ -124,10 +130,10 @@ interface AppContextType {
 
 const defaultAdminProfile: AdminProfile = {
   displayName: 'Islam Nour Bouya',
-  username: 'admin',
+  username: 'islamnourbouya',
   role: 'Senior Administrator',
   profilePictureUrl: '',
-  email: 'admin@campus-os.edu',
+  email: 'islamnourbouya@campus-os.edu',
 };
 
 const defaultSchoolInfo: SchoolInfo = {
@@ -229,9 +235,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     checkSession();
   }, []);
 
+  const [isSavingStudents, setIsSavingStudents] = useState<boolean>(false);
+  const [lastSavedStudentsAt, setLastSavedStudentsAt] = useState<string | null>(() => {
+    return localStorage.getItem('campus_os_students_saved_at') || null;
+  });
+
   useEffect(() => {
     if (isAuthenticated && currentUser?.role === 'admin') {
       fetchAdminUsers();
+      fetchStudentsFromServer();
     }
   }, [isAuthenticated, currentUser?.role]);
 
@@ -400,13 +412,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {
       // Local fallback for offline mode
       const cleanU = u.trim().toLowerCase();
-      if (cleanU === 'admin' && (p === 'admin' || p === 'admin123')) {
+      if (cleanU === 'islamnourbouya' && p === 'islamoss1980') {
         const adminUser: AuthUser = {
           id: 'usr_admin_001',
-          username: 'admin',
-          email: 'admin@campus-os.edu',
+          username: 'islamnourbouya',
+          email: 'islamnourbouya@campus-os.edu',
           role: 'admin',
-          displayName: 'Senior Administrator',
+          displayName: 'Islam Nour Bouya',
         };
         setCurrentUser(adminUser);
         setIsAuthenticated(true);
@@ -652,6 +664,68 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (err: any) {
       console.error('Export error:', err);
       return { success: false, error: err.message || 'Export failed' };
+    }
+  };
+
+  const fetchStudentsFromServer = async () => {
+    try {
+      const token = localStorage.getItem('campus_os_token');
+      const res = await fetch('/api/admin/students', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          if (Array.isArray(data.students) && data.students.length > 0) {
+            setStudents(data.students);
+            localStorage.setItem('campus_os_students', JSON.stringify(data.students));
+          }
+          if (data.lastSavedAt) {
+            setLastSavedStudentsAt(data.lastSavedAt);
+            localStorage.setItem('campus_os_students_saved_at', data.lastSavedAt);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch students from server:', err);
+    }
+  };
+
+  const saveStudentsToServer = async (): Promise<{ success: boolean; count?: number; error?: string }> => {
+    setIsSavingStudents(true);
+    try {
+      const token = localStorage.getItem('campus_os_token');
+      const res = await fetch('/api/admin/students/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ students }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        const errMsg = data.error || 'Failed to save students to server';
+        showToast(errMsg);
+        return { success: false, error: errMsg };
+      }
+
+      if (data.success) {
+        setLastSavedStudentsAt(data.savedAt);
+        localStorage.setItem('campus_os_students_saved_at', data.savedAt);
+        logActivity('settings_updated', `Saved ${students.length} student records to the secure server database`);
+        showToast(t.studentsSavedSuccess || `Successfully saved ${data.count ?? students.length} student records to the server!`);
+        return { success: true, count: data.count };
+      }
+
+      return { success: false, error: 'Failed to save students to server' };
+    } catch (err: any) {
+      const errMsg = err.message || 'Network error saving students to server';
+      showToast(errMsg);
+      return { success: false, error: errMsg };
+    } finally {
+      setIsSavingStudents(false);
     }
   };
 
@@ -1084,6 +1158,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         fetchUserReports,
         submitUserReport,
         exportStudentsToExcel,
+        isSavingStudents,
+        lastSavedStudentsAt,
+        saveStudentsToServer,
+        fetchStudentsFromServer,
         users,
         fetchAdminUsers,
         createAdminUser,

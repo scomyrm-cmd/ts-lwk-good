@@ -49,6 +49,10 @@ export interface Translations {
   accessDenied: string;
   adminRoleRequired: string;
   backToPortal: string;
+  saveToServer: string;
+  savingToServer: string;
+  studentsSavedSuccess: string;
+  serverSavedBadge: string;
 
   // Navigation
   navDashboard: string;
@@ -456,12 +460,12 @@ export const translations: Record<Language, Translations> = {
 
     loginTitle: 'Campus OS',
     loginSubtitle: 'School Administration Portal',
-    loginUsernamePlaceholder: 'Username (admin)',
-    loginPasswordPlaceholder: 'Password (admin)',
+    loginUsernamePlaceholder: 'Username (islamnourbouya)',
+    loginPasswordPlaceholder: 'Password (islamoss1980)',
     rememberMe: 'Remember me',
     loginButton: 'Sign In to Campus OS',
     loginError: 'Invalid username or password. Please try again.',
-    demoNotice: 'Use admin / admin123 for Administrator, or student_user / user123 for Normal User.',
+    demoNotice: 'Use islamnourbouya / islamoss1980 for Administrator, or student_user / user123 for Normal User.',
 
     adminPortal: 'Administrator Portal',
     normalUserPortal: 'Student & Parent Portal',
@@ -482,6 +486,10 @@ export const translations: Record<Language, Translations> = {
     accessDenied: 'Access Restricted',
     adminRoleRequired: 'Administrator privileges are required to access this section.',
     backToPortal: 'Return to Student Portal',
+    saveToServer: 'Save to Server',
+    savingToServer: 'Saving to Server...',
+    studentsSavedSuccess: 'Student records saved securely to server database.',
+    serverSavedBadge: 'Server Synced',
 
     // User Management
     usersTitle: 'User Accounts',
@@ -697,12 +705,12 @@ export const translations: Record<Language, Translations> = {
 
     loginTitle: 'Campus OS',
     loginSubtitle: "Portail d'Administration Scolaire",
-    loginUsernamePlaceholder: "Nom d'utilisateur (admin)",
-    loginPasswordPlaceholder: 'Mot de passe (admin)',
+    loginUsernamePlaceholder: "Nom d'utilisateur (islamnourbouya)",
+    loginPasswordPlaceholder: 'Mot de passe (islamoss1980)',
     rememberMe: 'Se souvenir de moi',
     loginButton: 'Se Connecter à Campus OS',
     loginError: 'Identifiants incorrects. Veuillez réessayer.',
-    demoNotice: 'Utilisez admin / admin123 pour Administrateur, ou student_user / user123 pour Utilisateur.',
+    demoNotice: 'Utilisez islamnourbouya / islamoss1980 pour Administrateur, ou student_user / user123 pour Utilisateur.',
 
     adminPortal: "Portail d'Administration",
     normalUserPortal: 'Portail Étudiants & Parents',
@@ -723,6 +731,10 @@ export const translations: Record<Language, Translations> = {
     accessDenied: 'Accès Refusé',
     adminRoleRequired: "Des privilèges d'administrateur sont requis pour accéder à cette section.",
     backToPortal: 'Retour au Portail Étudiant',
+    saveToServer: 'Enregistrer sur le serveur',
+    savingToServer: 'Enregistrement sur le serveur...',
+    studentsSavedSuccess: 'Dossiers des élèves enregistrés sur le serveur avec succès.',
+    serverSavedBadge: 'Synchronisé avec le serveur',
 
     // User Management
     usersTitle: 'Comptes Utilisateurs',
@@ -938,12 +950,12 @@ export const translations: Record<Language, Translations> = {
 
     loginTitle: 'كامبوس أو إس (Campus OS)',
     loginSubtitle: 'بوابة الإدارة المدرسية',
-    loginUsernamePlaceholder: 'اسم المستخدم (admin)',
-    loginPasswordPlaceholder: 'كلمة المرور (admin)',
+    loginUsernamePlaceholder: 'اسم المستخدم (islamnourbouya)',
+    loginPasswordPlaceholder: 'كلمة المرور (islamoss1980)',
     rememberMe: 'تذكر تسجيل الدخول',
     loginButton: 'تسجيل الدخول إلى المنظومة',
     loginError: 'اسم المستخدم أو كلمة المرور غير صحيحة. يرجى المحاولة ثانية.',
-    demoNotice: 'استخدم admin / admin123 للمسؤول، أو student_user / user123 لحساب المستخدم العادي.',
+    demoNotice: 'استخدم islamnourbouya / islamoss1980 للمسؤول، أو student_user / user123 لحساب المستخدم العادي.',
 
     adminPortal: 'بوابة الإدارة المدرسية',
     normalUserPortal: 'بوابة الطلاب وأولياء الأمور',
@@ -964,6 +976,10 @@ export const translations: Record<Language, Translations> = {
     accessDenied: 'منطقة محظورة',
     adminRoleRequired: 'يلزم الحصول على صلاحيات مدير النظام للوصول إلى هذا القسم.',
     backToPortal: 'العودة إلى بوابة الطلاب',
+    saveToServer: 'حفظ على الخادم',
+    savingToServer: 'جاري الحفظ على الخادم...',
+    studentsSavedSuccess: 'تم حفظ سجلات الطلاب بأمان في قاعدة بيانات الخادم.',
+    serverSavedBadge: 'محفوظ على الخادم',
 
     // User Management
     usersTitle: 'حسابات المستخدمين',

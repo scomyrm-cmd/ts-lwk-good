@@ -166,3 +166,50 @@ test('admin can create users with specific roles and retrieve safe user list', (
   assert.equal(deleteSuccess.success, true);
 });
 
+// 7. Admin Credentials & Server Student Persistence
+test('islamnourbouya authenticates with islamoss1980 and admin username is removed', () => {
+  const adminUser = db.findUserByUsername('islamnourbouya');
+  assert.ok(adminUser, 'Admin islamnourbouya must exist in database');
+  assert.equal(adminUser.role, 'admin');
+  assert.equal(verifyPassword('islamoss1980', adminUser.passwordHash), true);
+  assert.equal(verifyPassword('wrongPassword', adminUser.passwordHash), false);
+
+  // Old admin username must be completely removed
+  const oldAdmin = db.findUserByUsername('admin');
+  assert.equal(oldAdmin, undefined, 'Old admin account must be removed');
+});
+
+test('db.saveStudents saves student data on server and tracks timestamp and audit log', () => {
+  const mockStudents = [
+    {
+      id: 'stu_test_1',
+      studentId: 'STU-9901',
+      firstName: 'Adam',
+      lastName: 'Mansouri',
+      className: 'Grade 10-A',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: 'stu_test_2',
+      studentId: 'STU-9902',
+      firstName: 'Leila',
+      lastName: 'Chraibi',
+      className: 'Grade 11-B',
+      createdAt: new Date().toISOString(),
+    },
+  ];
+
+  const adminUser = db.findUserByUsername('islamnourbouya')!;
+  const saveResult = db.saveStudents(mockStudents, adminUser.id, adminUser.username);
+  assert.equal(saveResult.success, true);
+  assert.equal(saveResult.count, 2);
+  assert.ok(saveResult.savedAt);
+
+  const savedStudents = db.getStudents();
+  assert.equal(savedStudents.length, 2);
+  assert.equal(savedStudents[0].studentId, 'STU-9901');
+
+  const lastSaved = db.getStudentsLastSaved();
+  assert.equal(lastSaved, saveResult.savedAt);
+});
+

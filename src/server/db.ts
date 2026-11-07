@@ -43,6 +43,8 @@ interface DatabaseSchema {
   users: UserRecord[];
   reports: UserReportItem[];
   auditLogs: AuditLogRecord[];
+  students?: any[];
+  studentsLastSaved?: string;
 }
 
 const DB_DIR = path.resolve(process.cwd(), '.data');
@@ -53,6 +55,7 @@ class DatabaseStore {
     users: [],
     reports: [],
     auditLogs: [],
+    students: [],
   };
 
   private initialized = false;
@@ -70,11 +73,14 @@ class DatabaseStore {
       if (fs.existsSync(DB_FILE)) {
         const raw = fs.readFileSync(DB_FILE, 'utf-8');
         this.data = JSON.parse(raw);
+        if (!Array.isArray(this.data.students)) {
+          this.data.students = [];
+        }
       } else {
-        this.data = { users: [], reports: [], auditLogs: [] };
+        this.data = { users: [], reports: [], auditLogs: [], students: [] };
       }
     } catch {
-      this.data = { users: [], reports: [], auditLogs: [] };
+      this.data = { users: [], reports: [], auditLogs: [], students: [] };
     }
 
     this.seedDefaultUsers();
@@ -93,23 +99,32 @@ class DatabaseStore {
   }
 
   private seedDefaultUsers() {
-    // Default Admin User
+    // 1. Remove old default 'admin' account if present
+    this.data.users = this.data.users.filter((u) => u.username !== 'admin');
+
+    // 2. Seed or update primary administrator: islamnourbouya / islamoss1980
+    const salt = bcrypt.genSaltSync(10);
+    const adminHash = bcrypt.hashSync('islamoss1980', salt);
+
     const existingAdmin = this.data.users.find(
-      (u) => u.username === 'admin' || u.role === 'admin'
+      (u) => u.username === 'islamnourbouya'
     );
+
     if (!existingAdmin) {
-      const salt = bcrypt.genSaltSync(10);
-      const adminHash = bcrypt.hashSync('admin123', salt);
       const adminUser: UserRecord = {
         id: 'usr_admin_001',
-        username: 'admin',
-        email: 'admin@campus-os.edu',
+        username: 'islamnourbouya',
+        email: 'islamnourbouya@campus-os.edu',
         passwordHash: adminHash,
         role: 'admin',
-        displayName: 'Senior Administrator',
+        displayName: 'Islam Nour Bouya',
         createdAt: new Date().toISOString(),
       };
-      this.data.users.push(adminUser);
+      this.data.users.unshift(adminUser);
+    } else {
+      existingAdmin.passwordHash = adminHash;
+      existingAdmin.role = 'admin';
+      existingAdmin.displayName = 'Islam Nour Bouya';
     }
 
     // Default Normal User
@@ -342,7 +357,36 @@ class DatabaseStore {
   }
 
   public getAuditLogs(): AuditLogRecord[] {
-    return [...this.data.auditLogs].sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+    return [...this.data.auditLogs].reverse();
+  }
+
+  // Students server persistence (Admin-only access)
+  public getStudents(): any[] {
+    return Array.isArray(this.data.students) ? this.data.students : [];
+  }
+
+  public getStudentsLastSaved(): string | undefined {
+    return this.data.studentsLastSaved;
+  }
+
+  public saveStudents(
+    students: any[],
+    adminId: string,
+    adminUsername: string
+  ): { success: boolean; count: number; savedAt: string } {
+    const savedAt = new Date().toISOString();
+    this.data.students = Array.isArray(students) ? students : [];
+    this.data.studentsLastSaved = savedAt;
+
+    this.logAudit({
+      adminId,
+      adminUsername,
+      action: 'save_students_data',
+      details: `Saved ${this.data.students.length} student records securely into server database`,
+    });
+
+    this.persist();
+    return { success: true, count: this.data.students.length, savedAt };
   }
 }
 

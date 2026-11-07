@@ -15,6 +15,9 @@ import {
   Clock,
   CheckCircle2,
   Sparkles,
+  CloudUpload,
+  RefreshCw,
+  Check,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Student } from '../../types';
@@ -32,6 +35,9 @@ export const StudentsView: React.FC = () => {
     deleteStudent,
     openAIChat,
     exportStudentsToExcel,
+    isSavingStudents,
+    lastSavedStudentsAt,
+    saveStudentsToServer,
     settings,
     t,
   } = useApp();
@@ -111,6 +117,28 @@ export const StudentsView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           {students.length > 0 && (
             <>
+              <button
+                type="button"
+                data-testid="save-students-server-btn"
+                onClick={() => saveStudentsToServer()}
+                disabled={isSavingStudents}
+                title={lastSavedStudentsAt ? `Last saved to server: ${new Date(lastSavedStudentsAt).toLocaleTimeString()}` : 'Save student registry to server database'}
+                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
+              >
+                {isSavingStudents ? (
+                  <RefreshCw className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
+                ) : (
+                  <CloudUpload className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                )}
+                <span>{isSavingStudents ? t.savingToServer : t.saveToServer}</span>
+                {lastSavedStudentsAt && !isSavingStudents && (
+                  <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/80 dark:text-indigo-200">
+                    <Check className="w-2.5 h-2.5 mr-0.5" />
+                    {t.serverSavedBadge}
+                  </span>
+                )}
+              </button>
+
               <button
                 type="button"
                 data-testid="export-excel-btn"

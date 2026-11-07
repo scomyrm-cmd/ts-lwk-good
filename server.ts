@@ -312,6 +312,43 @@ app.patch('/api/admin/reports/:id', requireAdmin as any, (req: AuthenticatedRequ
 });
 
 // ==========================================
+// 4A. ADMIN-ONLY STUDENT DATA PERSISTENCE
+// ==========================================
+
+// Admin: Retrieve student records stored securely on the server
+app.get('/api/admin/students', requireAdmin as any, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const students = db.getStudents();
+    const lastSavedAt = db.getStudentsLastSaved();
+    return res.json({ success: true, students, lastSavedAt });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to retrieve student records from server.' });
+  }
+});
+
+// Admin: Save/sync student records securely on the server database
+app.post('/api/admin/students/save', requireAdmin as any, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { students } = req.body || {};
+
+    if (!Array.isArray(students)) {
+      return res.status(400).json({ error: 'Payload must include an array of student records.' });
+    }
+
+    const result = db.saveStudents(students, req.user!.id, req.user!.username);
+    return res.json({
+      success: true,
+      message: `Successfully saved ${result.count} student records to server.`,
+      count: result.count,
+      savedAt: result.savedAt,
+    });
+  } catch (err: any) {
+    console.error('Error saving student records:', err.message);
+    return res.status(500).json({ error: 'Failed to save student records on server.' });
+  }
+});
+
+// ==========================================
 // 4. ADMIN-ONLY EXCEL STUDENT DATA EXPORT
 // ==========================================
 

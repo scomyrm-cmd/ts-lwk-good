@@ -169,8 +169,8 @@ const defaultSettings: AppSettings = {
   },
   aiAssistant: {
     enabled: true,
-    model: 'gemini-3.8-flash',
-    strictPrivacyMode: false,
+    model: 'gemini-2.5-flash',
+    strictPrivacyMode: true,
     saveHistory: true,
   },
 };

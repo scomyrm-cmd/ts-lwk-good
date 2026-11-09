@@ -21,7 +21,7 @@ function originGuard(req:VercelRequest,res:VercelResponse) {
     const origin=req.headers.origin;
     const host=req.headers['x-forwarded-host']||req.headers.host;
     const allowed=process.env.APP_URL;
-    if(origin && origin!=='https://'+host && origin!==allowed && origin!=='http://localhost:3000') {
+    if(origin && origin!=='https://'+host && origin!==allowed && !(process.env.VERCEL_ENV==='development'&&origin==='http://localhost:3000')) {
       fail(res,403,'Cross-origin request denied');return false;
     }
     if(!String(req.headers['content-type']||'').includes('application/json')) {
@@ -188,8 +188,13 @@ async function route(req:VercelRequest,res:VercelResponse){
       if(!prompt)return fail(res,400,'Message required');
       const lang=clean(req.body?.language,20)||detectLanguage(prompt);
       const history=Array.isArray(req.body?.history)?req.body.history.slice(-12).filter((h:any)=>typeof h?.content==='string').map((h:any)=>({role:h.sender==='user'?'user':'model',parts:[{text:clean(h.content,4000)}]})):[];
-      const context=admin?{students:s.students,attendance:s.attendance,lostFoundItems:s.lostFoundItems,schoolInfo:s.schoolInfo}:{
-        lostFoundItems:s.lostFoundItems.map(({contactInformation,reporterName,...safe}:any)=>safe),schoolInfo:s.schoolInfo};
+      // Private student identities never leave the server in privacy mode.
+      const privacyEnabled=s.settings?.aiAssistant?.strictPrivacyMode!==false;
+      const publicItems=s.lostFoundItems.map(({contactInformation,reporterName,...safe}:any)=>safe);
+      const context=admin && !privacyEnabled
+        ? {students:s.students,attendance:s.attendance,lostFoundItems:s.lostFoundItems,schoolInfo:s.schoolInfo}
+        : {studentCount:admin?s.students.length:undefined,attendanceRecordCount:admin?s.attendance.length:undefined,
+           lostFoundItems:publicItems,schoolInfo:s.schoolInfo,privacyMode:true};
       if(history.length&&history[history.length-1]?.role==='user'&&history[history.length-1]?.parts?.[0]?.text===prompt)history.pop();
       const ai=new GoogleGenAI({apiKey:process.env.GEMINI_API_KEY});
       const promptSystem=buildMultilingualSystemPrompt(context,lang)+'\nBe genuinely conversational; respond thoughtfully to follow-up questions. Never invent student records or disclose admin-only records to non-admins. Do not claim to have saved or modified data unless an API did so. Respond in the latest user language; prefer concise natural prose.';

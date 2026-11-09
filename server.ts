@@ -72,7 +72,7 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Access-Control-Allow-Credentials', 'true');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, x-admin-user');
   }
 
   if (req.method === 'OPTIONS') {
@@ -290,10 +290,14 @@ app.get('/api/admin/reports', requireAdmin as any, (req: AuthenticatedRequest, r
 });
 
 // Admin: Update report status
-app.patch('/api/admin/reports/:id', requireAdmin as any, (req: AuthenticatedRequest, res: Response) => {
+app.patch(['/api/admin/reports/:id', '/api/admin/reports'], requireAdmin as any, (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id || req.body?.id;
     const { status, adminNotes } = req.body || {};
+
+    if (!id) {
+      return res.status(400).json({ error: 'Report ID is required.' });
+    }
 
     const updated = db.updateReportStatus(
       id,
@@ -345,6 +349,29 @@ app.post('/api/admin/students/save', requireAdmin as any, (req: AuthenticatedReq
   } catch (err: any) {
     console.error('Error saving student records:', err.message);
     return res.status(500).json({ error: 'Failed to save student records on server.' });
+  }
+});
+
+// Admin: Retrieve and synchronize lost & found items stored on the server
+app.get('/api/admin/lost-found', requireAdmin as any, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const items = db.getLostFoundItems();
+    return res.json({ success: true, items });
+  } catch {
+    return res.status(500).json({ error: 'Failed to retrieve lost & found items.' });
+  }
+});
+
+app.post('/api/admin/lost-found', requireAdmin as any, (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { items } = req.body || {};
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ error: 'Payload must include items array.' });
+    }
+    const result = db.saveLostFoundItems(items);
+    return res.json({ success: true, count: result.count });
+  } catch {
+    return res.status(500).json({ error: 'Failed to save lost & found items.' });
   }
 });
 

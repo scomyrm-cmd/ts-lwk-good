@@ -45,10 +45,23 @@ interface DatabaseSchema {
   auditLogs: AuditLogRecord[];
   students?: any[];
   studentsLastSaved?: string;
+  lostFoundItems?: any[];
 }
 
-const DB_DIR = path.resolve(process.cwd(), '.data');
-const DB_FILE = path.join(DB_DIR, 'campus_db.json');
+function getDbFile(): string {
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    return path.join('/tmp', 'campus_db.json');
+  }
+  const defaultDir = path.resolve(process.cwd(), '.data');
+  try {
+    if (!fs.existsSync(defaultDir)) {
+      fs.mkdirSync(defaultDir, { recursive: true });
+    }
+    return path.join(defaultDir, 'campus_db.json');
+  } catch {
+    return path.join('/tmp', 'campus_db.json');
+  }
+}
 
 class DatabaseStore {
   private data: DatabaseSchema = {
@@ -66,12 +79,14 @@ class DatabaseStore {
 
   private init() {
     try {
-      if (!fs.existsSync(DB_DIR)) {
-        fs.mkdirSync(DB_DIR, { recursive: true });
+      const dbFile = getDbFile();
+      const dir = path.dirname(dbFile);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
       }
 
-      if (fs.existsSync(DB_FILE)) {
-        const raw = fs.readFileSync(DB_FILE, 'utf-8');
+      if (fs.existsSync(dbFile)) {
+        const raw = fs.readFileSync(dbFile, 'utf-8');
         this.data = JSON.parse(raw);
         if (!Array.isArray(this.data.students)) {
           this.data.students = [];
@@ -89,10 +104,12 @@ class DatabaseStore {
 
   private persist() {
     try {
-      if (!fs.existsSync(DB_DIR)) {
-        fs.mkdirSync(DB_DIR, { recursive: true });
+      const dbFile = getDbFile();
+      const dir = path.dirname(dbFile);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
       }
-      fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), 'utf-8');
+      fs.writeFileSync(dbFile, JSON.stringify(this.data, null, 2), 'utf-8');
     } catch (err) {
       console.error('Failed to persist database file:', err);
     }
@@ -322,9 +339,56 @@ class DatabaseStore {
       id: 'rep_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
       createdAt: new Date().toISOString(),
     };
-    this.data.reports.push(newReport);
+    this.data.reports.unshift(newReport);
+
+    // Automatically sync student report to lost & found items so the admin and dashboard see it immediately
+    if (!Array.isArray(this.data.lostFoundItems)) {
+      this.data.lostFoundItems = [];
+    }
+
+    const linkedItem = {
+      id: newReport.id,
+      itemName: newReport.title,
+      category: newReport.category,
+      type: newReport.type,
+      location: newReport.location,
+      dateReported: newReport.date,
+      reportedBy: `${newReport.userName} (${newReport.userEmail})`,
+      description: newReport.description,
+      status: (newReport.type === 'lost' ? 'lost' : 'found') as 'lost' | 'found',
+      contactInfo: newReport.contact,
+      createdAt: newReport.createdAt,
+      source: 'student_report',
+    };
+    this.data.lostFoundItems.unshift(linkedItem);
+
     this.persist();
     return newReport;
+  }
+
+  // Lost & Found items persistence
+  public getLostFoundItems(): any[] {
+    return Array.isArray(this.data.lostFoundItems) ? this.data.lostFoundItems : [];
+  }
+
+  public saveLostFoundItems(items: any[]): { success: boolean; count: number } {
+    this.data.lostFoundItems = Array.isArray(items) ? items : [];
+    this.persist();
+    return { success: true, count: this.data.lostFoundItems.length };
+  }
+
+  public addLostFoundItem(item: any): any {
+    if (!Array.isArray(this.data.lostFoundItems)) {
+      this.data.lostFoundItems = [];
+    }
+    const newItem = {
+      ...item,
+      id: item.id || 'item_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+      createdAt: item.createdAt || new Date().toISOString(),
+    };
+    this.data.lostFoundItems.unshift(newItem);
+    this.persist();
+    return newItem;
   }
 
   public updateReportStatus(

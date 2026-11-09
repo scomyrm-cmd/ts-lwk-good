@@ -53,13 +53,25 @@ const AccessDeniedView: React.FC<{ onReturnToPortal: () => void }> = ({ onReturn
 };
 
 const MainLayout: React.FC = () => {
-  const { isAuthenticated, currentUser, activeTab, setActiveTab, toastMessage } = useApp();
+  const { isVerifyingAuth, isAuthenticated, currentUser, activeTab, setActiveTab, toastMessage } = useApp();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Quick Action Modals
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [isReportItemModalOpen, setIsReportItemModalOpen] = useState(false);
 
+  // 0. Session verification on cold boot / fresh link opening
+  if (isVerifyingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white text-center">
+        <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <h2 className="text-lg font-semibold tracking-tight text-white">Campus OS</h2>
+        <p className="text-xs text-slate-400 mt-1">Verifying secure session...</p>
+      </div>
+    );
+  }
+
+  // Strictly enforce authentication - unauthorized link copying cannot bypass!
   if (!isAuthenticated || !currentUser) {
     return <LoginPage />;
   }

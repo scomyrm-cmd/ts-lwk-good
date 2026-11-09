@@ -15,6 +15,11 @@ import {
   ArrowUpDown,
   Tag,
   CheckCheck,
+  RefreshCw,
+  AlertCircle,
+  FileText,
+  Check,
+  Clock,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { LostFoundItem, ItemCategory, ItemStatus } from '../../types';
@@ -29,10 +34,17 @@ export const LostFoundView: React.FC = () => {
     lostFoundItems,
     deleteLostFoundItem,
     archiveItem,
+    addLostFoundItem,
+    userReports,
+    fetchAdminReports,
+    fetchLostFoundFromServer,
+    updateAdminReportStatus,
     settings,
     t,
   } = useApp();
 
+  const [activeSubTab, setActiveSubTab] = useState<'catalog' | 'student-reports'>('catalog');
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
@@ -103,7 +115,22 @@ export const LostFoundView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            type="button"
+            onClick={async () => {
+              setIsRefreshing(true);
+              await Promise.all([fetchAdminReports(), fetchLostFoundFromServer()]);
+              setTimeout(() => setIsRefreshing(false), 500);
+            }}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs md:text-sm font-medium transition-colors cursor-pointer"
+            title="Synchronize student reports and inventory with server database"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`} />
+            <span>{isRefreshing ? 'Syncing...' : 'Sync Server'}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => {
@@ -132,6 +159,40 @@ export const LostFoundView: React.FC = () => {
         </div>
       </div>
 
+      {/* Sub-tab Switcher: Official Catalog vs Student Incident Reports */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('catalog')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all cursor-pointer ${
+            activeSubTab === 'catalog'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+          }`}
+        >
+          <PackageSearch className="w-4 h-4" />
+          <span>Official Catalog ({lostFoundItems.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('student-reports')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all cursor-pointer ${
+            activeSubTab === 'student-reports'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span>Student Incident Reports ({userReports.length})</span>
+          {userReports.filter((r) => r.status === 'pending').length > 0 && (
+            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
+              {userReports.filter((r) => r.status === 'pending').length} pending
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* 4 Statistics Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {statCards.map((c) => (
@@ -153,7 +214,9 @@ export const LostFoundView: React.FC = () => {
       </div>
 
       {/* Main Content Area */}
-      {lostFoundItems.length === 0 ? (
+      {activeSubTab === 'catalog' && (
+        <>
+          {lostFoundItems.length === 0 ? (
         <EmptyState
           icon={PackageSearch}
           title={t.noItemsTitle}
@@ -374,6 +437,184 @@ export const LostFoundView: React.FC = () => {
                         title={t.delete}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+        </>
+      )}
+
+      {/* Sub-tab 2: Student Incident Reports */}
+      {activeSubTab === 'student-reports' && (
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                Student Submitted Reports ({userReports.length})
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Incidents and missing items submitted live from the student portal
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                setIsRefreshing(true);
+                await fetchAdminReports();
+                setTimeout(() => setIsRefreshing(false), 400);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 text-xs font-semibold hover:bg-blue-100 cursor-pointer w-fit"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>Refresh Reports</span>
+            </button>
+          </div>
+
+          {userReports.length === 0 ? (
+            <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800 space-y-2">
+              <FileText className="w-10 h-10 text-slate-400 mx-auto" />
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                No student reports submitted yet
+              </h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                When students report missing or found items in the Student Portal, they will appear here in real-time for administrative review.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {userReports.map((report) => (
+                <div
+                  key={report.id}
+                  className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3 flex flex-col justify-between"
+                >
+                  <div className="space-y-2.5">
+                    {/* Header Tags */}
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase ${
+                            report.type === 'lost'
+                              ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300'
+                              : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300'
+                          }`}
+                        >
+                          {report.type === 'lost' ? 'Lost Item Report' : 'Found Item Report'}
+                        </span>
+                        <span className="text-xs text-slate-400">· {report.category}</span>
+                      </div>
+
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          report.status === 'resolved'
+                            ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                            : report.status === 'reviewed'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                            : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                        }`}
+                      >
+                        {report.status}
+                      </span>
+                    </div>
+
+                    {/* Title */}
+                    <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+                      {report.title}
+                    </h3>
+
+                    {/* Student Info Box */}
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500 font-medium">Student / Reporter:</span>
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">
+                          {report.userName}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-500">Email:</span>
+                        <span className="text-slate-700 dark:text-slate-300 font-mono text-[11px]">
+                          {report.userEmail}
+                        </span>
+                      </div>
+                      {report.contact && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">Contact / Phone:</span>
+                          <span className="font-semibold text-blue-600 dark:text-blue-400">
+                            {report.contact}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Location & Date */}
+                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-300 pt-1">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{report.location}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 truncate">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{report.date}</span>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-xs text-slate-600 dark:text-slate-400 bg-slate-50/50 dark:bg-slate-800/30 p-2.5 rounded-lg border border-slate-100/80 dark:border-slate-800/80">
+                      {report.description}
+                    </p>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+                    <span className="text-[11px] text-slate-400">
+                      ID: {report.id.substring(0, 14)}
+                    </span>
+
+                    <div className="flex items-center gap-2">
+                      {report.status !== 'reviewed' && report.status !== 'resolved' && (
+                        <button
+                          type="button"
+                          onClick={() => updateAdminReportStatus(report.id, 'reviewed')}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-colors"
+                        >
+                          Mark Reviewed
+                        </button>
+                      )}
+
+                      {report.status !== 'resolved' && (
+                        <button
+                          type="button"
+                          onClick={() => updateAdminReportStatus(report.id, 'resolved')}
+                          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer transition-colors"
+                        >
+                          Mark Resolved
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          addLostFoundItem({
+                            itemName: report.title,
+                            category: (report.category as ItemCategory) || 'Other',
+                            reportType: report.type,
+                            status: report.type === 'lost' ? 'lost' : 'found',
+                            location: report.location,
+                            dateReported: report.date,
+                            reporterName: `${report.userName} (${report.userEmail})`,
+                            description: report.description,
+                            contactInformation: report.contact,
+                          });
+                          updateAdminReportStatus(report.id, 'reviewed');
+                        }}
+                        className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
+                        title="Ensure item is in official catalog inventory"
+                      >
+                        Add to Official Catalog
                       </button>
                     </div>
                   </div>

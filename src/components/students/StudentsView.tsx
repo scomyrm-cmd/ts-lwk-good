@@ -18,6 +18,7 @@ import {
   CloudUpload,
   RefreshCw,
   Check,
+  Upload,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { Student } from '../../types';
@@ -38,6 +39,9 @@ export const StudentsView: React.FC = () => {
     isSavingStudents,
     lastSavedStudentsAt,
     saveStudentsToServer,
+    fetchStudentsFromServer,
+    addStudent,
+    showToast,
     settings,
     t,
   } = useApp();
@@ -97,12 +101,93 @@ export const StudentsView: React.FC = () => {
     exportToCSV(`students_list_${currentDate}`, headers, rows);
   };
 
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const text = event.target?.result as string;
+        if (!text) return;
+
+        let importedCount = 0;
+        if (file.name.endsWith('.json')) {
+          const parsed = JSON.parse(text);
+          const list = Array.isArray(parsed) ? parsed : (parsed.students || []);
+          if (Array.isArray(list)) {
+            list.forEach((s: any) => {
+              if (s.firstName && s.lastName) {
+                addStudent({
+                  studentId: s.studentId || `STU-${Math.floor(1000 + Math.random() * 9000)}`,
+                  firstName: s.firstName,
+                  lastName: s.lastName,
+                  className: s.className || 'Grade 10-A',
+                  gender: s.gender || 'other',
+                  dateOfBirth: s.dateOfBirth || '',
+                  guardianContact: s.guardianContact || '',
+                  notes: s.notes || 'Imported via file',
+                });
+                importedCount++;
+              }
+            });
+          }
+        } else {
+          // CSV parser
+          const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
+          if (lines.length > 1) {
+            for (let i = 1; i < lines.length; i++) {
+              const cols = lines[i].split(',').map((c) => c.trim().replace(/^"|"$/g, ''));
+              if (cols.length >= 2) {
+                const [studentId, firstName, lastName, className, gender, dateOfBirth, guardianContact] = cols;
+                if (firstName && lastName) {
+                  addStudent({
+                    studentId: studentId || `STU-${Math.floor(1000 + Math.random() * 9000)}`,
+                    firstName,
+                    lastName,
+                    className: className || 'Grade 10-A',
+                    gender: (gender?.toLowerCase() as any) || 'other',
+                    dateOfBirth: dateOfBirth || '',
+                    guardianContact: guardianContact || '',
+                    notes: 'Imported via CSV',
+                  });
+                  importedCount++;
+                }
+              }
+            }
+          }
+        }
+
+        if (importedCount > 0) {
+          showToast(`Successfully imported ${importedCount} student records. Click 'Save to Server' to sync.`);
+        } else {
+          showToast('No valid student records found in file.');
+        }
+      } catch (err: any) {
+        showToast(`Import failed: ${err.message}`);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const getInitials = (first: string, last: string) => {
     return ((first[0] || '') + (last[0] || '')).toUpperCase();
   };
 
   return (
     <div className="space-y-6 pb-12">
+      {/* Hidden file input for importing student records */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        accept=".csv,.json"
+        className="hidden"
+        onChange={handleImportFile}
+      />
+
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div>
@@ -114,31 +199,42 @@ export const StudentsView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center flex-wrap gap-2.5">
+          <button
+            type="button"
+            data-testid="save-students-server-btn"
+            onClick={() => saveStudentsToServer()}
+            disabled={isSavingStudents}
+            title={lastSavedStudentsAt ? `Last saved to server: ${new Date(lastSavedStudentsAt).toLocaleTimeString()}` : 'Save student registry to server database'}
+            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
+          >
+            {isSavingStudents ? (
+              <RefreshCw className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
+            ) : (
+              <CloudUpload className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            )}
+            <span>{isSavingStudents ? t.savingToServer : t.saveToServer}</span>
+            {lastSavedStudentsAt && !isSavingStudents && (
+              <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/80 dark:text-indigo-200">
+                <Check className="w-2.5 h-2.5 mr-0.5" />
+                {t.serverSavedBadge}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            data-testid="import-students-btn"
+            onClick={() => fileInputRef.current?.click()}
+            title="Import student records from a CSV or JSON file"
+            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium transition-colors cursor-pointer"
+          >
+            <Upload className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+            <span>Import File</span>
+          </button>
+
           {students.length > 0 && (
             <>
-              <button
-                type="button"
-                data-testid="save-students-server-btn"
-                onClick={() => saveStudentsToServer()}
-                disabled={isSavingStudents}
-                title={lastSavedStudentsAt ? `Last saved to server: ${new Date(lastSavedStudentsAt).toLocaleTimeString()}` : 'Save student registry to server database'}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
-              >
-                {isSavingStudents ? (
-                  <RefreshCw className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
-                ) : (
-                  <CloudUpload className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-                )}
-                <span>{isSavingStudents ? t.savingToServer : t.saveToServer}</span>
-                {lastSavedStudentsAt && !isSavingStudents && (
-                  <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/80 dark:text-indigo-200">
-                    <Check className="w-2.5 h-2.5 mr-0.5" />
-                    {t.serverSavedBadge}
-                  </span>
-                )}
-              </button>
-
               <button
                 type="button"
                 data-testid="export-excel-btn"

@@ -134,11 +134,11 @@ interface AppContextType {
 }
 
 const defaultAdminProfile: AdminProfile = {
-  displayName: 'Islam Nour Bouya',
+  displayName: 'Administrator',
   username: 'islamnourbouya',
   role: 'Senior Administrator',
   profilePictureUrl: '',
-  email: 'islamnourbouya@campus-os.edu',
+  email: '',
 };
 
 const defaultSchoolInfo: SchoolInfo = {

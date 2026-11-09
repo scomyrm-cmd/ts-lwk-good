@@ -37,6 +37,7 @@ export const CampusAIView: React.FC = () => {
     clearAllConversations,
     adminProfile,
     settings,
+    updateSettings,
     pendingAIPrompt,
     setPendingAIPrompt,
     t,

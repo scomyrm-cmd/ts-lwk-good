@@ -127,6 +127,7 @@ export interface AppSettings {
     model: string;
     strictPrivacyMode: boolean;
     saveHistory: boolean;
+    autoSpeak?: boolean;
   };
 }
 

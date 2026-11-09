@@ -135,7 +135,7 @@ interface AppContextType {
 
 const defaultAdminProfile: AdminProfile = {
   displayName: 'Administrator',
-  username: 'islamnourbouya',
+  username: '',
   role: 'Senior Administrator',
   profilePictureUrl: '',
   email: '',

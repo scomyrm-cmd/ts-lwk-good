@@ -154,20 +154,6 @@ async function route(req:VercelRequest,res:VercelResponse){
   }
   if(routeName==='auth/logout'&&method==='POST'){cookie(res,'',0);return res.status(200).json({success:true});}
   if(routeName==='auth/me'&&method==='GET'){const u=await currentUser(req);return res.status(200).json({authenticated:!!u,user:u?safeUser(u):null});}
-  // TEMPORARY PREVIEW-ONLY SMOKE TEST CLEANUP. Remove before production.
-  if(routeName==='internal/cleanup-smoke'&&method==='POST'&&process.env.VERCEL_ENV==='preview'){
-    const state=await readState(),actor=await currentUser(req,state);
-    if(!actor || actor.role!=='user' || !actor.username.startsWith('qa_smoke_')) return fail(res,403,'Not a test account');
-    await mutate(db=>{
-      const reportIds=new Set(db.reports.filter(r=>r.userId===actor.id).map(r=>r.id));
-      db.reports=db.reports.filter(r=>r.userId!==actor.id);
-      db.lostFoundItems=db.lostFoundItems.filter(v=>!reportIds.has(v.id));
-      db.users=db.users.filter(v=>v.id!==actor.id);
-      return true;
-    });
-    cookie(res,'',0);
-    return res.status(200).json({success:true,cleaned:true});
-  }
   const s=await readState(),u=await currentUser(req,s);
   if(!u)return badAuth(res);
   const admin=u.role==='admin';

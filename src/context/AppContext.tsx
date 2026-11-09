@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   Student,
   AttendanceRecord,
@@ -186,107 +186,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  const [userReports, setUserReports] = useState<UserReport[]>(() => {
-    const saved = localStorage.getItem('campus_os_user_reports');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [users, setUsers] = useState<AuthUser[]>(() => {
-    try {
-      const saved = localStorage.getItem('campus_os_admin_users');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [userReports, setUserReports] = useState<UserReport[]>([]);
+  const [users, setUsers] = useState<AuthUser[]>([]);
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [settingsSubTab, setSettingsSubTab] = useState<string>('admin-profile');
   const [currentDate, setCurrentDate] = useState<string>(getTodayStr());
 
-  // Strictly validate server session on startup
+  // HttpOnly cookie session is always verified by the server.
+  // Never trust or resurrect an offline browser identity.
   useEffect(() => {
-    let isMounted = true;
-    const checkSession = async () => {
+    let mounted = true;
+    (async () => {
       try {
-        const token = localStorage.getItem('campus_os_token');
-        if (!token) {
-          if (isMounted) {
-            setIsAuthenticated(false);
-            setCurrentUser(null);
-            setIsVerifyingAuth(false);
-          }
-          return;
+        const response = await fetch('/api/auth/me', {credentials:'include',cache:'no-store'});
+        const data = await response.json();
+        if(mounted && response.ok && data.authenticated && data.user) {
+          setCurrentUser(data.user);
+          setIsAuthenticated(true);
+          setActiveTab(data.user.role==='admin'?'dashboard':'lostfound-user');
+        } else if(mounted) {
+          setCurrentUser(null);setIsAuthenticated(false);
         }
-
-        const res = await fetch('/api/auth/me', {
-          headers: { Authorization: `Bearer ${token}` },
-          credentials: 'include',
-        });
-
-        if (res.ok) {
-          const text = await res.text();
-          const data = text ? JSON.parse(text) : {};
-          if (data.authenticated && data.user) {
-            if (isMounted) {
-              setCurrentUser(data.user);
-              setIsAuthenticated(true);
-              if (data.user.role === 'user') {
-                setActiveTab('lostfound-user');
-              } else {
-                setActiveTab('dashboard');
-              }
-            }
-            return;
-          }
-        }
-
-        // If server says unauthenticated or token is expired, clean up and show login screen
-        if (isMounted) {
-          setCurrentUser(null);
-          setIsAuthenticated(false);
-          localStorage.removeItem('campus_os_auth');
-          localStorage.removeItem('campus_os_user');
-          localStorage.removeItem('campus_os_token');
-        }
-      } catch {
-        // Network/server offline fallback: check if client explicitly holds valid user token
-        const savedToken = localStorage.getItem('campus_os_token');
-        const savedUser = localStorage.getItem('campus_os_user');
-        if (savedToken && savedUser) {
-          try {
-            const parsed = JSON.parse(savedUser);
-            if (isMounted) {
-              setCurrentUser(parsed);
-              setIsAuthenticated(true);
-              setActiveTab(parsed.role === 'user' ? 'lostfound-user' : 'dashboard');
-            }
-            return;
-          } catch {}
-        }
-        if (isMounted) {
-          setCurrentUser(null);
-          setIsAuthenticated(false);
-          localStorage.removeItem('campus_os_auth');
-          localStorage.removeItem('campus_os_user');
-          localStorage.removeItem('campus_os_token');
-        }
-      } finally {
-        if (isMounted) {
-          setIsVerifyingAuth(false);
-        }
-      }
-    };
-
-    checkSession();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+      }catch(e){if(mounted){setCurrentUser(null);setIsAuthenticated(false);}}
+      finally{if(mounted)setIsVerifyingAuth(false);}
+    })();
+    return ()=>{mounted=false;};
+  },[]);
 
   const [isSavingStudents, setIsSavingStudents] = useState<boolean>(false);
   const [lastSavedStudentsAt, setLastSavedStudentsAt] = useState<string | null>(() => {
-    return localStorage.getItem('campus_os_students_saved_at') || null;
+    return null || null;
   });
 
   useEffect(() => {
@@ -298,51 +228,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [isAuthenticated, currentUser?.role]);
 
-  // Data states starting CLEAN by default as requested
-  const [students, setStudents] = useState<Student[]>(() => {
-    const saved = localStorage.getItem('campus_os_students');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [attendance, setAttendance] = useState<AttendanceRecord[]>(() => {
-    const saved = localStorage.getItem('campus_os_attendance');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [lostFoundItems, setLostFoundItems] = useState<LostFoundItem[]>(() => {
-    const saved = localStorage.getItem('campus_os_lost_found');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [activities, setActivities] = useState<ActivityLogItem[]>(() => {
-    const saved = localStorage.getItem('campus_os_activities');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [notifications, setNotifications] = useState<NotificationItem[]>(() => {
-    const saved = localStorage.getItem('campus_os_notifications');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [conversations, setConversations] = useState<Conversation[]>(() => {
-    const saved = localStorage.getItem('campus_os_conversations');
-    return saved ? JSON.parse(saved) : [];
-  });
-
-  const [adminProfile, setAdminProfile] = useState<AdminProfile>(() => {
-    const saved = localStorage.getItem('campus_os_admin_profile');
-    return saved ? JSON.parse(saved) : defaultAdminProfile;
-  });
-
-  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(() => {
-    const saved = localStorage.getItem('campus_os_school_info');
-    return saved ? JSON.parse(saved) : defaultSchoolInfo;
-  });
-
-  const [settings, setSettings] = useState<AppSettings>(() => {
-    const saved = localStorage.getItem('campus_os_settings');
-    return saved ? JSON.parse(saved) : defaultSettings;
-  });
+  // Private records are loaded only after the server verifies the session.
+  const [students, setStudents] = useState<Student[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [lostFoundItems, setLostFoundItems] = useState<LostFoundItem[]>([]);
+  const [activities, setActivities] = useState<ActivityLogItem[]>([]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [adminProfile, setAdminProfile] = useState<AdminProfile>(defaultAdminProfile);
+  const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(defaultSchoolInfo);
+  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const hydrated = useRef(false);
+  const persisted = useRef<Record<string,string>>({});
+  const saveChain = useRef<Promise<void>>(Promise.resolve());
 
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -362,247 +260,121 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 3200);
   };
 
-  // Sync with LocalStorage
-  useEffect(() => {
-    localStorage.setItem('campus_os_auth', isAuthenticated ? 'true' : 'false');
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    localStorage.setItem('campus_os_students', JSON.stringify(students));
-  }, [students]);
-
-  useEffect(() => {
-    localStorage.setItem('campus_os_attendance', JSON.stringify(attendance));
-  }, [attendance]);
-
-  useEffect(() => {
-    localStorage.setItem('campus_os_lost_found', JSON.stringify(lostFoundItems));
-  }, [lostFoundItems]);
-
-  useEffect(() => {
-    localStorage.setItem('campus_os_activities', JSON.stringify(activities));
-  }, [activities]);
-
-  useEffect(() => {
-    localStorage.setItem('campus_os_notifications', JSON.stringify(notifications));
-  }, [notifications]);
-
-  useEffect(() => {
-    localStorage.setItem('campus_os_conversations', JSON.stringify(conversations));
-  }, [conversations]);
-
-  useEffect(() => {
-    localStorage.setItem('campus_os_admin_profile', JSON.stringify(adminProfile));
-  }, [adminProfile]);
-
-  useEffect(() => {
-    localStorage.setItem('campus_os_school_info', JSON.stringify(schoolInfo));
-  }, [schoolInfo]);
-
-  useEffect(() => {
-    localStorage.setItem('campus_os_settings', JSON.stringify(settings));
-    // Apply HTML dir and lang
-    document.documentElement.lang = settings.language;
-    document.documentElement.dir = settings.language === 'ar' ? 'rtl' : 'ltr';
-
-    // Apply dark mode class to html element
-    const isDark =
-      settings.theme === 'dark' ||
-      (settings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+  // Fetch shared server state before enabling writes, preventing initial blank state from overwriting records.
+  useEffect(()=>{
+    if(!isAuthenticated||currentUser?.role!=='admin'){
+      hydrated.current=false;
+      return;
     }
-  }, [settings]);
+    let cancelled=false;
+    (async()=>{
+      try{
+        const response=await fetch('/api/admin/state',{credentials:'include',cache:'no-store'});
+        const data=await response.json();
+        if(!response.ok||!data.success||!data.state)throw Error(data.error||'Failed to load school database');
+        if(cancelled)return;
+        const v=data.state;
+        hydrated.current=false;
+        if(Array.isArray(v.students))setStudents(v.students);
+        if(Array.isArray(v.attendance))setAttendance(v.attendance);
+        if(Array.isArray(v.lostFoundItems))setLostFoundItems(v.lostFoundItems);
+        if(Array.isArray(v.activities))setActivities(v.activities);
+        if(Array.isArray(v.notifications))setNotifications(v.notifications);
+        if(Array.isArray(v.conversations))setConversations(v.conversations);
+        if(v.adminProfile)setAdminProfile(v.adminProfile);
+        if(v.schoolInfo)setSchoolInfo(v.schoolInfo);
+        if(v.settings)setSettings(v.settings);
+        const keys=['students','attendance','lostFoundItems','activities','notifications','conversations','adminProfile','schoolInfo','settings'];
+        const defaults:any={students:[],attendance:[],lostFoundItems:[],activities:[],notifications:[],conversations:[],adminProfile:defaultAdminProfile,schoolInfo:defaultSchoolInfo,settings:defaultSettings};
+        persisted.current=Object.fromEntries(keys.map(k=>[k,JSON.stringify(v[k]??defaults[k])]));
+        setLastSavedStudentsAt(v.studentsLastSaved||null);
+        // Allow React to commit the hydrated state before syncing future changes.
+        setTimeout(()=>{if(!cancelled)hydrated.current=true;},100);
+      }catch(e:any){if(!cancelled)showToast('Server state unavailable: '+(e.message||'Unknown error'));}
+    })();
+    return ()=>{cancelled=true;hydrated.current=false;};
+  },[isAuthenticated,currentUser?.id,currentUser?.role]);
+
+  // Changes are saved to persistent private server storage; browser storage is never authoritative.
+  useEffect(()=>{
+    document.documentElement.lang=settings.language;
+    document.documentElement.dir=settings.language==='ar'?'rtl':'ltr';
+    const dark=settings.theme==='dark'||(settings.theme==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+    document.documentElement.classList.toggle('dark',dark);
+  },[settings]);
+
+  useEffect(()=>{
+    if(!isAuthenticated||currentUser?.role!=='admin'||!hydrated.current)return;
+    const snapshot:any={students,attendance,lostFoundItems,activities,notifications,conversations,adminProfile,schoolInfo,settings};
+    const changes=Object.fromEntries(Object.entries(snapshot).filter(([key,value])=>JSON.stringify(value)!==persisted.current[key]));
+    if(Object.keys(changes).length===0)return;
+    const timer=setTimeout(()=>{
+      saveChain.current=saveChain.current.then(async()=>{
+        const res=await fetch('/api/admin/state',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:changes})});
+        const raw=await res.text();let data:any={};
+        try{data=raw?JSON.parse(raw):{};}catch{throw Error('Invalid server response');}
+        if(!res.ok||!data.success)throw Error(data.error||'Server refused to save');
+        for(const [key,value] of Object.entries(changes))persisted.current[key]=JSON.stringify(value);
+      }).catch((e:any)=>{showToast('Server save failed: '+(e.message||'Unknown error'));});
+    },650);
+    return ()=>clearTimeout(timer);
+  },[students,attendance,lostFoundItems,activities,notifications,conversations,adminProfile,schoolInfo,settings,isAuthenticated,currentUser?.id,currentUser?.role]);
 
   const t = translations[settings.language] || translations.en;
 
-  const login = async (
-    u: string,
-    p: string,
-    requireAdmin = false
-  ): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: u.trim(),
-          password: p,
-          requireAdmin,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return { success: false, error: data.error || 'Authentication failed' };
-      }
-
-      if (data.success && data.user) {
-        setCurrentUser(data.user);
-        setIsAuthenticated(true);
-        if (data.token) {
-          localStorage.setItem('campus_os_token', data.token);
-        }
-        localStorage.setItem('campus_os_user', JSON.stringify(data.user));
-        localStorage.setItem('campus_os_auth', 'true');
-
-        if (data.user.role === 'admin') {
-          setActiveTab('dashboard');
-        } else {
-          setActiveTab('lostfound-user');
-        }
-
-        showToast(`Welcome back, ${data.user.displayName}!`);
-        return { success: true };
-      }
-      return { success: false, error: 'Authentication failed' };
-    } catch {
-      // Local fallback for offline mode
-      const cleanU = u.trim().toLowerCase();
-      if (cleanU === 'islamnourbouya' && p === 'islamoss1980') {
-        const adminUser: AuthUser = {
-          id: 'usr_admin_001',
-          username: 'islamnourbouya',
-          email: 'islamnourbouya@campus-os.edu',
-          role: 'admin',
-          displayName: 'Islam Nour Bouya',
-        };
-        const clientToken = `admin_tok_${Date.now()}_islamnourbouya`;
-        setCurrentUser(adminUser);
-        setIsAuthenticated(true);
-        localStorage.setItem('campus_os_user', JSON.stringify(adminUser));
-        localStorage.setItem('campus_os_auth', 'true');
-        localStorage.setItem('campus_os_token', clientToken);
-        setActiveTab('dashboard');
-        return { success: true };
-      }
-
-      if ((cleanU === 'student_user' || cleanU === 'user') && (p === 'user123' || p === 'user')) {
-        if (requireAdmin) {
-          return { success: false, error: 'Access denied: Admin credentials required.' };
-        }
-        const normalUser: AuthUser = {
-          id: 'usr_user_001',
-          username: 'student_user',
-          email: 'student@campus-os.edu',
-          role: 'user',
-          displayName: 'Sarah Connor (Student)',
-        };
-        setCurrentUser(normalUser);
-        setIsAuthenticated(true);
-        localStorage.setItem('campus_os_user', JSON.stringify(normalUser));
-        localStorage.setItem('campus_os_auth', 'true');
-        setActiveTab('lostfound-user');
-        return { success: true };
-      }
-
-      return { success: false, error: t.loginError };
-    }
+  const parseApi = async (response:Response) => {
+    const raw=await response.text();
+    try{return raw?JSON.parse(raw):{error:'Empty response from server'};}
+    catch{return {error:'Server did not return valid JSON. Please try again.'};}
   };
 
-  const register = async (
-    u: string,
-    email: string,
-    p: string,
-    displayName?: string
-  ): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: u.trim(),
-          email: email.trim(),
-          password: p,
-          displayName: displayName?.trim() || u.trim(),
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        return { success: false, error: data.error || 'Registration failed' };
-      }
-
-      if (data.success && data.user) {
-        setCurrentUser(data.user);
-        setIsAuthenticated(true);
-        if (data.token) {
-          localStorage.setItem('campus_os_token', data.token);
-        }
-        localStorage.setItem('campus_os_user', JSON.stringify(data.user));
-        localStorage.setItem('campus_os_auth', 'true');
-        setActiveTab('lostfound-user');
-        showToast('Account created successfully! Welcome to Campus OS.');
-        return { success: true };
-      }
-      return { success: false, error: 'Registration failed' };
-    } catch {
-      // Offline fallback
-      const normalUser: AuthUser = {
-        id: 'usr_' + Date.now(),
-        username: u.trim().toLowerCase(),
-        email: email.trim().toLowerCase(),
-        role: 'user',
-        displayName: displayName?.trim() || u.trim(),
-      };
-      setCurrentUser(normalUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('campus_os_user', JSON.stringify(normalUser));
-      localStorage.setItem('campus_os_auth', 'true');
-      setActiveTab('lostfound-user');
-      return { success: true };
-    }
+  const login = async (u:string,p:string,requireAdmin=false):Promise<{success:boolean;error?:string}>=>{
+    try{
+      const response=await fetch('/api/auth/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:u.trim(),password:p,requireAdmin})});
+      const data=await parseApi(response);
+      if(!response.ok||!data.success||!data.user)return {success:false,error:data.error||'Login failed'};
+      setCurrentUser(data.user);setIsAuthenticated(true);
+      setActiveTab(data.user.role==='admin'?'dashboard':'lostfound-user');
+      return {success:true};
+    }catch(e:any){return {success:false,error:'Could not connect to server. Login was not completed.'};}
   };
-
-  const logout = async () => {
-    try {
-      const token = localStorage.getItem('campus_os_token');
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-    } catch {
-      // Ignore network errors on logout
-    } finally {
-      setIsAuthenticated(false);
-      setCurrentUser(null);
-      localStorage.removeItem('campus_os_auth');
-      localStorage.removeItem('campus_os_user');
-      localStorage.removeItem('campus_os_token');
-      setActiveTab('dashboard');
-    }
+  const register = async (u:string,email:string,p:string,displayName?:string):Promise<{success:boolean;error?:string}>=>{
+    try{
+      const response=await fetch('/api/auth/register',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({username:u.trim(),email:email.trim(),password:p,displayName:displayName?.trim()||u.trim()})});
+      const data=await parseApi(response);
+      if(!response.ok||!data.success||!data.user)return {success:false,error:data.error||'Registration failed'};
+      setCurrentUser(data.user);setIsAuthenticated(true);setActiveTab('lostfound-user');return {success:true};
+    }catch(e:any){return {success:false,error:'Could not connect to server. Account was not created.'};}
+  };
+  const logout = async ()=>{
+    try{await fetch('/api/auth/logout',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:'{}'});}
+    catch{}
+    hydrated.current=false;persisted.current={};
+    setCurrentUser(null);setIsAuthenticated(false);setActiveTab('dashboard');
+    setStudents([]);setAttendance([]);setLostFoundItems([]);setActivities([]);setNotifications([]);
+    setConversations([]);setUserReports([]);setUsers([]);
   };
 
   const fetchUserReports = async () => {
     try {
-      const token = localStorage.getItem('campus_os_token');
       const res = await fetch('/api/user/reports', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.ok) {
         const text = await res.text();
         const data = text ? JSON.parse(text) : {};
         if (Array.isArray(data.reports)) {
           setUserReports(data.reports);
-          localStorage.setItem('campus_os_user_reports', JSON.stringify(data.reports));
         }
       }
-    } catch {
-      // Fallback to local
-    }
+    } catch (e) { console.error('Could not refresh server reports:',e); }
   };
 
   const fetchAdminReports = async () => {
     try {
-      const token = localStorage.getItem('campus_os_token') || (currentUser?.role === 'admin' ? `admin_tok_${Date.now()}_islamnourbouya` : '');
       const res = await fetch('/api/admin/reports', {
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(currentUser?.role === 'admin' ? { 'x-admin-user': currentUser.username } : {}),
         },
       });
       if (res.ok) {
@@ -610,7 +382,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const data = text ? JSON.parse(text) : {};
         if (Array.isArray(data.reports)) {
           setUserReports(data.reports);
-          localStorage.setItem('campus_os_user_reports', JSON.stringify(data.reports));
         }
       }
     } catch (err) {
@@ -624,13 +395,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     adminNotes?: string
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      const token = localStorage.getItem('campus_os_token') || (currentUser?.role === 'admin' ? `admin_tok_${Date.now()}_islamnourbouya` : '');
       const res = await fetch('/api/admin/reports', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(currentUser?.role === 'admin' ? { 'x-admin-user': currentUser.username } : {}),
         },
         body: JSON.stringify({ id: reportId, status, adminNotes }),
       });
@@ -651,30 +419,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { success: true };
       }
       return { success: false, error: data.error || 'Failed to update report status' };
-    } catch (err: any) {
-      setUserReports((prev) =>
-        prev.map((r) => (r.id === reportId ? { ...r, status, adminNotes } : r))
-      );
-      showToast(`Report status updated to ${status}.`);
-      return { success: true };
+    } catch (err:any) {
+      return {success:false,error:'Report status was not saved. '+(err?.message||'')};
     }
   };
 
   const fetchLostFoundFromServer = async () => {
     try {
-      const token = localStorage.getItem('campus_os_token') || (currentUser?.role === 'admin' ? `admin_tok_${Date.now()}_islamnourbouya` : '');
       const res = await fetch('/api/admin/lost-found', {
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(currentUser?.role === 'admin' ? { 'x-admin-user': currentUser.username } : {}),
         },
       });
       if (res.ok) {
         const text = await res.text();
         const data = text ? JSON.parse(text) : {};
-        if (data.success && Array.isArray(data.items) && data.items.length > 0) {
+        if (data.success && Array.isArray(data.items)) {
           setLostFoundItems(data.items);
-          localStorage.setItem('campus_os_lost_found', JSON.stringify(data.items));
         }
       }
     } catch (err) {
@@ -692,12 +452,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     contact?: string;
   }): Promise<{ success: boolean; error?: string }> => {
     try {
-      const token = localStorage.getItem('campus_os_token');
       const res = await fetch('/api/user/reports', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify(data),
       });
@@ -737,42 +495,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { success: true };
       }
       return { success: false, error: 'Failed to submit report' };
-    } catch {
-      // Offline fallback
-      const newReport: UserReport = {
-        id: 'rep_' + Date.now(),
-        userId: currentUser?.id || 'usr_user_001',
-        userEmail: currentUser?.email || 'student@campus-os.edu',
-        userName: currentUser?.displayName || 'Student User',
-        type: data.type,
-        title: data.title,
-        category: data.category,
-        description: data.description,
-        location: data.location,
-        date: data.date,
-        contact: data.contact || '',
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-      };
-      setUserReports((prev) => [newReport, ...prev]);
-
-      const linkedItem: LostFoundItem = {
-        id: newReport.id,
-        itemName: newReport.title,
-        category: (newReport.category as ItemCategory) || 'Other',
-        reportType: newReport.type,
-        status: newReport.type === 'lost' ? 'lost' : 'found',
-        location: newReport.location,
-        dateReported: newReport.date,
-        reporterName: `${newReport.userName} (${newReport.userEmail})`,
-        description: newReport.description,
-        contactInformation: newReport.contact,
-        createdAt: newReport.createdAt,
-      };
-      setLostFoundItems((prev) => [linkedItem, ...prev.filter((i) => i.id !== linkedItem.id)]);
-
-      showToast('Report submitted successfully!');
-      return { success: true };
+    } catch (e:any) {
+      return {success:false,error:'Report was not saved to server. Please retry.'};
     }
   };
 
@@ -808,13 +532,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         createdAt: s.createdAt,
       }));
 
-      const token = localStorage.getItem('campus_os_token') || (currentUser?.role === 'admin' ? `admin_tok_${Date.now()}_islamnourbouya` : '');
       const res = await fetch('/api/admin/students/export-excel', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(currentUser?.role === 'admin' ? { 'x-admin-user': currentUser.username } : {}),
         },
         body: JSON.stringify({
           students: payload,
@@ -850,24 +571,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const fetchStudentsFromServer = async () => {
     try {
-      const token = localStorage.getItem('campus_os_token') || (currentUser?.role === 'admin' ? `admin_tok_${Date.now()}_islamnourbouya` : '');
       const res = await fetch('/api/admin/students', {
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(currentUser?.role === 'admin' ? { 'x-admin-user': currentUser.username } : {}),
         },
       });
       if (res.ok) {
         const text = await res.text();
         const data = text ? JSON.parse(text) : {};
         if (data.success) {
-          if (Array.isArray(data.students) && data.students.length > 0) {
+          if (Array.isArray(data.students)) {
             setStudents(data.students);
-            localStorage.setItem('campus_os_students', JSON.stringify(data.students));
           }
           if (data.lastSavedAt) {
             setLastSavedStudentsAt(data.lastSavedAt);
-            localStorage.setItem('campus_os_students_saved_at', data.lastSavedAt);
           }
         }
       }
@@ -879,13 +595,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const saveStudentsToServer = async (): Promise<{ success: boolean; count?: number; error?: string }> => {
     setIsSavingStudents(true);
     try {
-      const token = localStorage.getItem('campus_os_token') || (currentUser?.role === 'admin' ? `admin_tok_${Date.now()}_islamnourbouya` : '');
       const res = await fetch('/api/admin/students/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(currentUser?.role === 'admin' ? { 'x-admin-user': currentUser.username } : {}),
         },
         body: JSON.stringify({ students }),
       });
@@ -906,7 +619,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
       if (data.success) {
         setLastSavedStudentsAt(data.savedAt);
-        localStorage.setItem('campus_os_students_saved_at', data.savedAt);
         logActivity('settings_updated', `Saved ${students.length} student records to the secure server database`);
         showToast(t.studentsSavedSuccess || `Successfully saved ${data.count ?? students.length} student records to the server!`);
         return { success: true, count: data.count };
@@ -924,11 +636,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const fetchAdminUsers = async () => {
     try {
-      const token = localStorage.getItem('campus_os_token') || (currentUser?.role === 'admin' ? `admin_tok_${Date.now()}_islamnourbouya` : '');
       const res = await fetch('/api/admin/users', {
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(currentUser?.role === 'admin' ? { 'x-admin-user': currentUser.username } : {}),
         },
       });
       if (res.ok) {
@@ -936,7 +645,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const data = text ? JSON.parse(text) : {};
         if (Array.isArray(data.users)) {
           setUsers(data.users);
-          localStorage.setItem('campus_os_admin_users', JSON.stringify(data.users));
         }
       }
     } catch (err) {
@@ -952,13 +660,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     role: 'admin' | 'user';
   }): Promise<{ success: boolean; error?: string; user?: AuthUser }> => {
     try {
-      const token = localStorage.getItem('campus_os_token') || (currentUser?.role === 'admin' ? `admin_tok_${Date.now()}_islamnourbouya` : '');
       const res = await fetch('/api/admin/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(currentUser?.role === 'admin' ? { 'x-admin-user': currentUser.username } : {}),
         },
         body: JSON.stringify(userData),
       });
@@ -982,31 +687,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return { success: true, user: data.user };
       }
       return { success: false, error: data.error || 'Failed to create user account' };
-    } catch (err: any) {
-      // Local fallback in case network error occurs
-      const newUser: AuthUser = {
-        id: 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-        username: userData.username.trim().toLowerCase(),
-        email: userData.email.trim().toLowerCase(),
-        role: userData.role,
-        displayName: userData.displayName.trim(),
-        createdAt: new Date().toISOString(),
-      };
-      setUsers((prev) => [newUser, ...prev]);
-      showToast(`User account '${newUser.username}' created successfully.`);
-      logActivity('settings_updated', `Created user account '${newUser.username}' with role '${newUser.role}'`);
-      return { success: true, user: newUser };
+    } catch (err:any) {
+      return {success:false,error:'Server did not create the account. '+(err?.message||'')};
     }
   };
 
   const deleteAdminUser = async (userId: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const token = localStorage.getItem('campus_os_token') || (currentUser?.role === 'admin' ? `admin_tok_${Date.now()}_islamnourbouya` : '');
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          ...(currentUser?.role === 'admin' ? { 'x-admin-user': currentUser.username } : {}),
         },
       });
 
@@ -1026,11 +716,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       showToast('User account deleted successfully.');
       logActivity('settings_updated', `Deleted user account ID '${userId}'`);
       return { success: true };
-    } catch (err: any) {
-      // Local fallback
-      setUsers((prev) => prev.filter((u) => u.id !== userId));
-      showToast('User account deleted.');
-      return { success: true };
+    } catch (err:any) {
+      return {success:false,error:'Server did not delete the account. '+(err?.message||'')};
     }
   };
 

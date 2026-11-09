@@ -54,9 +54,8 @@ export const CampusAIView: React.FC = () => {
 
   // Voice & Speech states
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
-  const [autoSpeak, setAutoSpeak] = useState<boolean>(() => {
-    return localStorage.getItem('campus_ai_auto_speak') === 'true';
-  });
+  const [autoSpeak, setAutoSpeak] = useState<boolean>(Boolean(settings.aiAssistant.autoSpeak));
+  useEffect(()=>{setAutoSpeak(Boolean(settings.aiAssistant.autoSpeak));},[settings.aiAssistant.autoSpeak]);
   const [isListening, setIsListening] = useState(false);
   const [voiceNotice, setVoiceNotice] = useState<string | null>(null);
 
@@ -112,7 +111,7 @@ export const CampusAIView: React.FC = () => {
   const handleToggleAutoSpeak = () => {
     setAutoSpeak((prev) => {
       const next = !prev;
-      localStorage.setItem('campus_ai_auto_speak', next ? 'true' : 'false');
+      updateSettings({aiAssistant:{...settings.aiAssistant,autoSpeak:next}});
       if (!next) speechController.stop();
       return next;
     });

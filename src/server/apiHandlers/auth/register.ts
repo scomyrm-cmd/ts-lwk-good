@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { db } from '../../src/server/db.js';
-import { generateToken, sanitizeInput } from '../../src/server/auth.js';
+import { db } from '../../db.js';
+import { generateToken, sanitizeInput } from '../../auth.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const origin = req.headers.origin as string;

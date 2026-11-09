@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import jwt from 'jsonwebtoken';
-import { db } from '../../src/server/db.js';
-import { JWT_SECRET, ALT_JWT_SECRET } from '../../src/server/auth.js';
+import { db } from '../../db.js';
+import { JWT_SECRET, ALT_JWT_SECRET } from '../../auth.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const origin = req.headers.origin as string;

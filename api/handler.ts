@@ -87,6 +87,18 @@ function issue(res:VercelResponse,user:User){
 const badAuth=(res:VercelResponse)=>fail(res,401,'Sign in to continue');
 const adminRequired=(res:VercelResponse)=>fail(res,403,'Administrator permission required');
 function sanitizeItems(items:any[],limit=5000){return items.slice(0,limit).map(v=>JSON.parse(JSON.stringify(v)));}
+
+function preserveReports(db:State,items:any[]){
+  const incoming=sanitizeItems(items);
+  const ids=new Set(incoming.map(x=>x.id));
+  for(const previous of db.lostFoundItems){
+    if(previous?.source==='student_report' && db.reports.some(r=>r.id===previous.id) && !ids.has(previous.id)){
+      incoming.push(previous);
+      ids.add(previous.id);
+    }
+  }
+  return incoming;
+}
 const limits=new Map<string,{n:number,until:number}>();
 function limited(req:VercelRequest,kind:string,max:number,period:number){
   const key=kind+':'+String(req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0];
@@ -178,6 +190,7 @@ async function route(req:VercelRequest,res:VercelResponse){
       const history=Array.isArray(req.body?.history)?req.body.history.slice(-12).filter((h:any)=>typeof h?.content==='string').map((h:any)=>({role:h.sender==='user'?'user':'model',parts:[{text:clean(h.content,4000)}]})):[];
       const context=admin?{students:s.students,attendance:s.attendance,lostFoundItems:s.lostFoundItems,schoolInfo:s.schoolInfo}:{
         lostFoundItems:s.lostFoundItems.map(({contactInformation,reporterName,...safe}:any)=>safe),schoolInfo:s.schoolInfo};
+      if(history.length&&history[history.length-1]?.role==='user'&&history[history.length-1]?.parts?.[0]?.text===prompt)history.pop();
       const ai=new GoogleGenAI({apiKey:process.env.GEMINI_API_KEY});
       const promptSystem=buildMultilingualSystemPrompt(context,lang)+'\nBe genuinely conversational; respond thoughtfully to follow-up questions. Never invent student records or disclose admin-only records to non-admins. Do not claim to have saved or modified data unless an API did so. Respond in the latest user language; prefer concise natural prose.';
       try{
@@ -229,7 +242,7 @@ async function route(req:VercelRequest,res:VercelResponse){
   }
   if(routeName==='admin/lost-found'&&method==='POST'){
     if(!Array.isArray(req.body?.items))return fail(res,400,'Items array required');
-    const count=await mutate(db=>{db.lostFoundItems=sanitizeItems(req.body.items);return db.lostFoundItems.length;});
+    const count=await mutate(db=>{db.lostFoundItems=preserveReports(db,req.body.items);return db.lostFoundItems.length;});
     return res.status(200).json({success:true,count});
   }
   if((routeName==='admin/students'||routeName==='admin/students/index')&&method==='GET')
@@ -260,7 +273,7 @@ async function route(req:VercelRequest,res:VercelResponse){
         const value=updates[k];
         if(['students','attendance','lostFoundItems','activities','notifications','conversations'].includes(k)) {
           if(!Array.isArray(value))throw new Error('Invalid array data for '+k);
-          (db as any)[k]=sanitizeItems(value);
+          (db as any)[k]=k==='lostFoundItems'?preserveReports(db,value):sanitizeItems(value);
         }else if(value&&typeof value==='object'&&!Array.isArray(value)) (db as any)[k]=value;
       }
       return true;

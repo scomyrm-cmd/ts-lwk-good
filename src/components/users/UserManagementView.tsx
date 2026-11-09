@@ -95,8 +95,8 @@ export const UserManagementView: React.FC = () => {
       return;
     }
 
-    if (password.length < 6) {
-      setFormError('Password must contain at least 6 characters.');
+    if (password.length < 10) {
+      setFormError('Password must contain at least 10 characters.');
       return;
     }
 

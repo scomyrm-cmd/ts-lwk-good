@@ -218,13 +218,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [lastSavedStudentsAt, setLastSavedStudentsAt] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isAuthenticated && currentUser?.role === 'admin') {
-      fetchAdminUsers();
-      fetchStudentsFromServer();
-      fetchLostFoundFromServer();
-      fetchAdminReports();
-    }
-  }, [isAuthenticated, currentUser?.role]);
+    if (!isAuthenticated || currentUser?.role !== 'admin') return;
+    fetchAdminUsers();
+    fetchStudentsFromServer();
+    fetchAdminReports();
+    // Poll for reports from other devices, so new student submissions appear automatically.
+    const timer = setInterval(()=>{fetchAdminReports();fetchLostFoundFromServer();},15000);
+    return ()=>clearInterval(timer);
+  }, [isAuthenticated,currentUser?.role,currentUser?.id]);
+
 
   // Private records are loaded only after the server verifies the session.
   const [students, setStudents] = useState<Student[]>([]);
@@ -432,6 +434,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const text = await res.text();
         const data = text ? JSON.parse(text) : {};
         if (data.success && Array.isArray(data.items)) {
+          persisted.current.lostFoundItems=JSON.stringify(data.items);
           setLostFoundItems(data.items);
         }
       }

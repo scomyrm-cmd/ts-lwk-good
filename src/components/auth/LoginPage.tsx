@@ -37,21 +37,15 @@ export const LoginPage: React.FC = () => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Switch modes cleanly
+  // Never pre-populate credentials or expose demo logins.
   const switchMode = (newMode: AuthMode) => {
     setMode(newMode);
+    setUsername('');
+    setPassword('');
+    setEmail('');
+    setConfirmPassword('');
     setError(null);
     setSuccessMsg(null);
-    if (newMode === 'admin-login') {
-      setUsername('islamnourbouya');
-      setPassword('islamoss1980');
-    } else if (newMode === 'user-login') {
-      setUsername('student_user');
-      setPassword('user123');
-    } else {
-      setUsername('');
-      setPassword('');
-    }
   };
 
   const handleLanguageChange = (lang: Language) => {
@@ -72,7 +66,7 @@ export const LoginPage: React.FC = () => {
           return;
         }
 
-        if (password.length < 6) {
+        if (password.length < 10) {
           setError('Password must be at least 6 characters long.');
           setIsLoading(false);
           return;
@@ -316,7 +310,7 @@ export const LoginPage: React.FC = () => {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder={isAdmin ? 'islamnourbouya' : 'student_user'}
+                  placeholder="Enter your username"
                   className="w-full ps-10 pe-4 py-2.5 bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
               </div>
@@ -445,20 +439,6 @@ export const LoginPage: React.FC = () => {
             </div>
           )}
 
-          {/* Demo Helper Credentials */}
-          <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-center">
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              {isAdmin ? (
-                <span>
-                  Admin Demo: <strong>islamnourbouya</strong> / <strong>islamoss1980</strong>
-                </span>
-              ) : (
-                <span>
-                  User Demo: <strong>student_user</strong> / <strong>user123</strong>
-                </span>
-              )}
-            </p>
-          </div>
         </div>
 
         {/* Security Footer */}

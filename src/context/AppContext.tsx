@@ -215,9 +215,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   },[]);
 
   const [isSavingStudents, setIsSavingStudents] = useState<boolean>(false);
-  const [lastSavedStudentsAt, setLastSavedStudentsAt] = useState<string | null>(() => {
-    return null || null;
-  });
+  const [lastSavedStudentsAt, setLastSavedStudentsAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && currentUser?.role === 'admin') {

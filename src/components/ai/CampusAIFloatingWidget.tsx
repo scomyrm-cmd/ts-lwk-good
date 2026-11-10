@@ -11,31 +11,25 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ChatMessage, Conversation } from '../../types';
-import { buildComprehensiveAISchoolContext, buildSanitizedAISchoolContext } from '../../utils/analytics';
 import { speechController } from '../../utils/speechVoice';
 
 export const CampusAIFloatingWidget: React.FC = () => {
   const {
     isAuthenticated,
     currentUser,
-    pendingAIPrompt,
-    setPendingAIPrompt,
     t,
     activeTab,
     setActiveTab,
-    students,
-    attendance,
-    lostFoundItems,
-    activities,
-    currentDate,
     conversations,
     saveConversation,
+    askCampusAI,
     settings,
     adminProfile,
   } = useApp();
 
   const isAdmin = currentUser?.role === 'admin';
   const [isOpen, setIsOpen] = useState(false);
+  const [threadId] = useState(() => crypto.randomUUID());
   const [inputPrompt, setInputPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messageLog = useRef<HTMLDivElement>(null);
@@ -46,7 +40,7 @@ export const CampusAIFloatingWidget: React.FC = () => {
   };
 
   const activeConv = conversations[0] || {
-    id: 'floating_conv',
+    id: threadId,
     title: 'School Administration Assistant',
     messages: [],
     createdAt: new Date().toISOString(),
@@ -122,7 +116,7 @@ export const CampusAIFloatingWidget: React.FC = () => {
     setInputPrompt('');
 
     const userMessage: ChatMessage = {
-      id: 'msg_' + Date.now(),
+      id: crypto.randomUUID(),
       sender: 'user',
       content: query,
       timestamp: new Date().toISOString(),
@@ -139,31 +133,11 @@ export const CampusAIFloatingWidget: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const schoolContext = settings.aiAssistant.strictPrivacyMode
-        ? buildSanitizedAISchoolContext(students, attendance, lostFoundItems, activities, currentDate)
-        : buildComprehensiveAISchoolContext(students, attendance, lostFoundItems, activities, currentDate);
-
-      const response = await fetch('/api/campus-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: query,
-          schoolContext,
-          history: updatedMessages.slice(-8),
-          language: settings.language,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Server returned ${response.status}`);
-      }
-
-      const data = await response.json();
-
+      const data = await askCampusAI(activeConv.id, query, activeConv.messages);
       const assistantMessage: ChatMessage = {
         id: 'msg_ai_' + Date.now(),
         sender: 'assistant',
-        content: data.text || 'No response generated.',
+        content: data.text,
         timestamp: new Date().toISOString(),
       };
 
@@ -191,19 +165,9 @@ export const CampusAIFloatingWidget: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (!isAdmin && pendingAIPrompt) {
-      setIsOpen(true);
-      setInputPrompt(pendingAIPrompt);
-      setPendingAIPrompt(null);
-    }
-  }, [isAdmin, pendingAIPrompt, setPendingAIPrompt]);
+  if (!isAuthenticated || !isAdmin || activeTab === 'campus-ai' || !settings.aiAssistant.enabled) return null;
 
-  if (!isAuthenticated || (isAdmin && activeTab === 'campus-ai')) return null;
-
-  const prompts = isAdmin
-    ? [t.aiSuggestedPrompt1, t.aiSuggestedPrompt2, t.aiSuggestedPrompt3]
-    : [t.aiClaimPrompt];
+  const prompts = [t.aiSuggestedPrompt1, t.aiSuggestedPrompt2, t.aiSuggestedPrompt3];
 
   return (
     <div className="fixed bottom-4 end-4 z-40 flex flex-col items-end sm:bottom-5 sm:end-5">
@@ -241,7 +205,7 @@ export const CampusAIFloatingWidget: React.FC = () => {
               <div className="flex min-h-full flex-col justify-center gap-2 py-3">
                 <p className="text-sm font-semibold">{t.aiWelcomeTitle}</p>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {isAdmin ? t.aiWelcomeSubtitle : t.portalAIDescription}
+                  {t.aiWelcomeSubtitle}
                 </p>
                 <div className="mt-3 grid gap-2">
                   {prompts.map((prompt) => (
@@ -264,7 +228,7 @@ export const CampusAIFloatingWidget: React.FC = () => {
                     <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-[10px] font-bold">
                       {isUser ? (
                         <div className="w-full h-full bg-brand-600 text-white flex items-center justify-center">
-                          {(isAdmin ? adminProfile.displayName : currentUser?.displayName || currentUser?.username || '').slice(0, 1).toUpperCase()}
+                          {adminProfile.displayName.slice(0, 1).toUpperCase()}
                         </div>
                       ) : (
                         <div className="w-full h-full bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 flex items-center justify-center">
@@ -348,7 +312,7 @@ export const CampusAIFloatingWidget: React.FC = () => {
                 type="text"
                 value={inputPrompt}
                 onChange={(e) => setInputPrompt(e.target.value)}
-                placeholder={isAdmin ? t.aiInputPlaceholder : t.portalAIDescription}
+                placeholder={t.aiInputPlaceholder}
                 aria-label={t.aiInputPlaceholder}
                 disabled={isLoading}
                 className="workspace-field min-w-0 flex-1 disabled:opacity-60"

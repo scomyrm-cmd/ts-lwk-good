@@ -60,6 +60,11 @@ export const ItemModal: React.FC<ItemModalProps> = ({
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 300_000) {
+        setErrors((previous) => ({ ...previous, image: 'Choose a PNG, JPEG, or WebP image under 300 KB.' }));
+        return;
+      }
+      setErrors((previous) => ({ ...previous, image: '' }));
       const reader = new FileReader();
       reader.onloadend = () => {
         setImageUrl(reader.result as string);
@@ -315,12 +320,13 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                 <span>Upload Image</span>
                 <input
                   type="file"
-                  accept="image/png, image/jpeg, image/jpg"
+                  accept="image/png, image/jpeg, image/webp"
                   onChange={handleImageUpload}
                   className="hidden"
                 />
               </label>
 
+              {errors.image && <p role="alert" className="mt-1 text-xs text-red-600">{errors.image}</p>}
               {imageUrl && (
                 <div className="flex items-center gap-2">
                   <img

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Settings,
   Sun,
@@ -35,8 +35,42 @@ export const SettingsView: React.FC = () => {
     seedDemoData,
     clearAllSchoolData,
     clearAllConversations,
+    changePassword,
     t,
   } = useApp();
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [nextPassword, setNextPassword] = useState('');
+  const [passwordNotice, setPasswordNotice] = useState<{ ok: boolean; message: string } | null>(null);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [configuredModel, setConfiguredModel] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (settingsSubTab !== 'ai-settings') return;
+    const request = new AbortController();
+    void fetch('/api/campus-ai', { signal: request.signal, cache: 'no-store' }).then(async (response) => {
+      if (!response.ok) return;
+      const data = await response.json();
+      if (!request.signal.aborted) setConfiguredModel(data.configured ? data.model : null);
+    }).catch(() => {});
+    return () => request.abort();
+  }, [settingsSubTab]);
+
+  const savePassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setChangingPassword(true);
+    setPasswordNotice(null);
+    const result = await changePassword(currentPassword, nextPassword);
+    setChangingPassword(false);
+    setPasswordNotice({
+      ok: result.success,
+      message: result.success ? 'Password updated. Other sessions were signed out.' : result.error || 'Password update failed.',
+    });
+    if (result.success) {
+      setCurrentPassword('');
+      setNextPassword('');
+    }
+  };
 
   // Local form states
   const [profileDisplayName, setProfileDisplayName] = useState(adminProfile.displayName);
@@ -621,52 +655,30 @@ export const SettingsView: React.FC = () => {
                   {t.tabSecurity}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Demo security notes and credentials configuration
+                  Manage the password for this administrator account.
                 </p>
               </div>
 
-              <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 text-xs space-y-2">
-                <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold">
-                  <Shield className="w-4 h-4" />
-                  <span>Single-Tenant Demo Security Notice</span>
+              <form className="grid max-w-md gap-4" onSubmit={savePassword}>
+                <div>
+                  <label className="auth-label" htmlFor="current-admin-password">Current password</label>
+                  <input id="current-admin-password" type="password" autoComplete="current-password" className="workspace-field" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} required />
                 </div>
-                <p className="text-amber-700 dark:text-amber-400 leading-relaxed">
-                  The current credentials (<strong>admin / admin</strong>) are designed for local demo and testing evaluation only.
-                  Before public or production rollout, connect server-verified authentication (such as Supabase Auth with Role-Based Access Control) to verify administrative privileges server-side.
-                </p>
-              </div>
-
-              {/* Password change mock */}
-              <div className="space-y-4 pt-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                  Change Demo Password (Simulation)
-                </h4>
-                <div className="space-y-3 max-w-md">
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">Current Password</label>
-                    <input
-                      type="password"
-                      defaultValue="admin"
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-500 mb-1">New Password</label>
-                    <input
-                      type="password"
-                      placeholder="Enter new administrator password"
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => alert('Password updated in demo session.')}
-                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-medium cursor-pointer"
-                  >
-                    Update Password
-                  </button>
+                <div>
+                  <label className="auth-label" htmlFor="next-admin-password">New password</label>
+                  <input id="next-admin-password" type="password" autoComplete="new-password" className="workspace-field" value={nextPassword} onChange={(event) => setNextPassword(event.target.value)} minLength={14} required />
+                  <p className="mt-1 text-xs text-slate-500">{t.adminPasswordHint}</p>
                 </div>
-              </div>
+                {passwordNotice && (
+                  <p role={passwordNotice.ok ? 'status' : 'alert'} className={passwordNotice.ok ? 'text-sm text-brand-700 dark:text-brand-300' : 'text-sm text-red-700 dark:text-red-300'}>
+                    {passwordNotice.message}
+                  </p>
+                )}
+                <button type="submit" className="workspace-button workspace-button-primary justify-self-start" disabled={changingPassword}>
+                  <Lock size={16} aria-hidden="true" />
+                  {changingPassword ? t.loading : 'Update password'}
+                </button>
+              </form>
             </div>
           )}
 
@@ -678,7 +690,7 @@ export const SettingsView: React.FC = () => {
                   Campus AI Configuration
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Configure Google Gemini model parameters, strict privacy mode, and conversation memory
+                  Manage access to Campus AI and saved conversation history.
                 </p>
               </div>
 
@@ -707,10 +719,10 @@ export const SettingsView: React.FC = () => {
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                      Zero-PII Privacy Protection Mode
+                      Student data privacy
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Enforce strict sanitization of all school data before querying AI. Never sends student names or phone numbers.
+                      Campus OS reads student records on the server. Gemini receives selected attendance statistics with known identifiers removed.
                     </p>
                   </div>
                   <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
@@ -726,7 +738,7 @@ export const SettingsView: React.FC = () => {
                     <input
                       type="text"
                       disabled
-                      value="models/gemini-3.8-flash"
+                      value={configuredModel || 'Unavailable'}
                       className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono cursor-not-allowed"
                     />
                   </div>
@@ -738,11 +750,22 @@ export const SettingsView: React.FC = () => {
                     <input
                       type="text"
                       disabled
-                      value="/api/campus-ai (Full-Stack Proxy)"
+                      value="/api/campus-ai"
                       className="w-full px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-mono cursor-not-allowed"
                     />
                   </div>
                 </div>
+
+                <label className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-4 text-sm dark:border-slate-800">
+                  Save conversation history
+                  <input
+                    type="checkbox"
+                    checked={settings.aiAssistant.saveHistory}
+                    onChange={(event) => updateSettings({
+                      aiAssistant: { ...settings.aiAssistant, saveHistory: event.target.checked },
+                    })}
+                  />
+                </label>
 
                 <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                   <span className="text-xs text-slate-400">

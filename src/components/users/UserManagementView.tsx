@@ -97,8 +97,9 @@ export const UserManagementView: React.FC = () => {
       return;
     }
 
-    if (password.length < 10) {
-      setFormError('Password must contain at least 10 characters.');
+    const minimum = role === 'admin' ? 14 : 10;
+    if (password.length < minimum || new TextEncoder().encode(password).length > 72) {
+      setFormError(`Use at least ${minimum} characters and at most 72 UTF-8 bytes for the password.`);
       return;
     }
 
@@ -478,12 +479,12 @@ export const UserManagementView: React.FC = () => {
                     id="create-user-password"
                     type={showPassword ? 'text' : 'password'}
                     required
-                    minLength={10}
+                    minLength={role === 'admin' ? 14 : 10}
                     maxLength={200}
                     autoComplete="new-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t.passwordMinLength}
+                    placeholder={role === 'admin' ? t.adminPasswordHint : t.passwordMinLength}
                     className="workspace-field pe-12"
                   />
                   <button

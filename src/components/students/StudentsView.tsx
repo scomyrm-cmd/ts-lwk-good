@@ -40,7 +40,6 @@ export const StudentsView: React.FC = () => {
     isSavingStudents,
     lastSavedStudentsAt,
     saveStudentsToServer,
-    fetchStudentsFromServer,
     addStudent,
     showToast,
     settings,
@@ -126,7 +125,7 @@ export const StudentsView: React.FC = () => {
                   firstName: s.firstName,
                   lastName: s.lastName,
                   className: s.className || 'Grade 10-A',
-                  gender: s.gender || 'other',
+                  gender: ['Male', 'Female', 'Other'].includes(s.gender) ? s.gender : 'Other',
                   dateOfBirth: s.dateOfBirth || '',
                   guardianContact: s.guardianContact || '',
                   notes: s.notes || 'Imported via file',
@@ -467,7 +466,7 @@ export const StudentsView: React.FC = () => {
                                   type="button"
                                   onClick={() => {
                                     setActionMenuOpenId(null);
-                                    openAIChat(`Tell me everything about student ${student.firstName} ${student.lastName} (${student.studentId}), including attendance record and guardian contact.`);
+                                    openAIChat(`Summarize the attendance and school record for student ${student.firstName} ${student.lastName} (${student.studentId}).`);
                                   }}
                                   className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 cursor-pointer font-medium"
                                 >
@@ -531,7 +530,8 @@ export const StudentsView: React.FC = () => {
         onConfirm={async () => {
           setIsExportingExcel(true);
           try {
-            await exportStudentsToExcel(selectedClass, selectedStatus);
+            const result = await exportStudentsToExcel(selectedClass, selectedStatus);
+            if (!result.success) showToast(result.error || 'Student export failed.');
           } finally {
             setIsExportingExcel(false);
             setIsExportConfirmOpen(false);

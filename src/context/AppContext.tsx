@@ -9,6 +9,7 @@ import {
   AdminProfile,
   SchoolInfo,
   AppSettings,
+  ChatMessage,
   Conversation,
   Language,
   AuthUser,
@@ -21,6 +22,9 @@ interface AppContextType {
   isVerifyingAuth: boolean;
   isAuthenticated: boolean;
   currentUser: AuthUser | null;
+  adminDataStatus: 'loading' | 'ready' | 'unavailable';
+  setUpAdministrator: (code: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  changePassword: (currentPassword: string, password: string) => Promise<{ success: boolean; error?: string }>;
   login: (u: string, p: string, requireAdmin?: boolean) => Promise<{ success: boolean; error?: string }>;
   register: (u: string, email: string, p: string, displayName?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
@@ -29,7 +33,7 @@ interface AppContextType {
   userReports: UserReport[];
   fetchUserReports: () => Promise<void>;
   fetchAdminReports: () => Promise<void>;
-  updateAdminReportStatus: (reportId: string, status: 'pending' | 'reviewed' | 'resolved', notes?: string) => Promise<{ success: boolean; error?: string }>;
+  updateAdminReportStatus: (reportId: string, status: 'pending' | 'reviewed' | 'resolved', notes?: string, publish?: boolean) => Promise<{ success: boolean; error?: string }>;
   submitUserReport: (data: {
     type: 'lost' | 'found';
     title: string;
@@ -48,7 +52,6 @@ interface AppContextType {
   isSavingStudents: boolean;
   lastSavedStudentsAt: string | null;
   saveStudentsToServer: () => Promise<{ success: boolean; count?: number; error?: string }>;
-  fetchStudentsFromServer: () => Promise<void>;
 
   // Admin User Management
   users: AuthUser[];
@@ -116,6 +119,7 @@ interface AppContextType {
 
   // Chat Conversations & AI Navigation
   saveConversation: (conv: Conversation) => void;
+  askCampusAI: (id: string, prompt: string, history: ChatMessage[]) => Promise<{ text: string; source: string }>;
   deleteConversation: (id: string) => void;
   clearAllConversations: () => void;
   pendingAIPrompt: string | null;
@@ -185,6 +189,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isVerifyingAuth, setIsVerifyingAuth] = useState<boolean>(true);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const sessionUser = useRef<AuthUser | null>(null);
+  const [adminDataStatus, setAdminDataStatus] = useState<AppContextType['adminDataStatus']>('loading');
 
   const [userReports, setUserReports] = useState<UserReport[]>([]);
   const [users, setUsers] = useState<AuthUser[]>([]);
@@ -202,9 +208,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const response = await fetch('/api/auth/me', {credentials:'include',cache:'no-store'});
         const data = await response.json();
         if(mounted && response.ok && data.authenticated && data.user) {
-          setCurrentUser(data.user);
-          setIsAuthenticated(true);
-          setActiveTab(data.user.role==='admin'?'dashboard':'lostfound-user');
+          startSession(data.user);
         } else if(mounted) {
           setCurrentUser(null);setIsAuthenticated(false);
         }
@@ -220,7 +224,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (!isAuthenticated || currentUser?.role !== 'admin') return;
     fetchAdminUsers();
-    fetchStudentsFromServer();
     fetchAdminReports();
     // Poll for reports from other devices, so new student submissions appear automatically.
     const timer = setInterval(()=>{fetchAdminReports();fetchLostFoundFromServer();},15000);
@@ -239,8 +242,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(defaultSchoolInfo);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const hydrated = useRef(false);
-  const persisted = useRef<Record<string,string>>({});
+  const persisted = useRef<Record<string, string>>({});
+  const versions = useRef<Record<string, string>>({});
   const saveChain = useRef<Promise<void>>(Promise.resolve());
+  const preferenceChain = useRef<Promise<void>>(Promise.resolve());
+  const latestState = useRef<Record<string, unknown>>({});
+  latestState.current = { students, attendance, lostFoundItems, activities, notifications, adminProfile, schoolInfo, settings };
 
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -260,40 +267,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 3200);
   };
 
-  // Fetch shared server state before enabling writes, preventing initial blank state from overwriting records.
-  useEffect(()=>{
-    if(!isAuthenticated||currentUser?.role!=='admin'){
-      hydrated.current=false;
-      return;
-    }
-    let cancelled=false;
-    (async()=>{
-      try{
-        const response=await fetch('/api/admin/state',{credentials:'include',cache:'no-store'});
-        const data=await response.json();
-        if(!response.ok||!data.success||!data.state)throw Error(data.error||'Failed to load school database');
-        if(cancelled)return;
-        const v=data.state;
-        hydrated.current=false;
-        if(Array.isArray(v.students))setStudents(v.students);
-        if(Array.isArray(v.attendance))setAttendance(v.attendance);
-        if(Array.isArray(v.lostFoundItems))setLostFoundItems(v.lostFoundItems);
-        if(Array.isArray(v.activities))setActivities(v.activities);
-        if(Array.isArray(v.notifications))setNotifications(v.notifications);
-        if(Array.isArray(v.conversations))setConversations(v.conversations);
-        if(v.adminProfile)setAdminProfile(v.adminProfile);
-        if(v.schoolInfo)setSchoolInfo(v.schoolInfo);
-        if(v.settings)setSettings(v.settings);
-        const keys=['students','attendance','lostFoundItems','activities','notifications','conversations','adminProfile','schoolInfo','settings'];
-        const defaults:any={students:[],attendance:[],lostFoundItems:[],activities:[],notifications:[],conversations:[],adminProfile:defaultAdminProfile,schoolInfo:defaultSchoolInfo,settings:defaultSettings};
-        persisted.current=Object.fromEntries(keys.map(k=>[k,JSON.stringify(v[k]??defaults[k])]));
-        setLastSavedStudentsAt(v.studentsLastSaved||null);
-        // Allow React to commit the hydrated state before syncing future changes.
-        setTimeout(()=>{if(!cancelled)hydrated.current=true;},100);
-      }catch(e:any){if(!cancelled)showToast('Server state unavailable: '+(e.message||'Unknown error'));}
+  useEffect(() => {
+    if (!isAuthenticated || currentUser?.role !== 'admin') return;
+    const request = new AbortController();
+    setAdminDataStatus('loading');
+    hydrated.current = false;
+    void (async () => {
+      try {
+        const response = await fetch('/api/admin/state', { credentials: 'include', cache: 'no-store', signal: request.signal });
+        const data = await response.json();
+        if (!response.ok || !data.success || !data.state || !data.versions) throw new Error('School data could not be loaded');
+        if (request.signal.aborted) return;
+        const value = data.state;
+        const nextSettings = {
+          ...defaultSettings, ...value.settings,
+          notifications: { ...defaultSettings.notifications, ...value.settings?.notifications },
+          aiAssistant: { ...defaultSettings.aiAssistant, ...value.settings?.aiAssistant, strictPrivacyMode: true },
+        };
+        const next = {
+          students: value.students ?? [], attendance: value.attendance ?? [], lostFoundItems: value.lostFoundItems ?? [],
+          activities: value.activities ?? [], notifications: value.notifications ?? [],
+          adminProfile: { ...defaultAdminProfile, ...value.adminProfile }, schoolInfo: { ...defaultSchoolInfo, ...value.schoolInfo },
+          settings: nextSettings,
+        };
+        persisted.current = Object.fromEntries(Object.entries(next).map(([key, record]) => [key, JSON.stringify(record)]));
+        versions.current = data.versions;
+        setStudents(next.students);
+        setAttendance(next.attendance);
+        setLostFoundItems(next.lostFoundItems);
+        setActivities(next.activities);
+        setNotifications(next.notifications);
+        setConversations(data.conversations ?? []);
+        setAdminProfile(next.adminProfile);
+        setSchoolInfo(next.schoolInfo);
+        setSettings(next.settings);
+        setLastSavedStudentsAt(value.studentsLastSaved ?? null);
+        hydrated.current = true;
+        setAdminDataStatus('ready');
+      } catch {
+        if (!request.signal.aborted) setAdminDataStatus('unavailable');
+      }
     })();
-    return ()=>{cancelled=true;hydrated.current=false;};
-  },[isAuthenticated,currentUser?.id,currentUser?.role]);
+    return () => {
+      request.abort();
+      hydrated.current = false;
+    };
+  }, [isAuthenticated, currentUser?.id, currentUser?.role]);
 
   useEffect(() => {
     document.documentElement.lang = settings.language;
@@ -312,23 +331,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => preference.removeEventListener('change', syncTheme);
   }, [settings.theme]);
 
-  // Changes are saved to persistent private server storage; browser storage is never authoritative.
-  useEffect(()=>{
-    if(!isAuthenticated||currentUser?.role!=='admin'||!hydrated.current)return;
-    const snapshot:any={students,attendance,lostFoundItems,activities,notifications,conversations,adminProfile,schoolInfo,settings};
-    const changes=Object.fromEntries(Object.entries(snapshot).filter(([key,value])=>JSON.stringify(value)!==persisted.current[key]));
-    if(Object.keys(changes).length===0)return;
-    const timer=setTimeout(()=>{
-      saveChain.current=saveChain.current.then(async()=>{
-        const res=await fetch('/api/admin/state',{method:'PUT',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({state:changes})});
-        const raw=await res.text();let data:any={};
-        try{data=raw?JSON.parse(raw):{};}catch{throw Error('Invalid server response');}
-        if(!res.ok||!data.success)throw Error(data.error||'Server refused to save');
-        for(const [key,value] of Object.entries(changes))persisted.current[key]=JSON.stringify(value);
-      }).catch((e:any)=>{showToast('Server save failed: '+(e.message||'Unknown error'));});
-    },650);
-    return ()=>clearTimeout(timer);
-  },[students,attendance,lostFoundItems,activities,notifications,conversations,adminProfile,schoolInfo,settings,isAuthenticated,currentUser?.id,currentUser?.role]);
+  function flushServerChanges() {
+    const account = sessionUser.current;
+    if (account?.role !== 'admin' || !hydrated.current) return Promise.resolve();
+    const task = saveChain.current.then(async () => {
+      if (sessionUser.current?.id !== account.id || !hydrated.current) return;
+      const changes = Object.fromEntries(Object.entries(latestState.current)
+        .filter(([key, value]) => JSON.stringify(value) !== persisted.current[key]));
+      if (!Object.keys(changes).length) return;
+      const base = Object.fromEntries(Object.keys(changes).map((key) => [key, versions.current[key]]));
+      const response = await fetch('/api/admin/state', {
+        method: 'PUT', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ state: changes, versions: base }),
+      });
+      const result = await parseApi(response);
+      if (!response.ok || !result.success) throw new Error(result.error || 'Server save failed');
+      if (sessionUser.current?.id !== account.id) return;
+      Object.assign(versions.current, result.versions);
+      for (const [key, value] of Object.entries(changes)) persisted.current[key] = JSON.stringify(value);
+    });
+    saveChain.current = task.catch(() => {});
+    return task;
+  }
+
+  useEffect(() => {
+    if (!isAuthenticated || currentUser?.role !== 'admin' || adminDataStatus !== 'ready') return;
+    const timer = setTimeout(() => {
+      void flushServerChanges().catch((error: Error) => showToast('Unsaved changes: ' + error.message));
+    }, 650);
+    return () => clearTimeout(timer);
+  }, [students, attendance, lostFoundItems, activities, notifications, adminProfile, schoolInfo, settings,
+    isAuthenticated, currentUser?.id, currentUser?.role, adminDataStatus]);
 
   const t = translations[settings.language] || translations.en;
 
@@ -338,33 +371,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     catch{return {error:'Server did not return valid JSON. Please try again.'};}
   };
 
-  const login = async (u:string,p:string,requireAdmin=false):Promise<{success:boolean;error?:string}>=>{
-    try{
-      const response=await fetch('/api/auth/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:u.trim(),password:p,requireAdmin})});
-      const data=await parseApi(response);
-      if(!response.ok||!data.success||!data.user)return {success:false,error:data.error||'Login failed'};
-      setCurrentUser(data.user);setIsAuthenticated(true);
-      setActiveTab(data.user.role==='admin'?'dashboard':'lostfound-user');
-      return {success:true};
-    }catch(e:any){return {success:false,error:'Could not connect to server. Login was not completed.'};}
-  };
-  const register = async (u:string,email:string,p:string,displayName?:string):Promise<{success:boolean;error?:string}>=>{
-    try{
-      const response=await fetch('/api/auth/register',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({username:u.trim(),email:email.trim(),password:p,displayName:displayName?.trim()||u.trim()})});
-      const data=await parseApi(response);
-      if(!response.ok||!data.success||!data.user)return {success:false,error:data.error||'Registration failed'};
-      setCurrentUser(data.user);setIsAuthenticated(true);setActiveTab('lostfound-user');return {success:true};
-    }catch(e:any){return {success:false,error:'Could not connect to server. Account was not created.'};}
-  };
-  const logout = async ()=>{
-    try{await fetch('/api/auth/logout',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:'{}'});}
-    catch{}
-    hydrated.current=false;persisted.current={};
-    setCurrentUser(null);setIsAuthenticated(false);setActiveTab('dashboard');
-    setStudents([]);setAttendance([]);setLostFoundItems([]);setActivities([]);setNotifications([]);
-    setConversations([]);setUserReports([]);setUsers([]);setPendingAIPrompt(null);
+  function startSession(user: AuthUser) {
+    sessionUser.current = user;
+    setCurrentUser(user);
+    setIsAuthenticated(true);
+    setAdminDataStatus('loading');
+    setActiveTab(user.role === 'admin' ? 'dashboard' : 'lostfound-user');
+    if (user.role === 'user' && user.language) setSettings((previous) => ({ ...previous, language: user.language! }));
+  }
+
+  async function authRequest(path: string, body: Record<string, string | boolean>, establishSession: boolean) {
+    try {
+      const response = await fetch(path, {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const result = await parseApi(response);
+      if (!response.ok || !result.success || (establishSession && !result.user)) {
+        return { success: false, error: result.error || 'Authentication request failed' };
+      }
+      if (establishSession) {
+        startSession(result.user);
+        window.history.replaceState(null, '', result.user.role === 'admin' ? '/admin' : '/');
+      }
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Could not connect to the server. Please try again.' };
+    }
+  }
+
+  const login = (username: string, password: string, requireAdmin = false) =>
+    authRequest('/api/auth/login', { username: username.trim(), password, requireAdmin }, true);
+
+  const register = (username: string, email: string, password: string, displayName?: string) =>
+    authRequest('/api/auth/register', { username: username.trim(), email: email.trim(), password, displayName: displayName?.trim() || username.trim() }, true);
+
+  const setUpAdministrator = (code: string, password: string) =>
+    authRequest('/api/auth/admin-setup', { code: code.trim(), password }, true);
+
+  const changePassword = (currentPassword: string, password: string) =>
+    authRequest('/api/auth/password', { currentPassword, password }, false);
+
+  const logout = async () => {
+    try {
+      const saved = await flushServerChanges().then(() => true, () => false);
+      await preferenceChain.current;
+      const result = await authRequest('/api/auth/logout', {}, false);
+      if (!result.success) throw new Error(result.error);
+      window.history.replaceState(null, '', sessionUser.current?.role === 'admin' ? '/admin/login' : '/');
+      sessionUser.current = null;
+      hydrated.current = false;
+      persisted.current = {};
+      versions.current = {};
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+      setActiveTab('dashboard');
+      setStudents([]);
+      setAttendance([]);
+      setLostFoundItems([]);
+      setActivities([]);
+      setNotifications([]);
+      setConversations([]);
+      setUserReports([]);
+      setUsers([]);
+      setPendingAIPrompt(null);
+      setAdminProfile(defaultAdminProfile);
+      setSchoolInfo(defaultSchoolInfo);
+      setSettings((previous) => ({ ...defaultSettings, language: previous.language }));
+      if (!saved) showToast('Signed out. Some pending edits could not be saved.');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Sign-out failed. Please try again.');
+    }
   };
 
   const fetchUserReports = async () => {
@@ -402,53 +479,49 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateAdminReportStatus = async (
     reportId: string,
     status: 'pending' | 'reviewed' | 'resolved',
-    adminNotes?: string
-  ): Promise<{ success: boolean; error?: string }> => {
+    adminNotes?: string,
+    publish = false,
+  ) => {
     try {
+      if (publish) await flushServerChanges();
       const res = await fetch('/api/admin/reports', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: reportId, status, adminNotes }),
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: reportId, status, adminNotes, publish }),
       });
-
-      const text = await res.text();
-      let data: any = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch {
-        data = {};
-      }
-
-      if (res.ok && data.success) {
-        setUserReports((prev) =>
-          prev.map((r) => (r.id === reportId ? { ...r, status, adminNotes } : r))
-        );
-        showToast(`Report status marked as ${status}.`);
-        return { success: true };
-      }
-      return { success: false, error: data.error || 'Failed to update report status' };
-    } catch (err:any) {
-      return {success:false,error:'Report status was not saved. '+(err?.message||'')};
+      const result = await parseApi(res);
+      if (!res.ok || !result.success || !result.report) throw new Error(result.error || 'Report update failed');
+      setUserReports((previous) => previous.map((report) => report.id === reportId ? result.report : report));
+      if (publish) await fetchLostFoundFromServer();
+      showToast(publish ? 'Report added to the official catalog.' : 'Report status saved.');
+      return { success: true };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Report update failed';
+      showToast(message);
+      return { success: false, error: message };
     }
   };
 
   const fetchLostFoundFromServer = async (signal?: AbortSignal) => {
+    const account = sessionUser.current;
+    if (!account) return;
+    const admin = account.role === 'admin';
+    const base = versions.current.lostFoundItems;
     try {
-      const response = await fetch('/api/admin/lost-found', {
-        credentials: 'include',
-        cache: 'no-store',
-        signal,
+      const response = await fetch(admin ? '/api/admin/lost-found' : '/api/user/lost-found', {
+        credentials: 'include', cache: 'no-store', signal,
       });
       if (!response.ok || signal?.aborted) return;
       const data = await response.json();
-      if (!signal?.aborted && data.success && Array.isArray(data.items)) {
-        if (currentUser?.role === 'admin') persisted.current.lostFoundItems = JSON.stringify(data.items);
-        setLostFoundItems(data.items);
+      if (signal?.aborted || sessionUser.current?.id !== account.id || !data.success || !Array.isArray(data.items)) return;
+      if (admin) {
+        if (!hydrated.current || versions.current.lostFoundItems !== base ||
+          JSON.stringify(latestState.current.lostFoundItems) !== persisted.current.lostFoundItems) return;
+        versions.current.lostFoundItems = data.version;
+        persisted.current.lostFoundItems = JSON.stringify(data.items);
       }
-    } catch (error) {
-      if (!signal?.aborted) console.error('Failed to fetch lost and found items:', error);
+      setLostFoundItems(data.items);
+    } catch {
+      if (!signal?.aborted) showToast('The lost-and-found catalog could not be refreshed.');
     }
   };
 
@@ -485,23 +558,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (result.report) {
         setUserReports((prev) => [result.report, ...prev]);
 
-        // Auto-mirror to lost & found items so the school administration and catalogs see it immediately
-        const linkedItem: LostFoundItem = {
-          id: result.report.id,
-          itemName: result.report.title,
-          category: (result.report.category as ItemCategory) || 'Other',
-          reportType: result.report.type,
-          status: result.report.type === 'lost' ? 'lost' : 'found',
-          location: result.report.location,
-          dateReported: result.report.date,
-          reporterName: `${result.report.userName} (${result.report.userEmail})`,
-          description: result.report.description,
-          contactInformation: result.report.contact,
-          createdAt: result.report.createdAt,
-        };
-        setLostFoundItems((prev) => [linkedItem, ...prev.filter((i) => i.id !== linkedItem.id)]);
-
-        showToast('Report submitted successfully! Administration has been notified.');
+        showToast('Report saved. The administration can review it.');
         return { success: true };
       }
       return { success: false, error: 'Failed to submit report' };
@@ -510,135 +567,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const exportStudentsToExcel = async (
-    filterClass?: string,
-    filterStatus?: string
-  ): Promise<{ success: boolean; error?: string }> => {
+  const exportStudentsToExcel = async (filterClass?: string, filterStatus?: string) => {
     try {
-      const todayRecords = attendance.filter((a) => a.date === currentDate);
-      const attMap = new Map<string, string>();
-      todayRecords.forEach((r) => attMap.set(r.studentId, r.status));
-
-      const filtered = students.filter((s) => {
-        const matchesClass = !filterClass || filterClass === 'all' || s.className === filterClass;
-        const sStatus = attMap.get(s.studentId) || 'unmarked';
-        const matchesStatus = !filterStatus || filterStatus === 'all' || sStatus === filterStatus;
-        return matchesClass && matchesStatus;
+      await flushServerChanges();
+      const response = await fetch('/api/admin/students/export-excel', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filterClass, filterStatus, date: currentDate, confirmed: true }),
       });
-
-      const payload = filtered.map((s) => ({
-        id: s.id,
-        studentId: s.studentId,
-        firstName: s.firstName,
-        lastName: s.lastName,
-        className: s.className,
-        gender: s.gender,
-        dateOfBirth: s.dateOfBirth,
-        guardianContact: s.guardianContact,
-        todayStatus: attMap.get(s.studentId) || 'Unmarked',
-        attendanceRatePercent: '96',
-        totalAbsences: 1,
-        notes: s.notes,
-        createdAt: s.createdAt,
-      }));
-
-      const res = await fetch('/api/admin/students/export-excel', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          students: payload,
-          schoolName: schoolInfo.name,
-          filterClass,
-          filterStatus,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Export failed' }));
-        return { success: false, error: err.error || 'Server error during export' };
+      if (!response.ok) {
+        const error = await parseApi(response);
+        throw new Error(error.error || 'Export failed');
       }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `CampusOS_Student_Registry_${currentDate}.xlsx`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      logActivity('settings_updated', `Exported ${filtered.length} student records as Microsoft Excel (.xlsx)`);
-      showToast(`Exported ${filtered.length} students to Excel (.xlsx) successfully.`);
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `CampusOS_Student_Registry_${currentDate}.xlsx`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      const count = response.headers.get('X-Campus-Export-Count');
+      logActivity('settings_updated', 'Exported the student registry to Excel');
+      showToast(count ? `Exported ${count} students to Excel.` : 'Student registry exported to Excel.');
       return { success: true };
-    } catch (err: any) {
-      console.error('Export error:', err);
-      return { success: false, error: err.message || 'Export failed' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Export failed' };
     }
   };
 
-  const fetchStudentsFromServer = async () => {
-    try {
-      const res = await fetch('/api/admin/students', {
-        headers: {
-        },
-      });
-      if (res.ok) {
-        const text = await res.text();
-        const data = text ? JSON.parse(text) : {};
-        if (data.success) {
-          if (Array.isArray(data.students)) {
-            setStudents(data.students);
-          }
-          if (data.lastSavedAt) {
-            setLastSavedStudentsAt(data.lastSavedAt);
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch students from server:', err);
-    }
-  };
-
-  const saveStudentsToServer = async (): Promise<{ success: boolean; count?: number; error?: string }> => {
+  const saveStudentsToServer = async () => {
     setIsSavingStudents(true);
     try {
+      await flushServerChanges();
+      const value = latestState.current.students;
       const res = await fetch('/api/admin/students/save', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ students }),
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ students: value, version: versions.current.students }),
       });
-
-      const text = await res.text();
-      let data: any = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch {
-        data = { error: text || 'Failed to parse server response' };
-      }
-
-      if (!res.ok) {
-        const errMsg = data.error || 'Failed to save students to server';
-        showToast(errMsg);
-        return { success: false, error: errMsg };
-      }
-
-      if (data.success) {
-        setLastSavedStudentsAt(data.savedAt);
-        logActivity('settings_updated', `Saved ${students.length} student records to the secure server database`);
-        showToast(t.studentsSavedSuccess || `Successfully saved ${data.count ?? students.length} student records to the server!`);
-        return { success: true, count: data.count };
-      }
-
-      return { success: false, error: 'Failed to save students to server' };
-    } catch (err: any) {
-      const errMsg = err.message || 'Network error saving students to server';
-      showToast(errMsg);
-      return { success: false, error: errMsg };
+      const data = await parseApi(res);
+      if (!res.ok || !data.success) throw new Error(data.error || 'Student records could not be saved');
+      versions.current.students = data.version;
+      persisted.current.students = JSON.stringify(value);
+      setLastSavedStudentsAt(data.savedAt);
+      showToast(t.studentsSavedSuccess);
+      return { success: true, count: data.count };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Student records could not be saved';
+      showToast(message);
+      return { success: false, error: message };
     } finally {
       setIsSavingStudents(false);
     }
@@ -705,9 +679,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const deleteAdminUser = async (userId: string): Promise<{ success: boolean; error?: string }> => {
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
-        method: 'DELETE',
-        headers: {
-        },
+        method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+        body: '{}',
       });
 
       const text = await res.text();
@@ -757,7 +730,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addStudent = (data: Omit<Student, 'id' | 'createdAt'>): Student => {
     const newStudent: Student = {
       ...data,
-      id: 'stu_' + Date.now(),
+      id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
     };
     setStudents((prev) => [newStudent, ...prev]);
@@ -852,7 +825,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const addLostFoundItem = (data: Omit<LostFoundItem, 'id' | 'createdAt' | 'status'> & { status?: LostFoundItem['status'] }) => {
     const newItem: LostFoundItem = {
       ...data,
-      id: 'lf_' + Date.now(),
+      id: crypto.randomUUID(),
       status: data.status || (data.reportType === 'lost' ? 'lost' : 'found'),
       createdAt: new Date().toISOString(),
     };
@@ -958,8 +931,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSettings = (newSettings: Partial<AppSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
-    showToast('Preferences updated.');
+    setSettings((previous) => ({ ...previous, ...newSettings }));
+    const language = newSettings.language;
+    const account = sessionUser.current;
+    if (language && account?.role === 'user') {
+      preferenceChain.current = preferenceChain.current.then(async () => {
+        if (sessionUser.current?.id !== account.id) return;
+        const response = await fetch('/api/user/preferences', {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ language }),
+        });
+        if (!response.ok) throw new Error('Language preference could not be saved');
+      }).catch(() => showToast('Language preference could not be saved.'));
+    }
+  };
+
+  const askCampusAI = async (id: string, prompt: string, history: ChatMessage[]) => {
+    await flushServerChanges();
+    const response = await fetch('/api/campus-ai', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        conversationId: id, prompt, language: settings.language,
+        history: history.filter(({ sender, isError }) => sender !== 'system' && !isError)
+          .slice(-10).map(({ sender, content }) => ({ sender, content: content.slice(0, 6000) })),
+      }),
+    });
+    const data = await parseApi(response);
+    if (!response.ok || typeof data.text !== 'string' || !data.text) throw new Error(data.error || 'Campus AI is unavailable');
+    return { text: data.text as string, source: data.source as string };
   };
 
   const saveConversation = (conv: Conversation) => {
@@ -974,14 +972,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const deleteConversation = (id: string) => {
-    setConversations((prev) => prev.filter((c) => c.id !== id));
-  };
+  async function removeConversations(id?: string) {
+    try {
+      const response = await fetch('/api/admin/conversations', {
+        method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
+      });
+      const data = await parseApi(response);
+      if (!response.ok || !data.success) throw new Error(data.error || 'Conversation history could not be changed');
+      setConversations((previous) => id ? previous.filter((conversation) => conversation.id !== id) : []);
+      if (!id) showToast('AI conversation history cleared.');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Conversation history could not be changed.');
+    }
+  }
 
-  const clearAllConversations = () => {
-    setConversations([]);
-    showToast('AI conversation history cleared.');
-  };
+  const deleteConversation = (id: string) => { void removeConversations(id); };
+  const clearAllConversations = () => { void removeConversations(); };
 
   // Seed realistic demo data when requested by user in settings
   const seedDemoData = () => {
@@ -1079,6 +1085,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isVerifyingAuth,
         isAuthenticated,
         currentUser,
+        adminDataStatus,
+        setUpAdministrator,
+        changePassword,
         login,
         register,
         logout,
@@ -1092,7 +1101,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isSavingStudents,
         lastSavedStudentsAt,
         saveStudentsToServer,
-        fetchStudentsFromServer,
         users,
         fetchAdminUsers,
         createAdminUser,
@@ -1131,6 +1139,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateSchoolInfo,
         updateSettings,
         saveConversation,
+        askCampusAI,
         deleteConversation,
         clearAllConversations,
         pendingAIPrompt,

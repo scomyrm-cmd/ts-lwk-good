@@ -1,0 +1,244 @@
+import assert from 'node:assert/strict';
+import { registerHooks } from 'node:module';
+import { test } from 'node:test';
+import ExcelJS from 'exceljs';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+type MockBlob = { etag: string; json: string };
+const blobs = new Map<string, MockBlob>();
+let revision = 0;
+let providerRequests: Array<{ model: string; contents: unknown; config: { systemInstruction: string } }> = [];
+
+process.env.BLOB_READ_WRITE_TOKEN = 'isolated-storage-fixture';
+process.env.JWT_SECRET = 'isolated-test-signing-key-at-least-thirty-two-characters';
+process.env.GEMINI_API_KEY = 'isolated-provider-fixture';
+process.env.CAMPUS_ADMIN_USERNAME = 'qa_owner';
+process.env.CAMPUS_ADMIN_SETUP_CODE = 'first-one-time-setup-code-for-local-test-123456789';
+process.env.VERCEL_ENV = 'production';
+delete process.env.VERCEL;
+
+const mock = {
+  async get(path: string, options: { access: string; useCache: boolean }) {
+    assert.equal(options.access, 'private');
+    assert.equal(options.useCache, false);
+    const record = blobs.get(path);
+    return record ? { statusCode: 200, blob: { etag: record.etag }, stream: new Response(record.json).body } : null;
+  },
+  async put(path: string, json: string, options: { ifMatch?: string; allowOverwrite: boolean; access: string }) {
+    assert.equal(options.access, 'private');
+    await new Promise((resolve) => setTimeout(resolve, 1));
+    const current = blobs.get(path);
+    if (options.ifMatch && current?.etag !== options.ifMatch) {
+      const conflict = new Error('ETag changed');
+      conflict.name = 'BlobPreconditionFailedError';
+      throw conflict;
+    }
+    if (!options.allowOverwrite && current) throw new Error('Blob already exists');
+    blobs.set(path, { etag: String(++revision), json });
+  },
+  provider(args: (typeof providerRequests)[number]) {
+    providerRequests.push(args);
+    const instruction = args.config.systemInstruction;
+    const text = instruction.includes('Moroccan Darija') ? 'هادي خلاصة الحضور.' :
+      instruction.includes('Answer in French') ? 'Voici le bilan de présence.' : 'Here is the attendance summary.';
+    return { text };
+  },
+};
+Object.assign(globalThis, { campusTestDoubles: mock });
+
+const source = (code: string) => 'data:text/javascript,' + encodeURIComponent(code);
+const storage = source('export const { get, put } = globalThis.campusTestDoubles;');
+const provider = source('export class GoogleGenAI { models = { generateContent: globalThis.campusTestDoubles.provider } }');
+registerHooks({
+  resolve(specifier, context, next) {
+    if (specifier === '@vercel/blob') return { url: storage, shortCircuit: true };
+    if (specifier === '@google/genai') return { url: provider, shortCircuit: true };
+    return next(specifier, context);
+  },
+});
+
+const { default: handle } = await import('../api/handler.js');
+const { digest } = await import('../src/server/security.js');
+const { schoolDate } = await import('../src/server/records.js');
+
+const host = 'campus.example.test';
+const origin = 'https://' + host;
+const student = {
+  id: 'student-record', studentId: 'STU-42', firstName: 'Maya', lastName: 'River',
+  className: 'Form 2', dateOfBirth: '2012-08-03', guardianContact: '+212 677 123 456',
+  notes: '=HYPERLINK("https://example.invalid","Open")', createdAt: '2025-09-02',
+};
+const today = schoolDate();
+const reports = [
+  { type: 'lost', title: '<img src=x onerror=alert(1)>', category: 'Books', location: 'Library', date: today, description: 'Fixture report' },
+  { type: 'found', title: 'Blue water bottle', category: 'Accessories', location: 'Gym', date: today, description: 'Fixture report' },
+];
+
+async function api(name: string, method = 'GET', body?: unknown, cookie?: string, extra: Record<string, string> = {}, ip = '192.0.2.1') {
+  const headers: Record<string, string> = { host, ...(cookie && { cookie }), ...extra };
+  if (body !== undefined && !headers['content-type']) headers['content-type'] = 'application/json';
+  const response = {
+    code: 200, headers: {} as Record<string, string>, data: null as any,
+    status(code: number) { this.code = code; return this; },
+    setHeader(key: string, value: string) { this.headers[key.toLowerCase()] = value; return this; },
+    json(data: unknown) { this.data = data; return this; },
+    send(data: unknown) { this.data = data; return this; },
+    end() { return this; },
+  };
+  const request = { method, query: { route: name }, body, headers, socket: { remoteAddress: ip } };
+  await handle(request as unknown as VercelRequest, response as unknown as VercelResponse);
+  return response;
+}
+
+function session(response: Awaited<ReturnType<typeof api>>) {
+  const value = response.headers['set-cookie'];
+  assert.match(value, /HttpOnly; Secure; SameSite=Lax/);
+  return value.split(';')[0];
+}
+
+test('server roles, private persistence, controlled catalog, export, AI, and rotation', async () => {
+  const guest = await api('admin/entry');
+  assert.equal(guest.code, 302);
+  assert.equal(guest.headers.location, '/admin/login');
+  assert.equal((await api('admin/state')).code, 401);
+  assert.equal((await api('auth/login', 'GET')).code, 405);
+  assert.equal((await api('auth/login', 'POST', {}, undefined, { origin: 'https://untrusted.test' })).code, 403);
+  const preflight = await api('auth/login', 'OPTIONS', undefined, undefined, {
+    origin, 'access-control-request-method': 'POST', 'access-control-request-headers': 'content-type',
+  });
+  assert.equal(preflight.code, 204);
+  assert.equal(preflight.headers['access-control-allow-origin'], origin);
+  assert.equal((await api('auth/login', 'OPTIONS', undefined, undefined, {
+    origin: 'https://untrusted.test', 'access-control-request-method': 'POST',
+  })).code, 403);
+
+  const setup = await api('auth/admin-setup', 'POST', {
+    code: process.env.CAMPUS_ADMIN_SETUP_CODE, password: 'qa-owner-first-private-passphrase',
+  });
+  assert.equal(setup.code, 200);
+  const admin = session(setup);
+  assert.equal((await api('admin/entry', 'GET', undefined, admin)).headers.location, '/');
+  assert.equal((await api('auth/admin-setup', 'POST', {
+    code: process.env.CAMPUS_ADMIN_SETUP_CODE, password: 'qa-owner-another-private-passphrase',
+  })).code, 409);
+
+  const base = (await api('admin/state', 'GET', undefined, admin)).data;
+  assert.equal('sessions' in base.state, false);
+  assert.equal('users' in base.state, false);
+  assert.equal('adminSetupFingerprint' in base.state, false);
+  const saved = await api('admin/state', 'PUT', {
+    state: {
+      students: [student],
+      attendance: [{ id: 'attendance-1', studentId: student.studentId, date: today, status: 'absent', updatedAt: new Date().toISOString() }],
+    },
+    versions: base.versions,
+  }, admin, { origin });
+  assert.equal(saved.code, 200);
+  assert.equal((await api('admin/state', 'PUT', { state: { students: [] }, versions: base.versions }, admin)).code, 409);
+  assert.equal((await api('admin/state', 'PUT', {
+    state: { students: [{ ...student, id: '' }] }, versions: saved.data.versions,
+  }, admin)).code, 400);
+
+  const extra = await api('admin/users', 'POST', {
+    username: 'qa_secondary', email: 'secondary@example.invalid', displayName: 'QA Secondary',
+    password: 'qa-secondary-private-passphrase', role: 'admin',
+  }, admin);
+  assert.equal(extra.code, 201);
+  const secondary = session(await api('auth/login', 'POST', {
+    username: 'qa_secondary', password: 'qa-secondary-private-passphrase', requireAdmin: true,
+  }));
+
+  const userData = {
+    username: 'qa_student', email: 'student@example.invalid', displayName: 'QA Student', password: 'qa-student-private-passphrase',
+  };
+  assert.equal((await api('auth/register', 'POST', { ...userData, role: 'admin' })).code, 400);
+  const learner = session(await api('auth/register', 'POST', userData));
+  const second = session(await api('auth/register', 'POST', { ...userData, username: 'qa_other', email: 'other@example.invalid' }));
+  assert.equal((await api('admin/entry', 'GET', undefined, learner)).code, 403);
+  assert.equal((await api('admin/lost-found', 'GET', undefined, learner)).code, 403);
+  assert.equal((await api('admin/students/export-excel', 'POST', { confirmed: true }, learner)).code, 403);
+  assert.equal((await api('campus-ai', 'POST', { prompt: 'hi', conversationId: 'test' }, learner)).code, 403);
+  assert.equal((await api('user/preferences', 'PATCH', { language: 'ar', role: 'admin' }, learner)).code, 400);
+  assert.equal((await api('user/preferences', 'PATCH', { language: 'ar' }, learner)).code, 200);
+  assert.equal((await api('auth/me', 'GET', undefined, learner)).data.user.language, 'ar');
+
+  const submitted = await Promise.all(reports.map((report) => api('user/reports', 'POST', report, learner)));
+  assert.deepEqual(submitted.map(({ code }) => code), [201, 201]);
+  assert.equal((await api('user/reports', 'GET', undefined, learner)).data.reports.length, 2);
+  assert.equal((await api('user/reports', 'GET', undefined, second)).data.reports.length, 0);
+  assert.equal((await api('admin/reports', 'GET', undefined, admin)).data.reports.length, 2);
+  assert.equal((await api('user/lost-found', 'GET', undefined, learner)).data.items.length, 0);
+  const published = await api('admin/reports', 'PATCH', { id: submitted[0].data.report.id, status: 'reviewed', publish: true }, admin);
+  assert.equal(published.code, 200);
+  const item = (await api('user/lost-found', 'GET', undefined, learner)).data.items[0];
+  assert.equal(item.itemName, reports[0].title);
+  assert.equal('contactInformation' in item, false);
+  assert.equal('reporterName' in item, false);
+
+  assert.equal((await api('admin/students/export-excel', 'POST', {}, admin)).code, 400);
+  const exportResult = await api('admin/students/export-excel', 'POST', { confirmed: true, filterStatus: 'absent', date: today }, admin);
+  assert.equal(exportResult.code, 200);
+  assert.equal(exportResult.headers['x-campus-export-count'], '1');
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(exportResult.data);
+  const sheet = workbook.worksheets[0];
+  assert.equal(sheet.getCell('B5').value, 'Maya River');
+  assert.equal(sheet.getCell('H5').value, 0);
+  assert.equal(sheet.getCell('I5').value, 1);
+  assert.equal(sheet.getCell('J5').value, "'" + student.notes);
+  assert.equal(sheet.getCell('E5').value instanceof Date, true);
+  const privateState = () => JSON.parse(blobs.get('campus-os/private/state.json')!.json);
+  assert.equal(privateState().auditEvents.some((entry: any) =>
+    entry.actorId === setup.data.user.id && entry.type === 'student_export_xlsx' && entry.at), true);
+
+  const thread = 'fixture-thread';
+  providerRequests = [];
+  const reply = await api('campus-ai', 'POST', {
+    conversationId: thread, prompt: 'Summarize student Maya River STU-42 and the guardian contact', language: 'fr',
+  }, admin);
+  assert.equal(reply.code, 200);
+  assert.equal(reply.data.detectedLanguage, 'en');
+  assert.equal(reply.data.source, 'gemini-api');
+  assert.match(reply.data.text, /Maya River \(STU-42\)/);
+  const followup = await api('campus-ai', 'POST', { conversationId: thread, prompt: 'Et quel est son bilan ?', language: 'en' }, admin);
+  assert.equal(followup.data.detectedLanguage, 'fr');
+  assert.match(followup.data.text, /Maya River/);
+  const darija = await api('campus-ai', 'POST', { conversationId: thread, prompt: 'عطيني الغياب ديالها', language: 'en' }, admin);
+  assert.equal(darija.data.detectedLanguage, 'darija');
+  assert.match(darija.data.text, /Maya River/);
+  const outbound = JSON.stringify(providerRequests);
+  for (const identifier of [student.firstName, student.lastName, student.studentId, student.dateOfBirth, student.guardianContact, student.notes]) {
+    assert.equal(outbound.includes(identifier), false);
+  }
+  assert.equal((await api('admin/state', 'GET', undefined, admin)).data.conversations[0].messages.length, 6);
+  assert.equal((await api('admin/state', 'GET', undefined, secondary)).data.conversations.length, 0);
+
+  process.env.CAMPUS_ADMIN_SETUP_CODE = 'different-one-time-setup-code-for-local-test-987654';
+  const retiredPassword = 'qa-owner-first-private-passphrase';
+  process.env.CAMPUS_REJECTED_ADMIN_PASSWORD_SHA256 = digest(retiredPassword);
+  assert.equal((await api('auth/login', 'POST', { username: 'qa_owner', password: retiredPassword, requireAdmin: true })).code, 401);
+  const replacement = await api('auth/admin-setup', 'POST', {
+    code: process.env.CAMPUS_ADMIN_SETUP_CODE, password: 'qa-owner-new-private-passphrase',
+  });
+  assert.equal(replacement.data.user.id, setup.data.user.id);
+  const newAdmin = session(replacement);
+  assert.equal((await api('admin/state', 'GET', undefined, admin)).code, 401);
+  assert.equal((await api('admin/state', 'GET', undefined, secondary)).code, 401);
+  assert.equal((await api('admin/state', 'GET', undefined, newAdmin)).data.state.students[0].id, student.id);
+  assert.equal(privateState().users.find((user: any) => user.id === extra.data.user.id).disabledAt != null, true);
+
+  assert.equal((await api('auth/logout', 'POST', {}, newAdmin)).code, 200);
+  assert.equal((await api('auth/me', 'GET', undefined, newAdmin)).data.authenticated, false);
+  assert.equal((await api('admin/state', 'GET', undefined, newAdmin)).code, 401);
+});
+
+test('distributed rate counters survive separate requests and reject oversized bodies', async () => {
+  for (let attempt = 1; attempt <= 12; attempt++) {
+    assert.equal((await api('auth/login', 'POST', {}, undefined, {}, '192.0.2.202')).code, 400);
+  }
+  const rejected = await api('auth/login', 'POST', {}, undefined, {}, '192.0.2.202');
+  assert.equal(rejected.code, 429);
+  assert.ok(Number(rejected.headers['retry-after']) > 0);
+  assert.ok([...blobs.keys()].some((key) => key.includes('/limits/login/')));
+  assert.equal((await api('auth/login', 'POST', { password: 'x'.repeat(9000) })).code, 413);
+});

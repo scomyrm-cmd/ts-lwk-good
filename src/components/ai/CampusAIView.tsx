@@ -17,20 +17,15 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ChatMessage, Conversation } from '../../types';
-import { buildComprehensiveAISchoolContext, buildSanitizedAISchoolContext } from '../../utils/analytics';
 import { speechController } from '../../utils/speechVoice';
 import { ReportModal } from './ReportModal';
 import { WorkspaceAvatar } from '../common/WorkspaceUI';
 
 export const CampusAIView: React.FC = () => {
   const {
-    students,
-    attendance,
-    lostFoundItems,
-    activities,
-    currentDate,
     conversations,
     saveConversation,
+    askCampusAI,
     deleteConversation,
     clearAllConversations,
     adminProfile,
@@ -42,7 +37,7 @@ export const CampusAIView: React.FC = () => {
   } = useApp();
 
   const [activeConvId, setActiveConvId] = useState<string>(() => {
-    return conversations[0]?.id || 'conv_' + Date.now();
+    return conversations[0]?.id || crypto.randomUUID();
   });
 
   const [inputPrompt, setInputPrompt] = useState('');
@@ -103,7 +98,7 @@ export const CampusAIView: React.FC = () => {
   }, [pendingAIPrompt]);
 
   const handleStartNewChat = () => {
-    const newId = 'conv_' + Date.now();
+    const newId = crypto.randomUUID();
     setActiveConvId(newId);
     setSidebarOpen(false);
     setInputPrompt('');
@@ -188,7 +183,7 @@ export const CampusAIView: React.FC = () => {
     setInputPrompt('');
 
     const userMessage: ChatMessage = {
-      id: 'msg_' + Date.now(),
+      id: crypto.randomUUID(),
       sender: 'user',
       content: query,
       timestamp: new Date().toISOString(),
@@ -206,45 +201,11 @@ export const CampusAIView: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Build school administration context with full student intelligence
-      const schoolContext = settings.aiAssistant.strictPrivacyMode
-        ? buildSanitizedAISchoolContext(
-            students,
-            attendance,
-            lostFoundItems,
-            activities,
-            currentDate
-          )
-        : buildComprehensiveAISchoolContext(
-            students,
-            attendance,
-            lostFoundItems,
-            activities,
-            currentDate
-          );
-
-      const response = await fetch('/api/campus-ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: query,
-          schoolContext,
-          history: updatedMessages.slice(-8),
-          language: settings.language,
-        }),
-      });
-
-      if (!response.ok) {
-        const errJson = await response.json().catch(() => ({}));
-        throw new Error(errJson.error || `Server responded with ${response.status}`);
-      }
-
-      const data = await response.json();
-
+      const data = await askCampusAI(activeConv.id, query, activeConv.messages);
       const assistantMessage: ChatMessage = {
         id: 'msg_ai_' + Date.now(),
         sender: 'assistant',
-        content: data.text || 'No response generated.',
+        content: data.text,
         timestamp: new Date().toISOString(),
       };
 

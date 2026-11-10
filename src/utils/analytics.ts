@@ -402,23 +402,16 @@ export function formatDateWithPattern(dateStr: string, format: DateFormat): stri
 }
 
 export function exportToCSV(filename: string, headers: string[], rows: (string | number)[][]) {
-  const escapeCsv = (val: string | number) => {
-    const str = String(val ?? '');
-    if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-      return `"${str.replace(/"/g, '""')}"`;
-    }
-    return str;
+  const escapeCsv = (value: string | number) => {
+    const text = String(value ?? '');
+    const safe = /^[=+\-@\t\r]/.test(text.trimStart()) || /^[\t\r]/.test(text) ? "'" + text : text;
+    return '"' + safe.replace(/"/g, '""') + '"';
   };
-
-  const csvContent =
-    'data:text/csv;charset=utf-8,\uFEFF' +
-    [headers.map(escapeCsv).join(','), ...rows.map((row) => row.map(escapeCsv).join(','))].join('\n');
-
-  const encodedUri = encodeURI(csvContent);
+  const csv = [headers, ...rows].map((row) => row.map(escapeCsv).join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob(['\uFEFF', csv], { type: 'text/csv;charset=utf-8' }));
   const link = document.createElement('a');
-  link.setAttribute('href', encodedUri);
-  link.setAttribute('download', `${filename}.csv`);
-  document.body.appendChild(link);
+  link.href = url;
+  link.download = filename + '.csv';
   link.click();
-  document.body.removeChild(link);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }

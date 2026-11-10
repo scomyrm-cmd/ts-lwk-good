@@ -11,7 +11,6 @@ import {
   Tag,
   MapPin,
   Calendar,
-  Sparkles,
   Eye,
   Info,
   X,
@@ -22,7 +21,7 @@ import { EmptyState } from '../common/EmptyState';
 import { WorkspaceDialog } from '../common/WorkspaceDialog';
 import { CampusBrand, LanguageControl, WorkspaceAvatar, WorkspaceHeader } from '../common/WorkspaceUI';
 
-type PortalTab = 'catalog' | 'report' | 'my-reports' | 'ai';
+type PortalTab = 'catalog' | 'report' | 'my-reports';
 
 export const UserPortalView: React.FC = () => {
   const {
@@ -33,7 +32,6 @@ export const UserPortalView: React.FC = () => {
     fetchUserReports,
     fetchLostFoundFromServer,
     submitUserReport,
-    openAIChat,
     t,
   } = useApp();
 
@@ -130,7 +128,6 @@ export const UserPortalView: React.FC = () => {
     { id: 'catalog', label: t.lostFoundCatalog, icon: PackageSearch },
     { id: 'report', label: t.submitReport, icon: PlusCircle },
     { id: 'my-reports', label: t.myReports, icon: FileText },
-    { id: 'ai', label: t.navCampusAI, icon: Sparkles },
   ] as const;
 
   const userName = currentUser?.displayName || currentUser?.username || '';
@@ -567,22 +564,6 @@ export const UserPortalView: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 4: CAMPUS AI ASSISTANT FOR STUDENTS */}
-        {activeTab === 'ai' && (
-          <div className="workspace-page max-w-3xl">
-            <WorkspaceHeader title={t.navCampusAI} description={t.portalAIDescription} />
-            <div className="workspace-panel p-5">
-              <button
-                type="button"
-                onClick={() => openAIChat(t.aiClaimPrompt)}
-                className="workspace-button workspace-button-primary"
-              >
-                <Sparkles size={16} />
-                {t.openAssistant}
-              </button>
-            </div>
-          </div>
-        )}
       </main>
 
       {/* Item Details Modal */}

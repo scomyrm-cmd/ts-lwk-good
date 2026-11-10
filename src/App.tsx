@@ -64,7 +64,7 @@ function Toast({ message }: { message: string | null }) {
 }
 
 const MainLayout: React.FC = () => {
-  const { isVerifyingAuth, isAuthenticated, currentUser, activeTab, setActiveTab, toastMessage, t } = useApp();
+  const { isVerifyingAuth, isAuthenticated, currentUser, adminDataStatus, logout, activeTab, setActiveTab, toastMessage, t } = useApp();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Quick Action Modals
@@ -92,7 +92,7 @@ const MainLayout: React.FC = () => {
 
   // Strictly enforce authentication - unauthorized link copying cannot bypass!
   if (!isAuthenticated || !currentUser) {
-    return <LoginPage />;
+    return <><LoginPage /><Toast message={toastMessage} /></>;
   }
 
   // 1. Role = 'user' (Normal User Portal)
@@ -100,9 +100,33 @@ const MainLayout: React.FC = () => {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors text-slate-900 dark:text-slate-100 antialiased">
         <UserPortalView />
-        <CampusAIFloatingWidget />
         <Toast message={toastMessage} />
       </div>
+    );
+  }
+
+  if (adminDataStatus !== 'ready') {
+    return (
+      <main className="grid min-h-svh place-items-center p-4">
+        <div className="workspace-panel flex max-w-sm flex-col items-start gap-4 p-6">
+          <CampusBrand />
+          {adminDataStatus === 'loading' ? (
+            <p role="status" className="flex items-center gap-2 text-sm">
+              <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
+              {t.loading}
+            </p>
+          ) : (
+            <>
+              <p role="alert" className="text-sm">School records could not be loaded from the server.</p>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className="workspace-button workspace-button-primary" onClick={() => window.location.reload()}>Try again</button>
+                <button type="button" className="workspace-button" onClick={logout}>{t.logout}</button>
+              </div>
+            </>
+          )}
+        </div>
+        <Toast message={toastMessage} />
+      </main>
     );
   }
 

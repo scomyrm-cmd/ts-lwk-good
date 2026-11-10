@@ -10,7 +10,7 @@ export interface StudentExportItem {
   dateOfBirth?: string;
   guardianContact?: string;
   todayStatus?: string;
-  attendanceRatePercent?: number | string;
+  attendanceRatePercent?: number | null;
   totalAbsences?: number;
   notes?: string;
   createdAt?: string;
@@ -41,6 +41,12 @@ export async function generateStudentsExcelWorkbook(options: {
   workbook.lastModifiedBy = options.exportedBy;
   workbook.created = new Date();
   workbook.modified = new Date();
+
+  const excelDate = (value?: string) => {
+    if (!value) return null;
+    const date = new Date(value.slice(0, 10) + 'T00:00:00Z');
+    return Number.isFinite(date.valueOf()) ? date : null;
+  };
 
   const worksheet = workbook.addWorksheet('Student Registry', {
     pageSetup: { paperSize: 9, orientation: 'landscape' },
@@ -128,18 +134,20 @@ export async function generateStudentsExcelWorkbook(options: {
       sanitizeExcelCell(`${s.firstName} ${s.lastName}`.trim()),
       sanitizeExcelCell(s.className),
       sanitizeExcelCell(s.gender || 'Not specified'),
-      sanitizeExcelCell(s.dateOfBirth || '-'),
+      excelDate(s.dateOfBirth),
       sanitizeExcelCell(s.guardianContact || '-'),
       sanitizeExcelCell(s.todayStatus ? s.todayStatus.toUpperCase() : 'UNMARKED'),
-      sanitizeExcelCell(typeof s.attendanceRatePercent === 'number' ? `${s.attendanceRatePercent}%` : s.attendanceRatePercent || '100%'),
+      s.attendanceRatePercent == null ? null : s.attendanceRatePercent / 100,
       sanitizeExcelCell(s.totalAbsences ?? 0),
       sanitizeExcelCell(s.notes || '-'),
-      sanitizeExcelCell(s.createdAt ? s.createdAt.split('T')[0] : options.exportDate),
+      excelDate(s.createdAt),
     ];
 
     values.forEach((val, vIdx) => {
       const cell = row.getCell(vIdx + 1);
       cell.value = val;
+      if (vIdx === 4 || vIdx === 10) cell.numFmt = 'yyyy-mm-dd';
+      if (vIdx === 7) cell.numFmt = '0%';
       cell.font = { name: 'Calibri', size: 10, color: { argb: 'FF0F172A' } };
       cell.fill = {
         type: 'pattern',

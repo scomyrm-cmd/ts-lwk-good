@@ -10,3 +10,10 @@ coverage/
 .playwright-cli/
 .data/
 .aistudio/
+
+# Local database snapshots, backups, and credentials.
+backups/
+*.bak
+*.sqlite*
+*.pem
+*.key

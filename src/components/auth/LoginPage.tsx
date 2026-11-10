@@ -1,9 +1,13 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { AlertCircle, ArrowRight, Eye, EyeOff, GraduationCap, LoaderCircle, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { CampusBrand, LanguageControl } from '../common/WorkspaceUI';
 
-type AuthMode = 'user-login' | 'user-register' | 'admin-login';
+type AuthMode = 'user-login' | 'user-register' | 'admin-login' | 'admin-setup';
+
+function routeMode(): AuthMode {
+  return window.location.pathname.replace(/\/$/, '') === '/admin/login' ? 'admin-login' : 'user-login';
+}
 
 function CampusIllustration() {
   return (
@@ -21,37 +25,56 @@ function CampusIllustration() {
 }
 
 export function LoginPage() {
-  const { login, register, t } = useApp();
-  const [mode, setMode] = useState<AuthMode>('user-login');
+  const { login, register, setUpAdministrator, t } = useApp();
+  const [mode, setMode] = useState<AuthMode>(routeMode);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [setupCode, setSetupCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const isAdmin = mode === 'admin-login';
+  const isSettingUp = mode === 'admin-setup';
+  const isAdmin = mode === 'admin-login' || isSettingUp;
   const isRegistering = mode === 'user-register';
+  const isNewPassword = isRegistering || isSettingUp;
 
-  const switchMode = (nextMode: AuthMode) => {
-    if (nextMode === mode) return;
-    setMode(nextMode);
+  const resetForm = () => {
     setUsername('');
     setEmail('');
     setDisplayName('');
     setPassword('');
     setConfirmPassword('');
     setShowPassword(false);
+    setSetupCode('');
     setError(null);
   };
+
+  const switchMode = (nextMode: AuthMode) => {
+    if (nextMode === mode) return;
+    const path = nextMode.startsWith('admin-') ? '/admin/login' : '/';
+    if (window.location.pathname !== path) window.history.pushState(null, '', path);
+    resetForm();
+    setMode(nextMode);
+  };
+
+  useEffect(() => {
+    const onPopState = () => {
+      resetForm();
+      setMode(routeMode());
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
-    if (isRegistering && password !== confirmPassword) {
+    if (isNewPassword && password !== confirmPassword) {
       setError(t.passwordMismatch);
       return;
     }
@@ -60,9 +83,11 @@ export function LoginPage() {
     setIsLoading(true);
 
     try {
-      const result = isRegistering
-        ? await register(username.trim(), email.trim(), password, displayName.trim())
-        : await login(username.trim(), password, isAdmin);
+      const result = isSettingUp
+        ? await setUpAdministrator(setupCode, password)
+        : isRegistering
+          ? await register(username.trim(), email.trim(), password, displayName.trim())
+          : await login(username.trim(), password, isAdmin);
       if (!result.success) setError(result.error || fallback);
     } catch (err) {
       setError(err instanceof Error ? err.message : fallback);
@@ -90,9 +115,9 @@ export function LoginPage() {
 
         <main className="auth-content">
           <div className="auth-form">
-            <h1 className="auth-heading">{isRegistering ? t.registerTitle : isAdmin ? t.adminPortal : t.loginTitle}</h1>
+            <h1 className="auth-heading">{isSettingUp ? t.adminSetupTitle : isRegistering ? t.registerTitle : isAdmin ? t.adminPortal : t.loginTitle}</h1>
             <p className="auth-description">
-              {isRegistering ? t.registerDescription : isAdmin ? t.adminSignInDescription : t.signInDescription}
+              {isSettingUp ? t.adminSetupDescription : isRegistering ? t.registerDescription : isAdmin ? t.adminSignInDescription : t.signInDescription}
             </p>
 
             <div className="auth-modes">
@@ -133,21 +158,28 @@ export function LoginPage() {
                 </>
               )}
 
-              <div>
-                <label className="auth-label" htmlFor="username">{isRegistering ? t.username : t.loginIdentity}</label>
-                <input
-                  className="workspace-field"
-                  id="username"
-                  type="text"
-                  autoComplete="username"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  maxLength={isRegistering ? 70 : 100}
-                  required
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                />
-              </div>
+              {isSettingUp ? (
+                <div>
+                  <label className="auth-label" htmlFor="setupCode">{t.adminSetupCode}</label>
+                  <input className="workspace-field" id="setupCode" type="password" autoComplete="off" required maxLength={256} value={setupCode} onChange={(event) => setSetupCode(event.target.value)} />
+                </div>
+              ) : (
+                <div>
+                  <label className="auth-label" htmlFor="username">{isRegistering ? t.username : t.loginIdentity}</label>
+                  <input
+                    className="workspace-field"
+                    id="username"
+                    type="text"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    maxLength={isRegistering ? 70 : 100}
+                    required
+                    value={username}
+                    onChange={(event) => setUsername(event.target.value)}
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="auth-label" htmlFor="password">{t.passwordLabel}</label>
@@ -156,9 +188,9 @@ export function LoginPage() {
                     className="workspace-field pe-12"
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    autoComplete={isRegistering ? 'new-password' : 'current-password'}
-                    aria-describedby={isRegistering ? 'password-guidance' : undefined}
-                    minLength={isRegistering ? 10 : undefined}
+                    autoComplete={isNewPassword ? 'new-password' : 'current-password'}
+                    aria-describedby={isNewPassword ? 'password-guidance' : undefined}
+                    minLength={isSettingUp ? 14 : isRegistering ? 10 : undefined}
                     maxLength={200}
                     required
                     value={password}
@@ -173,10 +205,10 @@ export function LoginPage() {
                     {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
-                {isRegistering && <p id="password-guidance" className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t.passwordMinLength}</p>}
+                {isNewPassword && <p id="password-guidance" className="mt-1 text-xs text-slate-500 dark:text-slate-400">{isSettingUp ? t.adminPasswordHint : t.passwordMinLength}</p>}
               </div>
 
-              {isRegistering && (
+              {isNewPassword && (
                 <div>
                   <label className="auth-label" htmlFor="confirmPassword">{t.confirmPasswordLabel}</label>
                   <input
@@ -192,23 +224,21 @@ export function LoginPage() {
               )}
 
               <button type="submit" disabled={isLoading} className="workspace-button workspace-button-primary mt-1 min-h-11">
-                {isLoading ? t.loading : isRegistering ? t.registerBtn : t.loginButton}
+                {isLoading ? t.loading : isSettingUp ? t.adminSetupSubmit : isRegistering ? t.registerBtn : t.loginButton}
                 {isLoading ? <LoaderCircle size={17} className="animate-spin" /> : <ArrowRight size={17} className="rtl:rotate-180" />}
               </button>
             </form>
 
-            {!isAdmin && (
-              <div className="auth-footer">
-                <button
-                  type="button"
-                  disabled={isLoading}
-                  className="workspace-link"
-                  onClick={() => switchMode(isRegistering ? 'user-login' : 'user-register')}
-                >
-                  {isRegistering ? t.alreadyHaveAccount : t.needAccount}
-                </button>
-              </div>
-            )}
+            <div className="auth-footer">
+              <button
+                type="button"
+                disabled={isLoading}
+                className="workspace-link"
+                onClick={() => switchMode(isAdmin ? (isSettingUp ? 'admin-login' : 'admin-setup') : isRegistering ? 'user-login' : 'user-register')}
+              >
+                {isAdmin ? (isSettingUp ? t.adminPortal : t.adminSetupTitle) : isRegistering ? t.alreadyHaveAccount : t.needAccount}
+              </button>
+            </div>
           </div>
         </main>
       </div>

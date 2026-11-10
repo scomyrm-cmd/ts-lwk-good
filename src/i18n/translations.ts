@@ -15,6 +15,11 @@ export interface Translations {
   verifyingSession: string;
   signInDescription: string;
   adminSignInDescription: string;
+  adminSetupTitle: string;
+  adminSetupDescription: string;
+  adminSetupCode: string;
+  adminSetupSubmit: string;
+  adminPasswordHint: string;
   registerDescription: string;
   loginIdentity: string;
   emailAddress: string;
@@ -311,6 +316,11 @@ export const translations: Record<Language, Translations> = {
     verifyingSession: "Checking your session…",
     signInDescription: "Use your student or parent account to continue.",
     adminSignInDescription: "Use your school administrator account to continue.",
+    adminSetupTitle: "Set up administrator",
+    adminSetupDescription: "Use your one-time setup code to choose a new administrator password.",
+    adminSetupCode: "One-time setup code",
+    adminSetupSubmit: "Activate administrator",
+    adminPasswordHint: "Use a fresh password of at least 14 characters.",
     registerDescription: "Create an account to browse lost property and submit reports.",
     loginIdentity: "Username or email",
     emailAddress: "Email address",
@@ -591,6 +601,11 @@ export const translations: Record<Language, Translations> = {
     verifyingSession: "Vérification de votre session…",
     signInDescription: "Connectez-vous avec votre compte élève ou parent.",
     adminSignInDescription: "Connectez-vous avec votre compte administrateur.",
+    adminSetupTitle: "Configurer le compte administrateur",
+    adminSetupDescription: "Utilisez le code à usage unique pour choisir un nouveau mot de passe administrateur.",
+    adminSetupCode: "Code de configuration à usage unique",
+    adminSetupSubmit: "Activer le compte administrateur",
+    adminPasswordHint: "Choisissez un nouveau mot de passe d’au moins 14 caractères.",
     registerDescription: "Créez un compte pour consulter les objets perdus et les signaler.",
     loginIdentity: "Identifiant ou adresse e-mail",
     emailAddress: "Adresse e-mail",
@@ -871,6 +886,11 @@ export const translations: Record<Language, Translations> = {
     verifyingSession: "جارٍ التحقق من جلستك…",
     signInDescription: "سجّل الدخول بحساب الطالب أو ولي الأمر.",
     adminSignInDescription: "سجّل الدخول بحساب إدارة المدرسة.",
+    adminSetupTitle: "إعداد حساب الإدارة",
+    adminSetupDescription: "استخدم رمز الإعداد لمرة واحدة لاختيار كلمة مرور جديدة للإدارة.",
+    adminSetupCode: "رمز الإعداد لمرة واحدة",
+    adminSetupSubmit: "تفعيل حساب الإدارة",
+    adminPasswordHint: "اختر كلمة مرور جديدة من 14 حرفاً على الأقل.",
     registerDescription: "أنشئ حساباً لتصفح المفقودات وإرسال البلاغات.",
     loginIdentity: "اسم المستخدم أو البريد الإلكتروني",
     emailAddress: "البريد الإلكتروني",

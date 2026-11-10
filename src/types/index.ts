@@ -158,6 +158,7 @@ export interface AuthUser {
   displayName: string;
   createdAt?: string;
   lastLogin?: string;
+  language?: Language;
 }
 
 export interface UserReport {

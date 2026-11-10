@@ -35,7 +35,6 @@ export const LostFoundView: React.FC = () => {
     lostFoundItems,
     deleteLostFoundItem,
     archiveItem,
-    addLostFoundItem,
     userReports,
     fetchAdminReports,
     fetchLostFoundFromServer,
@@ -552,20 +551,7 @@ export const LostFoundView: React.FC = () => {
 
                       <button
                         type="button"
-                        onClick={() => {
-                          addLostFoundItem({
-                            itemName: report.title,
-                            category: (report.category as ItemCategory) || 'Other',
-                            reportType: report.type,
-                            status: report.type === 'lost' ? 'lost' : 'found',
-                            location: report.location,
-                            dateReported: report.date,
-                            reporterName: `${report.userName} (${report.userEmail})`,
-                            description: report.description,
-                            contactInformation: report.contact,
-                          });
-                          updateAdminReportStatus(report.id, 'reviewed');
-                        }}
+                        onClick={() => updateAdminReportStatus(report.id, 'reviewed', undefined, true)}
                         className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
                         title="Ensure item is in official catalog inventory"
                       >

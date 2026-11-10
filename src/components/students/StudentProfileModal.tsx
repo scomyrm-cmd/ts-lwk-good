@@ -84,7 +84,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
               type="button"
               onClick={() => {
                 onClose();
-                openAIChat(`Tell me everything about student ${student.firstName} ${student.lastName} (${student.studentId}), including attendance record and guardian contact.`);
+                openAIChat(`Summarize the attendance and school record for student ${student.firstName} ${student.lastName} (${student.studentId}).`);
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-700 dark:text-brand-300 text-xs font-semibold transition-colors cursor-pointer"
               title="Ask Campus AI about this student"

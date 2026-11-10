@@ -320,8 +320,13 @@ test('administrator profiles and saved attendance emails stay isolated and dedup
   const other = session(await api('auth/login', 'POST', {
     username: 'qa_mail_second', password: 'qa-mail-second-private-password', requireAdmin: true,
   }, undefined, {}, '192.0.2.60'));
+  const { mutateState } = await import('../src/server/storage.js');
+  await mutateState((db) => {
+    db.adminProfile = { displayName: 'Legacy primary name', username: 'qa_mail_owner', email: '', role: 'Administrator' };
+  });
   let state = (await api('admin/state', 'GET', undefined, owner)).data;
   assert.equal(state.state.adminProfile.username, 'qa_mail_owner');
+  assert.equal(state.state.adminProfile.displayName, 'Legacy primary name');
   assert.equal((await api('admin/state', 'GET', undefined, other)).data.state.adminProfile.displayName, 'Second Administrator');
   const profile = await api('admin/state', 'PUT', {
     state: { adminProfile: { displayName: 'First Administrator', profilePictureUrl: '' } }, versions: state.versions,
@@ -363,7 +368,6 @@ test('administrator profiles and saved attendance emails stay isolated and dedup
   assert.equal((await api('admin/attendance-emails')).code, 401);
   assert.equal((await api('cron/attendance-emails')).code, 401);
 
-  const { mutateState } = await import('../src/server/storage.js');
   const { dispatchAttendanceEmails } = await import('../src/server/attendanceEmail.js');
   await mutateState((db) => {
     const job = db.attendanceEmails.find((job) => job.attendanceStatus === 'late')!;

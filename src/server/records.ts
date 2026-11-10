@@ -153,9 +153,10 @@ function readSettings(value: Record<string, unknown>, previous?: AppSettings): A
 }
 
 export function adminProfile(db: SchoolState, account: Account): AdminProfile {
-  const legacy = db.adminProfile?.username === account.username ? db.adminProfile : undefined;
+  const legacyOwner = db.adminProfile?.username || process.env.CAMPUS_ADMIN_USERNAME;
+  const legacy = legacyOwner === account.username && account.profilePictureUrl === undefined ? db.adminProfile : undefined;
   return {
-    displayName: account.displayName, username: account.username, email: account.email, role: 'Administrator',
+    displayName: legacy?.displayName || account.displayName, username: account.username, email: account.email, role: 'Administrator',
     profilePictureUrl: account.profilePictureUrl ?? legacy?.profilePictureUrl,
   };
 }

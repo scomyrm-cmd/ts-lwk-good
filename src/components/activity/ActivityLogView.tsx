@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { History, Filter, Search, Trash2, Calendar, User, ShieldCheck } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { WorkspaceHeader } from '../common/WorkspaceUI';
 import { ActivityActionType } from '../../types';
 import { EmptyState } from '../common/EmptyState';
 import { ConfirmModal } from '../common/ConfirmModal';
@@ -40,46 +41,34 @@ export const ActivityLogView: React.FC = () => {
       case 'lost_item_reported':
         return 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400';
       default:
-        return 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400';
+        return 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400';
     }
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {t.activityTitle}
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            {t.activitySubtitle}
-          </p>
-        </div>
-
+    <div className="workspace-page">
+      <WorkspaceHeader title={t.activityTitle} description={t.activitySubtitle}>
         {activities.length > 0 && (
           <button
             type="button"
             onClick={() => setIsConfirmClearOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+            className="workspace-button hover:text-red-700 dark:hover:text-red-300"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>{t.clearActivity}</span>
           </button>
         )}
-      </div>
+      </WorkspaceHeader>
 
       {/* Main Content Area */}
       {activities.length === 0 ? (
-        <EmptyState
-          icon={History}
-          title={t.noActivityTitle}
-          description={t.noActivityDesc}
-        />
+        <div className="workspace-panel">
+          <EmptyState icon={History} title={t.noActivityTitle} description={t.noActivityDesc} />
+        </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="workspace-panel overflow-hidden">
           {/* Controls Bar */}
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/30">
+          <div className="flex flex-col justify-between gap-3 border-b border-slate-200 p-3 dark:border-slate-800 md:flex-row md:items-center">
             <div className="relative flex-1 max-w-md">
               <Search className="w-4 h-4 text-slate-400 absolute inset-y-0 start-3 my-auto pointer-events-none" />
               <input
@@ -87,7 +76,7 @@ export const ActivityLogView: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search audit trail by description or admin..."
-                className="w-full ps-9 pe-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full ps-9 pe-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
@@ -96,7 +85,7 @@ export const ActivityLogView: React.FC = () => {
               <select
                 value={filterAction}
                 onChange={(e) => setFilterAction(e.target.value)}
-                className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="all">All Action Types</option>
                 <option value="student_created">Student Created</option>
@@ -127,7 +116,7 @@ export const ActivityLogView: React.FC = () => {
                 >
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 shrink-0">
-                      <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      <ShieldCheck className="w-4 h-4 text-brand-600 dark:text-brand-400" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">

@@ -4,6 +4,41 @@ export interface Translations {
   // Common
   appName: string;
   appSubtitle: string;
+  workspaceLabel: string;
+  workspaceTitle: string;
+  workspaceDescription: string;
+  schoolOperations: string;
+  workspaceTools: string;
+  openNavigation: string;
+  closeNavigation: string;
+  accountMenu: string;
+  verifyingSession: string;
+  signInDescription: string;
+  adminSignInDescription: string;
+  registerDescription: string;
+  loginIdentity: string;
+  emailAddress: string;
+  passwordLabel: string;
+  confirmPasswordLabel: string;
+  showPasswordLabel: string;
+  hidePasswordLabel: string;
+  passwordMismatch: string;
+  passwordMinLength: string;
+  registrationError: string;
+  notMarked: string;
+  reportsAwaitingReview: string;
+  viewActivity: string;
+  portalCatalogDescription: string;
+  portalReportDescription: string;
+  portalReportsDescription: string;
+  noMatchingItems: string;
+  adjustFilters: string;
+  noPersonalReports: string;
+  portalAIDescription: string;
+  openAssistant: string;
+  totalAccounts: string;
+  officialCatalog: string;
+  studentReports: string;
   save: string;
   cancel: string;
   delete: string;
@@ -231,6 +266,11 @@ export interface Translations {
   schoolLogo: string;
 
   // AI Assistant
+  aiConversations: string;
+  aiNoConversations: string;
+  aiSuggestions: string;
+  aiExpand: string;
+  aiClaimPrompt: string;
   aiWelcomeTitle: string;
   aiWelcomeSubtitle: string;
   aiInputPlaceholder: string;
@@ -252,19 +292,49 @@ export interface Translations {
 
   // Login
   loginTitle: string;
-  loginSubtitle: string;
-  loginUsernamePlaceholder: string;
-  loginPasswordPlaceholder: string;
-  rememberMe: string;
   loginButton: string;
   loginError: string;
-  demoNotice: string;
 }
 
 export const translations: Record<Language, Translations> = {
   en: {
     appName: 'Campus OS',
     appSubtitle: 'School Administration Portal',
+    workspaceLabel: "School workspace",
+    workspaceTitle: "School administration",
+    workspaceDescription: "Manage student records, attendance, and lost property.",
+    schoolOperations: "School operations",
+    workspaceTools: "Workspace tools",
+    openNavigation: "Open navigation",
+    closeNavigation: "Close navigation",
+    accountMenu: "Account menu",
+    verifyingSession: "Checking your session…",
+    signInDescription: "Use your student or parent account to continue.",
+    adminSignInDescription: "Use your school administrator account to continue.",
+    registerDescription: "Create an account to browse lost property and submit reports.",
+    loginIdentity: "Username or email",
+    emailAddress: "Email address",
+    passwordLabel: "Password",
+    confirmPasswordLabel: "Confirm password",
+    showPasswordLabel: "Show password",
+    hidePasswordLabel: "Hide password",
+    passwordMismatch: "Passwords do not match.",
+    passwordMinLength: "Use at least 10 characters.",
+    registrationError: "Could not create your account. Check your details and try again.",
+    notMarked: "Unmarked",
+    reportsAwaitingReview: "Student reports to review",
+    viewActivity: "View activity log",
+    portalCatalogDescription: "Browse items reported lost or found at school.",
+    portalReportDescription: "Tell the school team what you lost or found.",
+    portalReportsDescription: "Check the status of reports you sent to the school.",
+    noMatchingItems: "No matching items",
+    adjustFilters: "Try another search or change the filters.",
+    noPersonalReports: "No reports yet",
+    portalAIDescription: "Ask about school information and lost property.",
+    openAssistant: "Open assistant",
+    totalAccounts: "Total accounts",
+    officialCatalog: "School catalog",
+    studentReports: "Student reports",
     save: 'Save',
     cancel: 'Cancel',
     delete: 'Delete',
@@ -290,9 +360,9 @@ export const translations: Record<Language, Translations> = {
     today: 'Today',
     yesterday: 'Yesterday',
 
-    navDashboard: 'Dashboard',
+    navDashboard: "Overview",
     navStudents: 'Students',
-    navAttendance: 'Digital Absence',
+    navAttendance: "Attendance",
     navLostFound: 'Lost & Found',
     navActivity: 'Activity Log',
     navSettings: 'Settings',
@@ -306,8 +376,8 @@ export const translations: Record<Language, Translations> = {
     markAllRead: 'Mark all as read',
     editProfile: 'Edit Profile',
 
-    dashboardTitle: 'Administration Dashboard',
-    dashboardSubtitle: "Welcome back, Administrator. Here's what's happening at your school today.",
+    dashboardTitle: "Overview",
+    dashboardSubtitle: "A snapshot of attendance, student records, and lost and found.",
     totalStudents: 'Total Students',
     presentToday: 'Present Today',
     absentToday: 'Absent Today',
@@ -341,7 +411,7 @@ export const translations: Record<Language, Translations> = {
     registerFirstStudent: 'Register First Student',
     filterClass: 'Filter by Class',
 
-    attendanceTitle: 'Digital Absence System',
+    attendanceTitle: "Attendance",
     attendanceSubtitle: 'Monitor daily student attendance and manage absence records.',
     selectDate: 'Select Date',
     present: 'Present',
@@ -439,8 +509,13 @@ export const translations: Record<Language, Translations> = {
     schoolWebsite: 'School Website',
     schoolLogo: 'School Crest / Logo',
 
-    aiWelcomeTitle: 'Welcome to Campus AI',
-    aiWelcomeSubtitle: 'Your intelligent school administration assistant powered by Gemini.',
+    aiConversations: "Conversations",
+    aiNoConversations: "No conversations yet",
+    aiSuggestions: "Try asking",
+    aiExpand: "Open full assistant",
+    aiClaimPrompt: "How can I claim an item I lost at school?",
+    aiWelcomeTitle: "How can I help?",
+    aiWelcomeSubtitle: "Ask about attendance, student records, or lost property.",
     aiInputPlaceholder: 'Ask about attendance stats, student counts, or lost items...',
     aiSend: 'Send Query',
     aiNewChat: 'New Conversation',
@@ -458,21 +533,16 @@ export const translations: Record<Language, Translations> = {
     aiStatusConnected: 'Connected to Gemini API',
     aiStatusDemo: 'Demo Mode: Aggregated real statistics ready',
 
-    loginTitle: 'Campus OS',
-    loginSubtitle: 'School Administration Portal',
-    loginUsernamePlaceholder: 'Username (islamnourbouya)',
-    loginPasswordPlaceholder: 'Password (islamoss1980)',
-    rememberMe: 'Remember me',
-    loginButton: 'Sign In to Campus OS',
+    loginTitle: "Sign in",
+    loginButton: "Sign in",
     loginError: 'Invalid username or password. Please try again.',
-    demoNotice: 'Use islamnourbouya / islamoss1980 for Administrator, or student_user / user123 for Normal User.',
 
-    adminPortal: 'Administrator Portal',
+    adminPortal: "Administrator sign in",
     normalUserPortal: 'Student & Parent Portal',
-    adminLoginBtn: 'Admin Login',
-    userLoginBtn: 'Student / Parent Login',
+    adminLoginBtn: "Administrator",
+    userLoginBtn: "Student / parent",
     registerBtn: 'Create Account',
-    registerTitle: 'Create Student / Parent Account',
+    registerTitle: "Create an account",
     alreadyHaveAccount: 'Already have an account? Sign in',
     needAccount: "Don't have an account? Sign up",
     adminAccessOnly: 'Restricted Access — Authorized School Administrators Only',
@@ -480,9 +550,9 @@ export const translations: Record<Language, Translations> = {
     exportingExcel: 'Generating Excel (.xlsx)...',
     exportConfirmTitle: 'Export Student Registry to Excel',
     exportConfirmDesc: 'You are about to export official student records into an Excel (.xlsx) file with full attendance and guardian data.',
-    myReports: 'My Submitted Reports',
-    submitReport: 'Submit New Report',
-    lostFoundCatalog: 'Lost & Found Catalog',
+    myReports: "My reports",
+    submitReport: "Report an item",
+    lostFoundCatalog: "Lost and found",
     accessDenied: 'Access Restricted',
     adminRoleRequired: 'Administrator privileges are required to access this section.',
     backToPortal: 'Return to Student Portal',
@@ -510,6 +580,41 @@ export const translations: Record<Language, Translations> = {
   fr: {
     appName: 'Campus OS',
     appSubtitle: "Portail d'Administration Scolaire",
+    workspaceLabel: "Espace scolaire",
+    workspaceTitle: "Administration scolaire",
+    workspaceDescription: "Gérez les dossiers des élèves, les présences et les objets perdus.",
+    schoolOperations: "Vie scolaire",
+    workspaceTools: "Outils de gestion",
+    openNavigation: "Ouvrir la navigation",
+    closeNavigation: "Fermer la navigation",
+    accountMenu: "Menu du compte",
+    verifyingSession: "Vérification de votre session…",
+    signInDescription: "Connectez-vous avec votre compte élève ou parent.",
+    adminSignInDescription: "Connectez-vous avec votre compte administrateur.",
+    registerDescription: "Créez un compte pour consulter les objets perdus et les signaler.",
+    loginIdentity: "Identifiant ou adresse e-mail",
+    emailAddress: "Adresse e-mail",
+    passwordLabel: "Mot de passe",
+    confirmPasswordLabel: "Confirmer le mot de passe",
+    showPasswordLabel: "Afficher le mot de passe",
+    hidePasswordLabel: "Masquer le mot de passe",
+    passwordMismatch: "Les mots de passe ne correspondent pas.",
+    passwordMinLength: "Utilisez au moins 10 caractères.",
+    registrationError: "Impossible de créer le compte. Vérifiez vos informations et réessayez.",
+    notMarked: "Non renseignés",
+    reportsAwaitingReview: "Signalements à examiner",
+    viewActivity: "Voir le journal",
+    portalCatalogDescription: "Consultez les objets signalés perdus ou trouvés à l’école.",
+    portalReportDescription: "Indiquez à l’établissement l’objet que vous avez perdu ou trouvé.",
+    portalReportsDescription: "Suivez l’état de vos signalements auprès de l’établissement.",
+    noMatchingItems: "Aucun objet correspondant",
+    adjustFilters: "Essayez une autre recherche ou modifiez les filtres.",
+    noPersonalReports: "Aucun signalement pour le moment",
+    portalAIDescription: "Posez vos questions sur l’établissement et les objets perdus.",
+    openAssistant: "Ouvrir l’assistant",
+    totalAccounts: "Nombre de comptes",
+    officialCatalog: "Catalogue de l’établissement",
+    studentReports: "Signalements des élèves",
     save: 'Enregistrer',
     cancel: 'Annuler',
     delete: 'Supprimer',
@@ -535,9 +640,9 @@ export const translations: Record<Language, Translations> = {
     today: "Aujourd'hui",
     yesterday: 'Hier',
 
-    navDashboard: 'Tableau de bord',
+    navDashboard: "Vue d’ensemble",
     navStudents: 'Élèves',
-    navAttendance: 'Absences & Présences',
+    navAttendance: "Présences",
     navLostFound: 'Objets Trouvés',
     navActivity: "Journal d'Activité",
     navSettings: 'Paramètres',
@@ -551,8 +656,8 @@ export const translations: Record<Language, Translations> = {
     markAllRead: 'Tout marquer comme lu',
     editProfile: 'Modifier le profil',
 
-    dashboardTitle: "Tableau de Bord de l'Administration",
-    dashboardSubtitle: "Bienvenue, Administrateur. Voici l'état de votre établissement aujourd'hui.",
+    dashboardTitle: "Vue d’ensemble",
+    dashboardSubtitle: "Un aperçu des présences, des dossiers des élèves et des objets perdus.",
     totalStudents: 'Total des Élèves',
     presentToday: "Présents Aujourd'hui",
     absentToday: "Absents Aujourd'hui",
@@ -586,7 +691,7 @@ export const translations: Record<Language, Translations> = {
     registerFirstStudent: 'Inscrire le Premier Élève',
     filterClass: 'Filtrer par Classe',
 
-    attendanceTitle: 'Gestion Numérique des Absences',
+    attendanceTitle: "Présences",
     attendanceSubtitle: 'Suivez la présence quotidienne et gérez les motifs des absences.',
     selectDate: 'Choisir la Date',
     present: 'Présent',
@@ -684,8 +789,13 @@ export const translations: Record<Language, Translations> = {
     schoolWebsite: 'Site Internet',
     schoolLogo: "Blason / Logo de l'École",
 
-    aiWelcomeTitle: 'Bienvenue sur Campus AI',
-    aiWelcomeSubtitle: 'Votre assistant administratif scolaire propulsé par Gemini.',
+    aiConversations: "Conversations",
+    aiNoConversations: "Aucune conversation",
+    aiSuggestions: "Suggestions de questions",
+    aiExpand: "Ouvrir l’assistant complet",
+    aiClaimPrompt: "Comment récupérer un objet perdu à l’école ?",
+    aiWelcomeTitle: "Comment puis-je vous aider ?",
+    aiWelcomeSubtitle: "Posez vos questions sur les présences, les dossiers des élèves ou les objets perdus.",
     aiInputPlaceholder: 'Posez une question sur les présences, élèves ou objets...',
     aiSend: 'Envoyer',
     aiNewChat: 'Nouvelle Conversation',
@@ -703,21 +813,16 @@ export const translations: Record<Language, Translations> = {
     aiStatusConnected: 'Connecté à l’API Gemini',
     aiStatusDemo: 'Mode Démo : Statistiques réelles agrégées prêtes',
 
-    loginTitle: 'Campus OS',
-    loginSubtitle: "Portail d'Administration Scolaire",
-    loginUsernamePlaceholder: "Nom d'utilisateur (islamnourbouya)",
-    loginPasswordPlaceholder: 'Mot de passe (islamoss1980)',
-    rememberMe: 'Se souvenir de moi',
-    loginButton: 'Se Connecter à Campus OS',
+    loginTitle: "Se connecter",
+    loginButton: "Se connecter",
     loginError: 'Identifiants incorrects. Veuillez réessayer.',
-    demoNotice: 'Utilisez islamnourbouya / islamoss1980 pour Administrateur, ou student_user / user123 pour Utilisateur.',
 
-    adminPortal: "Portail d'Administration",
+    adminPortal: "Connexion administrateur",
     normalUserPortal: 'Portail Étudiants & Parents',
-    adminLoginBtn: 'Connexion Administrateur',
-    userLoginBtn: 'Connexion Étudiant / Parent',
+    adminLoginBtn: "Administration",
+    userLoginBtn: "Élève / parent",
     registerBtn: 'Créer un Compte',
-    registerTitle: 'Créer un Compte Étudiant / Parent',
+    registerTitle: "Créer un compte",
     alreadyHaveAccount: 'Vous avez déjà un compte ? Connectez-vous',
     needAccount: 'Pas encore de compte ? Inscrivez-vous',
     adminAccessOnly: 'Accès Réservé — Administrateurs Autorisés Uniquement',
@@ -725,9 +830,9 @@ export const translations: Record<Language, Translations> = {
     exportingExcel: 'Génération Excel (.xlsx)...',
     exportConfirmTitle: 'Exporter le Registre des Élèves vers Excel',
     exportConfirmDesc: 'Vous êtes sur le point de générer un classeur Excel (.xlsx) officiel avec les données de présence et tuteurs.',
-    myReports: 'Mes Signalements',
-    submitReport: 'Déposer un Signalement',
-    lostFoundCatalog: 'Catalogue Objets Perdus & Trouvés',
+    myReports: "Mes signalements",
+    submitReport: "Signaler un objet",
+    lostFoundCatalog: "Objets perdus et trouvés",
     accessDenied: 'Accès Refusé',
     adminRoleRequired: "Des privilèges d'administrateur sont requis pour accéder à cette section.",
     backToPortal: 'Retour au Portail Étudiant',
@@ -753,8 +858,43 @@ export const translations: Record<Language, Translations> = {
   },
 
   ar: {
-    appName: 'كامبوس أو إس (Campus OS)',
+    appName: 'Campus OS',
     appSubtitle: 'بوابة الإدارة المدرسية المتكاملة',
+    workspaceLabel: "فضاء المدرسة",
+    workspaceTitle: "إدارة المدرسة",
+    workspaceDescription: "إدارة ملفات الطلاب والحضور والمفقودات.",
+    schoolOperations: "الإدارة المدرسية",
+    workspaceTools: "أدوات العمل",
+    openNavigation: "فتح قائمة التنقل",
+    closeNavigation: "إغلاق قائمة التنقل",
+    accountMenu: "قائمة الحساب",
+    verifyingSession: "جارٍ التحقق من جلستك…",
+    signInDescription: "سجّل الدخول بحساب الطالب أو ولي الأمر.",
+    adminSignInDescription: "سجّل الدخول بحساب إدارة المدرسة.",
+    registerDescription: "أنشئ حساباً لتصفح المفقودات وإرسال البلاغات.",
+    loginIdentity: "اسم المستخدم أو البريد الإلكتروني",
+    emailAddress: "البريد الإلكتروني",
+    passwordLabel: "كلمة المرور",
+    confirmPasswordLabel: "تأكيد كلمة المرور",
+    showPasswordLabel: "إظهار كلمة المرور",
+    hidePasswordLabel: "إخفاء كلمة المرور",
+    passwordMismatch: "كلمتا المرور غير متطابقتين.",
+    passwordMinLength: "استخدم 10 أحرف على الأقل.",
+    registrationError: "تعذر إنشاء الحساب. تحقق من بياناتك وحاول مجدداً.",
+    notMarked: "لم يُسجّل",
+    reportsAwaitingReview: "بلاغات الطلاب قيد المراجعة",
+    viewActivity: "عرض سجل النشاط",
+    portalCatalogDescription: "تصفح الأشياء المبلّغ عن فقدانها أو العثور عليها في المدرسة.",
+    portalReportDescription: "أخبر إدارة المدرسة بما فقدته أو عثرت عليه.",
+    portalReportsDescription: "تابع حالة البلاغات التي أرسلتها إلى المدرسة.",
+    noMatchingItems: "لا توجد نتائج مطابقة",
+    adjustFilters: "جرّب بحثاً آخر أو غيّر عوامل التصفية.",
+    noPersonalReports: "لا توجد بلاغات حتى الآن",
+    portalAIDescription: "اطرح أسئلتك حول المدرسة والمفقودات.",
+    openAssistant: "فتح المساعد",
+    totalAccounts: "إجمالي الحسابات",
+    officialCatalog: "دليل المدرسة",
+    studentReports: "بلاغات الطلاب",
     save: 'حفظ',
     cancel: 'إلغاء',
     delete: 'حذف',
@@ -780,9 +920,9 @@ export const translations: Record<Language, Translations> = {
     today: 'اليوم',
     yesterday: 'أمس',
 
-    navDashboard: 'لوحة القيادة',
+    navDashboard: "نظرة عامة",
     navStudents: 'الطلاب',
-    navAttendance: 'سجل الغياب والحضور',
+    navAttendance: "الحضور",
     navLostFound: 'المفقودات والمعثورات',
     navActivity: 'سجل العمليات',
     navSettings: 'الإعدادات',
@@ -796,8 +936,8 @@ export const translations: Record<Language, Translations> = {
     markAllRead: 'تحديد الكل كمقروء',
     editProfile: 'تعديل الملف الشخصي',
 
-    dashboardTitle: 'لوحة قيادة الإدارة المدرسية',
-    dashboardSubtitle: 'مرحباً بك مجدداً، سعادة المدير. إليك ملخص ما يحدث في مؤسستك اليوم.',
+    dashboardTitle: "نظرة عامة",
+    dashboardSubtitle: "ملخص للحضور وملفات الطلاب والمفقودات.",
     totalStudents: 'إجمالي الطلاب المسجلين',
     presentToday: 'الحاضرون اليوم',
     absentToday: 'الغائبون اليوم',
@@ -831,7 +971,7 @@ export const translations: Record<Language, Translations> = {
     registerFirstStudent: 'تسجيل أول طالب',
     filterClass: 'تصفية حسب الفصل',
 
-    attendanceTitle: 'نظام رصد الغياب والحضور الرقمي',
+    attendanceTitle: "الحضور",
     attendanceSubtitle: 'متابعة الحضور اليومي وإدارة مبررات الغياب والتأخر.',
     selectDate: 'اختيار التاريخ',
     present: 'حاضر',
@@ -929,8 +1069,13 @@ export const translations: Record<Language, Translations> = {
     schoolWebsite: 'الموقع الإلكتروني',
     schoolLogo: 'شعار / خاتم المؤسسة',
 
-    aiWelcomeTitle: 'مرحباً بك في المساعد الذكي Campus AI',
-    aiWelcomeSubtitle: 'مساعدك الذكي لإدارة شؤون المدرسة والتحليل الإحصائي الفوري المدعوم بـ Gemini.',
+    aiConversations: "المحادثات",
+    aiNoConversations: "لا توجد محادثات بعد",
+    aiSuggestions: "جرّب أن تسأل",
+    aiExpand: "فتح صفحة المساعد",
+    aiClaimPrompt: "كيف أستعيد غرضاً فقدته في المدرسة؟",
+    aiWelcomeTitle: "كيف يمكنني مساعدتك؟",
+    aiWelcomeSubtitle: "اطرح أسئلتك حول الحضور أو ملفات الطلاب أو المفقودات.",
     aiInputPlaceholder: 'اسأل عن نسب الحضور، عدد الطلاب، أو ملخص المفقودات...',
     aiSend: 'إرسال الاستفسار',
     aiNewChat: 'محادثة جديدة',
@@ -948,21 +1093,16 @@ export const translations: Record<Language, Translations> = {
     aiStatusConnected: 'متصل بنموذج Gemini الذكي',
     aiStatusDemo: 'وضع تجريبي تفاعلي: الإحصائيات المجمعة جاهزة للتحليل',
 
-    loginTitle: 'كامبوس أو إس (Campus OS)',
-    loginSubtitle: 'بوابة الإدارة المدرسية',
-    loginUsernamePlaceholder: 'اسم المستخدم (islamnourbouya)',
-    loginPasswordPlaceholder: 'كلمة المرور (islamoss1980)',
-    rememberMe: 'تذكر تسجيل الدخول',
-    loginButton: 'تسجيل الدخول إلى المنظومة',
+    loginTitle: "تسجيل الدخول",
+    loginButton: "تسجيل الدخول",
     loginError: 'اسم المستخدم أو كلمة المرور غير صحيحة. يرجى المحاولة ثانية.',
-    demoNotice: 'استخدم islamnourbouya / islamoss1980 للمسؤول، أو student_user / user123 لحساب المستخدم العادي.',
 
-    adminPortal: 'بوابة الإدارة المدرسية',
+    adminPortal: "تسجيل دخول الإدارة",
     normalUserPortal: 'بوابة الطلاب وأولياء الأمور',
-    adminLoginBtn: 'تسجيل دخول الإدارة',
-    userLoginBtn: 'دخول الطلاب وأولياء الأمور',
+    adminLoginBtn: "الإدارة",
+    userLoginBtn: "طالب / ولي أمر",
     registerBtn: 'إنشاء حساب جديد',
-    registerTitle: 'تسجيل حساب طالب / ولي أمر',
+    registerTitle: "إنشاء حساب",
     alreadyHaveAccount: 'لديك حساب بالفعل؟ تسجيل الدخول',
     needAccount: 'ليس لديك حساب؟ أنشئ حساباً جديداً',
     adminAccessOnly: 'منطقة مخصصة للمسؤولين المعتمدين والمشرفين التربويين فقط',
@@ -970,9 +1110,9 @@ export const translations: Record<Language, Translations> = {
     exportingExcel: 'جاري إنشاء ملف إكسيل (.xlsx)...',
     exportConfirmTitle: 'تأكيد تصدير سجل الطلاب إلى إكسيل',
     exportConfirmDesc: 'أنت على وشك تصدير السجل المدرسي الرسمي مع تفاصيل الحضور وهواتف أولياء الأمور إلى ملف Excel مؤمن.',
-    myReports: 'بلاغاتي المسجلة',
-    submitReport: 'تقديم بلاغ عن غرض',
-    lostFoundCatalog: 'دليل المفقودات والمعثورات',
+    myReports: "بلاغاتي",
+    submitReport: "الإبلاغ عن غرض",
+    lostFoundCatalog: "المفقودات والمعثورات",
     accessDenied: 'منطقة محظورة',
     adminRoleRequired: 'يلزم الحصول على صلاحيات مدير النظام للوصول إلى هذا القسم.',
     backToPortal: 'العودة إلى بوابة الطلاب',

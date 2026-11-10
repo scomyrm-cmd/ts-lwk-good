@@ -2,27 +2,27 @@ import React, { useState, useEffect } from 'react';
 import {
   PackageSearch,
   Search,
-  Filter,
   PlusCircle,
   FileText,
   Clock,
   CheckCircle2,
   AlertCircle,
   LogOut,
-  Shield,
-  User,
-  Globe,
   Tag,
   MapPin,
   Calendar,
   Sparkles,
-  ChevronRight,
   Eye,
   Info,
+  X,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
-import { LostFoundItem, ItemCategory } from '../../types';
-import { Language } from '../../types';
+import type { LostFoundItem, ItemCategory } from '../../types';
+import { EmptyState } from '../common/EmptyState';
+import { WorkspaceDialog } from '../common/WorkspaceDialog';
+import { CampusBrand, LanguageControl, WorkspaceAvatar, WorkspaceHeader } from '../common/WorkspaceUI';
+
+type PortalTab = 'catalog' | 'report' | 'my-reports' | 'ai';
 
 export const UserPortalView: React.FC = () => {
   const {
@@ -31,15 +31,13 @@ export const UserPortalView: React.FC = () => {
     lostFoundItems,
     userReports,
     fetchUserReports,
+    fetchLostFoundFromServer,
     submitUserReport,
-    settings,
-    updateSettings,
     openAIChat,
     t,
-    schoolInfo,
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'catalog' | 'report' | 'my-reports' | 'ai'>('catalog');
+  const [activeTab, setActiveTab] = useState<PortalTab>('catalog');
 
   // Catalog search & filter
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,12 +58,15 @@ export const UserPortalView: React.FC = () => {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchUserReports();
+    const request = new AbortController();
+    void fetchUserReports();
+    void fetchLostFoundFromServer(request.signal);
+    return () => request.abort();
   }, []);
 
-  const handleLanguageChange = (lang: Language) => {
-    updateSettings({ language: lang });
-  };
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab]);
 
   const handleReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,230 +126,116 @@ export const UserPortalView: React.FC = () => {
     return matchesSearch && matchesCategory && matchesType;
   });
 
+  const tabs = [
+    { id: 'catalog', label: t.lostFoundCatalog, icon: PackageSearch },
+    { id: 'report', label: t.submitReport, icon: PlusCircle },
+    { id: 'my-reports', label: t.myReports, icon: FileText },
+    { id: 'ai', label: t.navCampusAI, icon: Sparkles },
+  ] as const;
+
+  const userName = currentUser?.displayName || currentUser?.username || '';
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased flex flex-col">
-      {/* Top Navbar */}
-      <header className="h-16 px-4 md:px-8 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 z-30 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs">
-            <PackageSearch className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="font-bold text-base tracking-tight leading-tight text-slate-900 dark:text-slate-100">
-              {t.appName}
-            </h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-              {schoolInfo.name} · {t.normalUserPortal}
-            </p>
-          </div>
-        </div>
-
-        {/* Right actions: Language, User Profile, Logout */}
-        <div className="flex items-center gap-3">
-          {/* Language Switcher */}
-          <div className="hidden sm:flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 text-xs">
-            <button
-              type="button"
-              onClick={() => handleLanguageChange('en')}
-              className={`px-2 py-0.5 rounded font-medium cursor-pointer ${
-                settings.language === 'en'
-                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              onClick={() => handleLanguageChange('fr')}
-              className={`px-2 py-0.5 rounded font-medium cursor-pointer ${
-                settings.language === 'fr'
-                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              FR
-            </button>
-            <button
-              type="button"
-              onClick={() => handleLanguageChange('ar')}
-              className={`px-2 py-0.5 rounded font-medium cursor-pointer ${
-                settings.language === 'ar'
-                  ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs'
-                  : 'text-slate-600 dark:text-slate-400'
-              }`}
-            >
-              العربية
+    <div className="flex min-h-svh flex-col">
+      <header className="sticky top-0 z-30 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <div className="workspace-topbar portal-content border-0">
+          <CampusBrand caption={t.normalUserPortal} />
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
+            <LanguageControl />
+            <div className="hidden items-center gap-2 sm:flex">
+              <WorkspaceAvatar name={userName} />
+              <span className="hidden max-w-32 truncate text-sm font-medium md:inline">{userName}</span>
+            </div>
+            <button type="button" className="workspace-icon-button" onClick={logout} aria-label={t.logout} title={t.logout}>
+              <LogOut size={18} />
             </button>
           </div>
-
-          {/* User Badge */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-300">
-            <User className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-            <span className="font-semibold">{currentUser?.displayName || currentUser?.username}</span>
-            <span className="text-[10px] text-slate-400 border border-slate-300 dark:border-slate-700 rounded-full px-1.5">
-              Normal User
-            </span>
-          </div>
-
-          {/* Logout */}
-          <button
-            type="button"
-            onClick={logout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 border border-red-200 dark:border-red-900/40 transition-colors cursor-pointer"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>{t.logout}</span>
-          </button>
         </div>
       </header>
 
-      {/* Navigation Sub-Tabs */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 md:px-8">
-        <div className="flex items-center gap-2 overflow-x-auto max-w-6xl mx-auto py-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab('catalog')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'catalog'
-                ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            <PackageSearch className="w-4 h-4" />
-            <span>{t.lostFoundCatalog}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              {filteredItems.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('report')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'report'
-                ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>{t.submitReport}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('my-reports')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'my-reports'
-                ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/60 dark:text-blue-400'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            <span>{t.myReports}</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              {userReports.length}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('ai')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
-              activeTab === 'ai'
-                ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>Campus AI Assistant</span>
-          </button>
-        </div>
+      <div className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+        <nav className="portal-content workspace-tabs portal-tabs border-0" aria-label={t.normalUserPortal}>
+          {tabs.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              type="button"
+              className="workspace-tab"
+              aria-current={activeTab === id ? 'page' : undefined}
+              onClick={() => setActiveTab(id)}
+            >
+              <Icon size={16} aria-hidden="true" />
+              {label}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* Main Content Area */}
-      <main className="flex-1 p-4 md:p-8 max-w-6xl w-full mx-auto">
+      <main className="portal-content flex-1 pt-7 pb-24 md:pt-10">
         {/* TAB 1: CATALOG */}
         {activeTab === 'catalog' && (
-          <div className="space-y-6">
-            {/* Header & Search */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                    {t.lostFoundCatalog}
-                  </h2>
-                  <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    Search and inspect items reported on school grounds. If you recognize your property, click for details to claim it.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('report')}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-xl shadow-xs transition-colors cursor-pointer shrink-0"
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>Report Lost / Found Item</span>
-                </button>
+          <div className="workspace-page">
+            <WorkspaceHeader title={t.lostFoundCatalog} description={t.portalCatalogDescription}>
+              <button type="button" onClick={() => setActiveTab('report')} className="workspace-button workspace-button-primary">
+                <PlusCircle size={16} /> {t.submitReport}
+              </button>
+            </WorkspaceHeader>
+
+            <div className="workspace-panel grid gap-3 p-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute start-3 inset-y-0 my-auto text-slate-400 pointer-events-none" />
+                <input
+                  aria-label={t.search}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t.search}
+                  className="workspace-field ps-9"
+                />
               </div>
 
-              {/* Filters */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="relative">
-                  <Search className="w-4 h-4 absolute start-3 top-3 text-slate-400 pointer-events-none" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by item name, room, or description..."
-                    className="w-full ps-9 pe-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <select
+                aria-label={t.category}
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="workspace-field"
+              >
+                <option value="all">All Categories</option>
+                <option value="Electronics">Electronics</option>
+                <option value="Clothing">Clothing</option>
+                <option value="Bags">Bags & Backpacks</option>
+                <option value="Books">Books & Textbooks</option>
+                <option value="School Supplies">School Supplies</option>
+                <option value="Accessories">Accessories</option>
+                <option value="Other">Other</option>
+              </select>
 
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Categories</option>
-                  <option value="Electronics">Electronics</option>
-                  <option value="Clothing">Clothing</option>
-                  <option value="Bags">Bags & Backpacks</option>
-                  <option value="Books">Books & Textbooks</option>
-                  <option value="School Supplies">School Supplies</option>
-                  <option value="Accessories">Accessories</option>
-                  <option value="Other">Other</option>
-                </select>
-
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Item Statuses</option>
-                  <option value="lost">Lost Items (Reported Missing)</option>
-                  <option value="found">Found Items (Available at Office)</option>
-                </select>
-              </div>
+              <select
+                aria-label={t.status}
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                className="workspace-field"
+              >
+                <option value="all">All Item Statuses</option>
+                <option value="lost">{t.lostItems}</option>
+                <option value="found">{t.foundItems}</option>
+              </select>
             </div>
 
             {/* Item Cards Grid */}
             {filteredItems.length === 0 ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800">
-                <PackageSearch className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">
-                  No matching items found
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-                  Try adjusting your search criteria, or submit a new report if you lost something recently.
-                </p>
+              <div className="workspace-panel">
+                <EmptyState
+                  icon={PackageSearch}
+                  title={lostFoundItems.length ? t.noMatchingItems : t.noItemsTitle}
+                  description={lostFoundItems.length ? t.adjustFilters : t.noItemsDesc}
+                />
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredItems.map((item) => (
                   <div
                     key={item.id}
-                    className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between hover:border-blue-300 dark:hover:border-blue-700 transition-all"
+                    className="workspace-panel flex flex-col justify-between p-5"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2 mb-2">
@@ -359,7 +246,7 @@ export const UserPortalView: React.FC = () => {
                               : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                           }`}
                         >
-                          {item.reportType === 'found' ? 'Found Item' : 'Lost Item'}
+                          {item.reportType === 'found' ? t.foundItems : t.lostItems}
                         </span>
 
                         <span className="text-[11px] text-slate-400 flex items-center gap-1">
@@ -391,10 +278,10 @@ export const UserPortalView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setViewItem(item)}
-                      className="mt-4 w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-blue-600 dark:text-blue-400 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                      className="workspace-link mt-4 self-start"
                     >
                       <Eye className="w-3.5 h-3.5" />
-                      <span>View Details & Claim Info</span>
+                      <span>{t.view}</span>
                     </button>
                   </div>
                 ))}
@@ -405,249 +292,217 @@ export const UserPortalView: React.FC = () => {
 
         {/* TAB 2: SUBMIT REPORT */}
         {activeTab === 'report' && (
-          <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                {t.submitReport}
-              </h2>
-              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                Provide accurate details about your lost or found item. Administration staff review each report and notify you upon verification.
-              </p>
-            </div>
-
-            {submitSuccess && (
-              <div className="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center gap-3 text-xs text-emerald-800 dark:text-emerald-300">
-                <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600" />
-                <div>
-                  <p className="font-semibold">Report successfully submitted!</p>
-                  <p className="text-[11px] opacity-90 mt-0.5">
-                    Redirecting to your submitted reports...
-                  </p>
+          <div className="workspace-page max-w-3xl">
+            <WorkspaceHeader title={t.submitReport} description={t.portalReportDescription} />
+            <div className="workspace-panel p-4 sm:p-6">
+              {submitSuccess && (
+                <div role="status" className="mb-6 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center gap-3 text-xs text-emerald-800 dark:text-emerald-300">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-600" />
+                  <div>
+                    <p className="font-semibold">Report successfully submitted!</p>
+                    <p className="text-[11px] opacity-90 mt-0.5">
+                      Redirecting to your submitted reports...
+                    </p>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {submitError && (
-              <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 flex items-center gap-3 text-xs text-red-800 dark:text-red-300">
-                <AlertCircle className="w-5 h-5 shrink-0 text-red-600" />
-                <span>{submitError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleReportSubmit} className="space-y-4">
-              {/* Type Selection */}
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
-                  Report Type
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setReportType('lost')}
-                    className={`py-2.5 px-4 rounded-xl text-xs font-semibold border transition-all cursor-pointer text-center ${
-                      reportType === 'lost'
-                        ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300 dark:border-amber-700 shadow-xs'
-                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                    }`}
-                  >
-                    I Lost an Item
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setReportType('found')}
-                    className={`py-2.5 px-4 rounded-xl text-xs font-semibold border transition-all cursor-pointer text-center ${
-                      reportType === 'found'
-                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 shadow-xs'
-                        : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
-                    }`}
-                  >
-                    I Found an Item
-                  </button>
+              {submitError && (
+                <div role="alert" className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 flex items-center gap-3 text-xs text-red-800 dark:text-red-300">
+                  <AlertCircle className="w-5 h-5 shrink-0 text-red-600" />
+                  <span>{submitError}</span>
                 </div>
-              </div>
+              )}
 
-              {/* Item Title */}
-              <div>
-                <label
-                  htmlFor="reportTitle"
-                  className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
-                >
-                  Item Name / Title *
-                </label>
-                <input
-                  id="reportTitle"
-                  type="text"
-                  required
-                  value={reportTitle}
-                  onChange={(e) => setReportTitle(e.target.value)}
-                  placeholder="e.g. Blue Water Bottle, Casio fx-991 Calculator"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* Category and Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <form onSubmit={handleReportSubmit} className="space-y-4">
+                {/* Type Selection */}
                 <div>
-                  <label
-                    htmlFor="reportCategory"
-                    className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
-                  >
-                    Category *
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+                    Report Type
                   </label>
-                  <select
-                    id="reportCategory"
-                    value={reportCategory}
-                    onChange={(e) => setReportCategory(e.target.value as ItemCategory)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="Electronics">Electronics</option>
-                    <option value="Clothing">Clothing</option>
-                    <option value="Bags">Bags</option>
-                    <option value="Books">Books</option>
-                    <option value="School Supplies">School Supplies</option>
-                    <option value="Accessories">Accessories</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setReportType('lost')}
+                      className={`py-2.5 px-4 rounded-xl text-xs font-semibold border transition-all cursor-pointer text-center ${
+                        reportType === 'lost'
+                          ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300 dark:border-amber-700 shadow-xs'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      I Lost an Item
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setReportType('found')}
+                      className={`py-2.5 px-4 rounded-xl text-xs font-semibold border transition-all cursor-pointer text-center ${
+                        reportType === 'found'
+                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700 shadow-xs'
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      I Found an Item
+                    </button>
+                  </div>
                 </div>
 
+                {/* Item Title */}
                 <div>
                   <label
-                    htmlFor="reportDate"
+                    htmlFor="reportTitle"
                     className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
                   >
-                    Date Incident Occurred *
+                    Item Name / Title *
                   </label>
                   <input
-                    id="reportDate"
-                    type="date"
+                    id="reportTitle"
+                    type="text"
                     required
-                    value={reportDate}
-                    onChange={(e) => setReportDate(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={reportTitle}
+                    onChange={(e) => setReportTitle(e.target.value)}
+                    placeholder="e.g. Blue Water Bottle, Casio fx-991 Calculator"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
-              </div>
 
-              {/* Location */}
-              <div>
-                <label
-                  htmlFor="reportLocation"
-                  className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
-                >
-                  Campus Location / Room *
-                </label>
-                <input
-                  id="reportLocation"
-                  type="text"
-                  required
-                  value={reportLocation}
-                  onChange={(e) => setReportLocation(e.target.value)}
-                  placeholder="e.g. Science Lab 3, Cafeteria courtyard bench"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+                {/* Category and Date */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="reportCategory"
+                      className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
+                    >
+                      Category *
+                    </label>
+                    <select
+                      id="reportCategory"
+                      value={reportCategory}
+                      onChange={(e) => setReportCategory(e.target.value as ItemCategory)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    >
+                      <option value="Electronics">Electronics</option>
+                      <option value="Clothing">Clothing</option>
+                      <option value="Bags">Bags</option>
+                      <option value="Books">Books</option>
+                      <option value="School Supplies">School Supplies</option>
+                      <option value="Accessories">Accessories</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
 
-              {/* Description */}
-              <div>
-                <label
-                  htmlFor="reportDescription"
-                  className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
-                >
-                  Detailed Description & Identifying Marks
-                </label>
-                <textarea
-                  id="reportDescription"
-                  rows={3}
-                  value={reportDescription}
-                  onChange={(e) => setReportDescription(e.target.value)}
-                  placeholder="Color, brand, size, distinctive stickers, scratches, or contents..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+                  <div>
+                    <label
+                      htmlFor="reportDate"
+                      className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
+                    >
+                      Date Incident Occurred *
+                    </label>
+                    <input
+                      id="reportDate"
+                      type="date"
+                      required
+                      value={reportDate}
+                      onChange={(e) => setReportDate(e.target.value)}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                    />
+                  </div>
+                </div>
 
-              {/* Contact Information */}
-              <div>
-                <label
-                  htmlFor="reportContact"
-                  className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
-                >
-                  Contact Phone or Email for Claim Follow-up
-                </label>
-                <input
-                  id="reportContact"
-                  type="text"
-                  value={reportContact}
-                  onChange={(e) => setReportContact(e.target.value)}
-                  placeholder="+212 600-000000 or email"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+                {/* Location */}
+                <div>
+                  <label
+                    htmlFor="reportLocation"
+                    className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
+                  >
+                    Campus Location / Room *
+                  </label>
+                  <input
+                    id="reportLocation"
+                    type="text"
+                    required
+                    value={reportLocation}
+                    onChange={(e) => setReportLocation(e.target.value)}
+                    placeholder="e.g. Science Lab 3, Cafeteria courtyard bench"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-70"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Submitting Report...</span>
-                    </>
-                  ) : (
-                    <span>Submit Official Report</span>
-                  )}
-                </button>
-              </div>
-            </form>
+                {/* Description */}
+                <div>
+                  <label
+                    htmlFor="reportDescription"
+                    className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
+                  >
+                    Detailed Description & Identifying Marks
+                  </label>
+                  <textarea
+                    id="reportDescription"
+                    rows={3}
+                    value={reportDescription}
+                    onChange={(e) => setReportDescription(e.target.value)}
+                    placeholder="Color, brand, size, distinctive stickers, scratches, or contents..."
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+
+                {/* Contact Information */}
+                <div>
+                  <label
+                    htmlFor="reportContact"
+                    className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1"
+                  >
+                    Contact Phone or Email for Claim Follow-up
+                  </label>
+                  <input
+                    id="reportContact"
+                    type="text"
+                    value={reportContact}
+                    onChange={(e) => setReportContact(e.target.value)}
+                    placeholder="+212 600-000000 or email"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm rounded-xl shadow-xs transition-colors cursor-pointer disabled:opacity-70"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        <span>Submitting Report...</span>
+                      </>
+                    ) : (
+                      <span>{t.submitReport}</span>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         )}
 
         {/* TAB 3: MY SUBMITTED REPORTS */}
         {activeTab === 'my-reports' && (
-          <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-                  {t.myReports}
-                </h2>
-                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  Track status updates from campus administration for your submitted tickets.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveTab('report')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-xl shadow-xs transition-colors cursor-pointer"
-              >
-                + New Report
+          <div className="workspace-page">
+            <WorkspaceHeader title={t.myReports} description={t.portalReportsDescription}>
+              <button type="button" onClick={() => setActiveTab('report')} className="workspace-button workspace-button-primary">
+                <PlusCircle size={16} /> {t.submitReport}
               </button>
-            </div>
+            </WorkspaceHeader>
 
             {userReports.length === 0 ? (
-              <div className="bg-white dark:bg-slate-900 rounded-2xl p-12 text-center border border-slate-200 dark:border-slate-800">
-                <FileText className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-slate-800 dark:text-slate-200">
-                  You haven't submitted any reports yet
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-                  If you lost or found something on campus, submit a report and administration staff will assist you.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('report')}
-                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium text-xs rounded-xl shadow-xs cursor-pointer"
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>Submit a Report</span>
-                </button>
+              <div className="workspace-panel">
+                <EmptyState icon={FileText} title={t.noPersonalReports} description={t.portalReportDescription} />
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="workspace-panel divide-y divide-slate-200 dark:divide-slate-800">
                 {userReports.map((report) => (
                   <div
                     key={report.id}
-                    className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    className="flex flex-col justify-between gap-3 p-4 sm:flex-row sm:items-center sm:p-5"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
@@ -681,8 +536,8 @@ export const UserPortalView: React.FC = () => {
                       </p>
 
                       {report.adminNotes && (
-                        <div className="mt-2 p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-200 flex items-start gap-2">
-                          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-blue-600" />
+                        <div className="mt-2 p-2.5 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/40 text-xs text-brand-900 dark:text-brand-200 flex items-start gap-2">
+                          <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-brand-600" />
                           <span>Admin Note: {report.adminNotes}</span>
                         </div>
                       )}
@@ -694,7 +549,7 @@ export const UserPortalView: React.FC = () => {
                           report.status === 'resolved' || report.status === 'claimed'
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                             : report.status === 'reviewed'
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                            ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300'
                             : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                         }`}
                       >
@@ -714,25 +569,16 @@ export const UserPortalView: React.FC = () => {
 
         {/* TAB 4: CAMPUS AI ASSISTANT FOR STUDENTS */}
         {activeTab === 'ai' && (
-          <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 rounded-2xl p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-xs text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-              Campus AI Assistant
-            </h2>
-            <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
-              Ask questions about lost & found items, school calendar, locations on campus, or school guidelines in English, French, Arabic, or Moroccan Darija.
-            </p>
-
-            <div className="pt-2">
+          <div className="workspace-page max-w-3xl">
+            <WorkspaceHeader title={t.navCampusAI} description={t.portalAIDescription} />
+            <div className="workspace-panel p-5">
               <button
                 type="button"
-                onClick={() => openAIChat('How do I claim a lost item on campus?')}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-xl shadow-xs cursor-pointer transition-colors"
+                onClick={() => openAIChat(t.aiClaimPrompt)}
+                className="workspace-button workspace-button-primary"
               >
-                <Sparkles className="w-4 h-4 text-amber-300" />
-                <span>Launch Assistant Consultation</span>
+                <Sparkles size={16} />
+                {t.openAssistant}
               </button>
             </div>
           </div>
@@ -741,8 +587,8 @@ export const UserPortalView: React.FC = () => {
 
       {/* Item Details Modal */}
       {viewItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-200 dark:border-slate-800 shadow-xl space-y-4">
+        <WorkspaceDialog label={viewItem.itemName} onClose={() => setViewItem(null)} className="max-w-lg">
+          <div className="space-y-4 p-5 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <span
@@ -761,9 +607,10 @@ export const UserPortalView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setViewItem(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                className="workspace-icon-button"
+                aria-label={t.close}
               >
-                ✕
+                <X size={18} />
               </button>
             </div>
 
@@ -790,8 +637,8 @@ export const UserPortalView: React.FC = () => {
               )}
             </div>
 
-            <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/40 text-xs text-blue-900 dark:text-blue-300 flex items-start gap-2">
-              <Info className="w-4 h-4 shrink-0 mt-0.5 text-blue-600" />
+            <div className="p-3 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/40 text-xs text-brand-900 dark:text-brand-300 flex items-start gap-2">
+              <Info className="w-4 h-4 shrink-0 mt-0.5 text-brand-600" />
               <div>
                 <p className="font-semibold">How to claim this item:</p>
                 <p className="text-[11px] opacity-90 mt-0.5">
@@ -804,13 +651,13 @@ export const UserPortalView: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setViewItem(null)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl cursor-pointer"
+                className="workspace-button"
               >
-                Close
+                {t.close}
               </button>
             </div>
           </div>
-        </div>
+        </WorkspaceDialog>
       )}
     </div>
   );

@@ -21,6 +21,7 @@ import {
   Upload,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { WorkspaceHeader } from '../common/WorkspaceUI';
 import { Student } from '../../types';
 import { exportToCSV, formatDateWithPattern } from '../../utils/analytics';
 import { EmptyState } from '../common/EmptyState';
@@ -178,7 +179,7 @@ export const StudentsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="workspace-page">
       {/* Hidden file input for importing student records */}
       <input
         type="file"
@@ -188,108 +189,100 @@ export const StudentsView: React.FC = () => {
         onChange={handleImportFile}
       />
 
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {t.studentsTitle}
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            {t.studentsSubtitle}
-          </p>
-        </div>
+      <WorkspaceHeader title={t.studentsTitle} description={t.studentsSubtitle}>
+        <button
+          type="button"
+          onClick={() => {
+            setStudentToEdit(null);
+            setIsAddModalOpen(true);
+          }}
+          className="workspace-button workspace-button-primary"
+        >
+          <Plus className="w-4 h-4" />
+          <span>{t.addStudent}</span>
+        </button>
+      </WorkspaceHeader>
 
-        <div className="flex items-center flex-wrap gap-2.5">
-          <button
-            type="button"
-            data-testid="save-students-server-btn"
-            onClick={() => saveStudentsToServer()}
-            disabled={isSavingStudents}
-            title={lastSavedStudentsAt ? `Last saved to server: ${new Date(lastSavedStudentsAt).toLocaleTimeString()}` : 'Save student registry to server database'}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
-          >
-            {isSavingStudents ? (
-              <RefreshCw className="w-4 h-4 text-indigo-600 dark:text-indigo-400 animate-spin" />
-            ) : (
-              <CloudUpload className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-            )}
-            <span>{isSavingStudents ? t.savingToServer : t.saveToServer}</span>
-            {lastSavedStudentsAt && !isSavingStudents && (
-              <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-900/80 dark:text-indigo-200">
-                <Check className="w-2.5 h-2.5 mr-0.5" />
-                {t.serverSavedBadge}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            data-testid="import-students-btn"
-            onClick={() => fileInputRef.current?.click()}
-            title="Import student records from a CSV or JSON file"
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium transition-colors cursor-pointer"
-          >
-            <Upload className="w-4 h-4 text-slate-600 dark:text-slate-300" />
-            <span>Import File</span>
-          </button>
-
-          {students.length > 0 && (
-            <>
-              <button
-                type="button"
-                data-testid="export-excel-btn"
-                onClick={() => setIsExportConfirmOpen(true)}
-                disabled={isExportingExcel}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 text-xs font-semibold transition-colors cursor-pointer disabled:opacity-60"
-              >
-                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                <span>{isExportingExcel ? t.exportingExcel : t.exportExcel}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleExportCsv}
-                className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium transition-colors cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>{t.exportCsv}</span>
-              </button>
-            </>
+      <div className="workspace-panel flex flex-wrap items-center gap-2 p-3">
+        <button
+          type="button"
+          data-testid="save-students-server-btn"
+          onClick={() => saveStudentsToServer()}
+          disabled={isSavingStudents}
+          title={lastSavedStudentsAt ? `Last saved to server: ${new Date(lastSavedStudentsAt).toLocaleTimeString()}` : 'Save student registry to server database'}
+          className="workspace-button"
+        >
+          {isSavingStudents ? (
+            <RefreshCw className="w-4 h-4 text-brand-600 dark:text-brand-400 animate-spin" />
+          ) : (
+            <CloudUpload className="w-4 h-4 text-brand-600 dark:text-brand-400" />
           )}
+          <span>{isSavingStudents ? t.savingToServer : t.saveToServer}</span>
+          {lastSavedStudentsAt && !isSavingStudents && (
+            <span className="hidden md:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-brand-100 text-brand-800 dark:bg-brand-900/80 dark:text-brand-200">
+              <Check className="w-2.5 h-2.5 mr-0.5" />
+              {t.serverSavedBadge}
+            </span>
+          )}
+        </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setStudentToEdit(null);
-              setIsAddModalOpen(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm font-medium transition-colors shadow-xs cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t.addStudent}</span>
-          </button>
-        </div>
+        <button
+          type="button"
+          data-testid="import-students-btn"
+          onClick={() => fileInputRef.current?.click()}
+          title="Import student records from a CSV or JSON file"
+          className="workspace-button"
+        >
+          <Upload className="w-4 h-4 text-slate-600 dark:text-slate-300" />
+          <span>Import File</span>
+        </button>
+
+        {students.length > 0 && (
+          <>
+            <button
+              type="button"
+              data-testid="export-excel-btn"
+              onClick={() => setIsExportConfirmOpen(true)}
+              disabled={isExportingExcel}
+              className="workspace-button"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>{isExportingExcel ? t.exportingExcel : t.exportExcel}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="workspace-button"
+            >
+              <Download className="w-4 h-4" />
+              <span>{t.exportCsv}</span>
+            </button>
+          </>
+        )}
       </div>
 
       {/* Main Content Area */}
       {students.length === 0 ? (
-        <EmptyState
-          icon={Users}
-          title={t.noStudentsTitle}
-          description={t.noStudentsDesc}
-          actionButton={{
-            label: t.registerFirstStudent,
-            onClick: () => {
-              setStudentToEdit(null);
-              setIsAddModalOpen(true);
-            },
-            icon: Plus,
-          }}
+        <div className="workspace-panel">
+          <EmptyState
+            icon={Users}
+            title={t.noStudentsTitle}
+            description={t.noStudentsDesc}
+            actionButton={{
+              label: t.registerFirstStudent,
+              onClick: () => {
+                setStudentToEdit(null);
+                setIsAddModalOpen(true);
+              },
+              icon: Plus,
+            }}
         />
+        </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="workspace-panel overflow-hidden">
           {/* Controls Bar: Search & Filters */}
-          <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/30">
+          <div className="flex flex-col justify-between gap-3 border-b border-slate-200 p-3 dark:border-slate-800 md:flex-row md:items-center">
             <div className="relative flex-1 max-w-md">
               <Search className="w-4 h-4 text-slate-400 absolute inset-y-0 start-3 my-auto pointer-events-none" />
               <input
@@ -297,7 +290,7 @@ export const StudentsView: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name, student ID, class..."
-                className="w-full ps-9 pe-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full ps-9 pe-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
@@ -308,7 +301,7 @@ export const StudentsView: React.FC = () => {
                 <select
                   value={selectedClass}
                   onChange={(e) => setSelectedClass(e.target.value)}
-                  className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 >
                   <option value="all">All Classes</option>
                   {classes.map((cls) => (
@@ -323,7 +316,7 @@ export const StudentsView: React.FC = () => {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="all">All Attendance</option>
                 <option value="present">Present</option>
@@ -342,7 +335,7 @@ export const StudentsView: React.FC = () => {
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full text-start text-xs md:text-sm">
-              <thead className="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                 <tr>
                   <th className="py-3 px-4 text-start">{t.studentId}</th>
                   <th className="py-3 px-4 text-start">{t.fullName}</th>
@@ -377,11 +370,11 @@ export const StudentsView: React.FC = () => {
                             onClick={() => setStudentToView(student)}
                             className="flex items-center gap-3 text-start group cursor-pointer"
                           >
-                            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center shrink-0">
+                            <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-900/60 text-brand-700 dark:text-brand-300 font-bold text-xs flex items-center justify-center shrink-0">
                               {getInitials(student.firstName, student.lastName)}
                             </div>
                             <div>
-                              <span className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 block transition-colors">
+                              <span className="font-semibold text-slate-900 dark:text-slate-100 group-hover:text-brand-600 dark:group-hover:text-brand-400 block transition-colors">
                                 {student.firstName} {student.lastName}
                               </span>
                             </div>
@@ -416,7 +409,7 @@ export const StudentsView: React.FC = () => {
                             </span>
                           )}
                           {status === 'excused' && (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400">
                               <UserCheck className="w-3 h-3" />
                               <span>{t.excused}</span>
                             </span>
@@ -476,7 +469,7 @@ export const StudentsView: React.FC = () => {
                                     setActionMenuOpenId(null);
                                     openAIChat(`Tell me everything about student ${student.firstName} ${student.lastName} (${student.studentId}), including attendance record and guardian contact.`);
                                   }}
-                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 cursor-pointer font-medium"
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-brand-600 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-brand-950/40 cursor-pointer font-medium"
                                 >
                                   <Sparkles className="w-3.5 h-3.5" />
                                   <span>Ask Campus AI</span>

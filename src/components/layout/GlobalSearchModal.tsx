@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Users, PackageSearch, UserCheck, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { WorkspaceDialog } from '../common/WorkspaceDialog';
 
 export const GlobalSearchModal: React.FC = () => {
   const {
@@ -79,8 +80,8 @@ export const GlobalSearchModal: React.FC = () => {
     matchedAttendance.length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+    <WorkspaceDialog label={t.search} onClose={() => setGlobalSearchOpen(false)} className="max-w-2xl">
+      <div className="workspace-panel">
         {/* Search Input */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-slate-200 dark:border-slate-800">
           <Search className="w-5 h-5 text-slate-400 shrink-0" />
@@ -109,20 +110,20 @@ export const GlobalSearchModal: React.FC = () => {
         {/* Results Area */}
         <div className="max-h-96 overflow-y-auto p-3 space-y-4">
           {!trimmed && (
-            <div className="py-12 text-center text-xs text-slate-400 dark:text-slate-500">
+            <div className="py-12 text-center text-xs text-slate-500 dark:text-slate-400">
               Type student name, ID, class, or lost item to search across Campus OS.
             </div>
           )}
 
           {trimmed && !hasResults && (
-            <div className="py-12 text-center text-xs text-slate-400 dark:text-slate-500">
+            <div className="py-12 text-center text-xs text-slate-500 dark:text-slate-400">
               No matching records found for "{query}".
             </div>
           )}
 
           {matchedStudents.length > 0 && (
             <div>
-              <div className="px-3 py-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="px-3 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5" />
                 <span>{t.navStudents} ({matchedStudents.length})</span>
               </div>
@@ -145,7 +146,7 @@ export const GlobalSearchModal: React.FC = () => {
                         {s.studentId} · {s.className}
                       </p>
                     </div>
-                    <span className="text-[10px] bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded font-medium">
+                    <span className="text-[10px] bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 px-2 py-0.5 rounded font-medium">
                       Student
                     </span>
                   </button>
@@ -156,7 +157,7 @@ export const GlobalSearchModal: React.FC = () => {
 
           {matchedItems.length > 0 && (
             <div>
-              <div className="px-3 py-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="px-3 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <PackageSearch className="w-3.5 h-3.5" />
                 <span>{t.navLostFound} ({matchedItems.length})</span>
               </div>
@@ -196,7 +197,7 @@ export const GlobalSearchModal: React.FC = () => {
 
           {matchedAttendance.length > 0 && (
             <div>
-              <div className="px-3 py-1 text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+              <div className="px-3 py-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <UserCheck className="w-3.5 h-3.5" />
                 <span>{t.navAttendance} ({matchedAttendance.length})</span>
               </div>
@@ -229,6 +230,6 @@ export const GlobalSearchModal: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+    </WorkspaceDialog>
   );
 };

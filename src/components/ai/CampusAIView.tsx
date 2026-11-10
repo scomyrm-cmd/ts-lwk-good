@@ -7,22 +7,20 @@ import {
   Copy,
   Check,
   FileSpreadsheet,
-  AlertCircle,
   RefreshCw,
   MessageSquare,
-  ShieldCheck,
-  Bot,
-  User as UserIcon,
   Mic,
   MicOff,
   Volume2,
   VolumeX,
+  X,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { ChatMessage, Conversation } from '../../types';
 import { buildComprehensiveAISchoolContext, buildSanitizedAISchoolContext } from '../../utils/analytics';
 import { speechController } from '../../utils/speechVoice';
 import { ReportModal } from './ReportModal';
+import { WorkspaceAvatar } from '../common/WorkspaceUI';
 
 export const CampusAIView: React.FC = () => {
   const {
@@ -68,7 +66,9 @@ export const CampusAIView: React.FC = () => {
     };
   }, []);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageLog = useRef<HTMLDivElement>(null);
+  const conversationsTrigger = useRef<HTMLButtonElement>(null);
+  const closeConversationsButton = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const activeConv = conversations.find((c) => c.id === activeConvId) || {
@@ -79,13 +79,19 @@ export const CampusAIView: React.FC = () => {
     updatedAt: new Date().toISOString(),
   };
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  useEffect(() => {
+    const log = messageLog.current;
+    if (log) log.scrollTop = log.scrollHeight;
+  }, [activeConv.messages, isLoading]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [activeConv.messages, isLoading]);
+    if (sidebarOpen) closeConversationsButton.current?.focus();
+  }, [sidebarOpen]);
+
+  const closeConversations = () => {
+    setSidebarOpen(false);
+    conversationsTrigger.current?.focus();
+  };
 
   // Handle incoming prompt requests from other tabs/modals (e.g. Student Profile)
   useEffect(() => {
@@ -99,6 +105,7 @@ export const CampusAIView: React.FC = () => {
   const handleStartNewChat = () => {
     const newId = 'conv_' + Date.now();
     setActiveConvId(newId);
+    setSidebarOpen(false);
     setInputPrompt('');
     inputRef.current?.focus();
   };
@@ -273,82 +280,80 @@ export const CampusAIView: React.FC = () => {
     return /[\u0600-\u06FF]/.test(text || '');
   };
 
-  // Generate intelligent suggestions referencing real students in the database
-  const sampleStudent = students[0];
-  const studentName = sampleStudent
-    ? `${sampleStudent.firstName} ${sampleStudent.lastName}`
-    : 'Marcus Vance';
-
-  const suggestedPrompts = [
-    `Tell me about student ${studentName}`,
-    'Who is marked absent today and what are their guardian contacts?',
-    `Donne-moi le profil de l'élève ${studentName} et son assiduité`,
-    'Qui est absent aujourd\'hui et comment contacter leurs parents ?',
-    `عطيني معلومات كاملة على التلميذ ${studentName}`,
-    'شكون لي غايب اليوم وعطيني نمر تيليفون ديال والديهم (بالدارجة)',
-    `Draft an absence letter to the parents of ${studentName}`,
-    `كتب رسالة إشعار لولي أمر ${studentName} بالدارجة المغربية`,
-  ];
-
-  const getInitials = (name: string) => {
-    if (!name) return 'AD';
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return name.slice(0, 2).toUpperCase();
-  };
+  const suggestedPrompts = [t.aiSuggestedPrompt1, t.aiSuggestedPrompt2, t.aiSuggestedPrompt3, t.aiSuggestedPrompt4];
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+    <div className="workspace-panel relative flex h-[calc(100dvh-7rem)] min-h-[25rem] overflow-hidden">
+      {sidebarOpen && (
+        <div
+          className="absolute inset-0 z-10 bg-slate-950/40 lg:hidden"
+          onClick={closeConversations}
+          aria-hidden="true"
+        />
+      )}
       {/* Conversations Drawer Sidebar (Desktop & Mobile toggle) */}
       <div
+        id="chat-conversations"
+        onKeyDown={(event) => {
+          if (event.key === 'Escape' && sidebarOpen) closeConversations();
+        }}
         className={`${
-          sidebarOpen ? 'block' : 'hidden'
-        } md:block w-64 border-e border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 p-3 flex flex-col shrink-0`}
+          sidebarOpen ? 'flex' : 'hidden'
+        } absolute inset-y-0 start-0 z-20 w-[min(15rem,88%)] shrink-0 flex-col border-e border-slate-200 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-950 lg:static lg:flex`}
       >
-        <button
-          type="button"
-          onClick={handleStartNewChat}
-          className="w-full flex items-center justify-center gap-2 px-3.5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors cursor-pointer mb-3"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{t.aiNewChat}</span>
-        </button>
+        <div className="mb-3 flex items-center gap-1.5">
+          <button type="button" onClick={handleStartNewChat} className="workspace-button flex-1">
+            <Plus size={16} />
+            {t.aiNewChat}
+          </button>
+          <button
+            ref={closeConversationsButton}
+            type="button"
+            onClick={closeConversations}
+            className="workspace-icon-button lg:hidden"
+            aria-label={t.close}
+          >
+            <X size={18} />
+          </button>
+        </div>
 
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 py-1">
-          Recent Conversations
+        <div className="px-2 py-1 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          {t.aiConversations}
         </div>
 
         <div className="flex-1 overflow-y-auto space-y-1 mt-1">
           {conversations.length === 0 ? (
-            <p className="text-xs text-slate-400 italic p-3 text-center">
-              No previous chats
+            <p className="p-2 text-xs text-slate-500 dark:text-slate-400">
+              {t.aiNoConversations}
             </p>
           ) : (
             conversations.map((conv) => (
               <div
                 key={conv.id}
-                onClick={() => {
-                  setActiveConvId(conv.id);
-                  setSidebarOpen(false);
-                }}
-                className={`group flex items-center justify-between p-2.5 rounded-lg text-xs font-medium cursor-pointer transition-colors ${
+                className={`group flex items-center justify-between gap-1 rounded-lg px-2 py-1 text-sm font-medium transition-colors ${
                   activeConvId === conv.id
-                    ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs'
+                    ? 'bg-white dark:bg-slate-800 text-brand-600 dark:text-brand-400 shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/50'
                 }`}
               >
-                <div className="flex items-center gap-2 truncate">
-                  <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">{conv.title}</span>
-                </div>
                 <button
                   type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteConversation(conv.id);
+                  className="flex min-w-0 flex-1 items-center gap-2 py-1.5 text-start"
+                  aria-current={activeConvId === conv.id ? 'true' : undefined}
+                  onClick={() => {
+                    setActiveConvId(conv.id);
+                    closeConversations();
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 rounded cursor-pointer transition-opacity"
-                  title="Delete chat"
+                >
+                  <MessageSquare size={15} className="shrink-0" />
+                  <span className="truncate">{conv.title}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteConversation(conv.id)}
+                  className="rounded p-1.5 text-slate-500 hover:text-red-700 dark:text-slate-400 dark:hover:text-red-300"
+                  aria-label={t.delete}
+                  title={t.delete}
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -372,30 +377,25 @@ export const CampusAIView: React.FC = () => {
       </div>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
+      <div className="flex h-full min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top Chat Toolbar */}
         <div className="h-14 px-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white dark:bg-slate-900 shrink-0">
           <div className="flex items-center gap-3">
             <button
+              ref={conversationsTrigger}
               type="button"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden p-1.5 rounded text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              onClick={() => setSidebarOpen((value) => !value)}
+              className="workspace-icon-button lg:hidden"
+              aria-label={t.aiConversations}
+              aria-expanded={sidebarOpen}
+              aria-controls="chat-conversations"
             >
               <MessageSquare className="w-4 h-4" />
             </button>
 
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-amber-500 to-blue-600 text-white flex items-center justify-center shadow-xs">
-                <Sparkles className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 leading-tight">
-                  Campus AI
-                </h3>
-                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium block leading-tight">
-                  ● Gemini 3.8 Flash Online
-                </span>
-              </div>
+              <Sparkles size={17} className="hidden text-brand-600 dark:text-brand-300 sm:block" aria-hidden="true" />
+              <h1 className="text-sm font-semibold">{t.navCampusAI}</h1>
             </div>
           </div>
 
@@ -406,21 +406,22 @@ export const CampusAIView: React.FC = () => {
               onClick={handleToggleAutoSpeak}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer border ${
                 autoSpeak
-                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border-blue-200 dark:border-blue-900/60 shadow-xs'
+                  ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 border-brand-200 dark:border-brand-900/60 shadow-xs'
                   : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
               title={t.aiAutoSpeak}
-              aria-label="Toggle auto voice speech"
+              aria-label={t.aiAutoSpeak}
+              aria-pressed={autoSpeak}
             >
               {autoSpeak ? (
                 <>
-                  <Volume2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                  <span className="hidden sm:inline font-semibold">Voice Talk: ON</span>
+                  <Volume2 className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
+                  <span className="hidden xl:inline">{t.aiAutoSpeak}</span>
                 </>
               ) : (
                 <>
                   <VolumeX className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="hidden sm:inline">Voice Talk: OFF</span>
+                  <span className="hidden xl:inline">{t.aiAutoSpeak}</span>
                 </>
               )}
             </button>
@@ -428,9 +429,11 @@ export const CampusAIView: React.FC = () => {
             <button
               type="button"
               onClick={() => setReportModalOpen(true)}
+              aria-label={t.aiGenerateReport}
+              title={t.aiGenerateReport}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
             >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
               <span className="hidden sm:inline">{t.aiGenerateReport}</span>
             </button>
 
@@ -439,6 +442,7 @@ export const CampusAIView: React.FC = () => {
               onClick={handleStartNewChat}
               className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               title={t.aiNewChat}
+              aria-label={t.aiNewChat}
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -446,40 +450,34 @@ export const CampusAIView: React.FC = () => {
         </div>
 
         {/* Message Stream */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
+        <div ref={messageLog} className="flex-1 space-y-5 overflow-y-auto p-4 md:p-6" role="log" aria-label={t.navCampusAI}>
           {activeConv.messages.length === 0 ? (
             /* Welcome Screen */
-            <div className="h-full flex flex-col items-center justify-center text-center max-w-xl mx-auto py-8">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/20 mb-4 animate-in zoom-in-95 duration-200">
-                <Sparkles className="w-7 h-7 text-amber-300" />
+            <div className="mx-auto flex min-h-full max-w-xl flex-col items-center justify-center py-5 text-center">
+              <div className="workspace-empty-icon">
+                <Sparkles size={22} className="text-brand-600 dark:text-brand-300" />
               </div>
               <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
                 {t.aiWelcomeTitle}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md">
+              <p className="mt-2 max-w-md text-sm text-slate-500 dark:text-slate-400">
                 {t.aiWelcomeSubtitle}
               </p>
 
-              {/* Privacy / Intelligence Badge */}
-              <div className="mt-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/40 text-[11px] text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                <span>Full Student Intelligence Active: Ask anything about students, absences, guardians, or classes</span>
-              </div>
-
               {/* Suggested Questions Grid */}
               <div className="mt-8 w-full">
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 text-start">
-                  Suggested Queries
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 text-start">
+                  {t.aiSuggestions}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-start">
-                  {suggestedPrompts.map((prompt, i) => (
+                  {suggestedPrompts.map((prompt) => (
                     <button
-                      key={i}
+                      key={prompt}
                       type="button"
                       onClick={() => handleSendMessage(prompt)}
-                      className="p-3 text-xs font-medium rounded-xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 transition-all hover:border-blue-400 text-start cursor-pointer group"
+                      className="workspace-button justify-start text-start"
                     >
-                      <span className="group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      <span className="group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                         {prompt}
                       </span>
                     </button>
@@ -498,40 +496,25 @@ export const CampusAIView: React.FC = () => {
                     isUser ? 'flex-row-reverse' : 'flex-row'
                   }`}
                 >
-                  {/* Avatar */}
-                  <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 flex items-center justify-center shadow-xs">
-                    {isUser ? (
-                      adminProfile.profilePictureUrl ? (
-                        <img
-                          src={adminProfile.profilePictureUrl}
-                          alt="Admin"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
-                          {getInitials(adminProfile.displayName)}
-                        </div>
-                      )
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-tr from-amber-500 to-blue-600 text-white flex items-center justify-center">
-                        <Sparkles className="w-4 h-4 text-white" />
-                      </div>
-                    )}
-                  </div>
+                  {isUser ? (
+                    <WorkspaceAvatar name={adminProfile.displayName} photo={adminProfile.profilePictureUrl} />
+                  ) : (
+                    <div className="workspace-avatar"><Sparkles size={16} aria-hidden="true" /></div>
+                  )}
 
                   {/* Bubble */}
                   <div
-                    className={`max-w-[85%] md:max-w-2xl rounded-2xl p-4 text-xs md:text-sm leading-relaxed ${
+                    className={`min-w-0 max-w-[85%] rounded-xl p-3.5 text-sm leading-relaxed sm:max-w-2xl ${
                       isUser
-                        ? 'bg-blue-600 text-white rounded-tr-none'
+                        ? 'bg-brand-600 text-white'
                         : msg.isError
-                        ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900/40 rounded-tl-none'
-                        : 'bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/60 rounded-tl-none'
+                        ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900/40'
+                        : 'bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 border border-slate-200/70 dark:border-slate-700/60'
                     }`}
                   >
                     <div
                       dir={isRtlText(msg.content) ? 'rtl' : 'ltr'}
-                      className={`whitespace-pre-wrap font-sans ${
+                      className={`break-words whitespace-pre-wrap ${
                         isRtlText(msg.content) ? 'text-right' : 'text-start'
                       }`}
                     >
@@ -552,15 +535,15 @@ export const CampusAIView: React.FC = () => {
                             onClick={() => handleSpeak(msg.content, msg.id)}
                             className={`flex items-center gap-1 cursor-pointer transition-colors ${
                               speakingMsgId === msg.id
-                                ? 'text-blue-600 dark:text-blue-400 font-semibold'
+                                ? 'text-brand-600 dark:text-brand-400 font-semibold'
                                 : 'hover:text-slate-600 dark:hover:text-slate-200'
                             }`}
                             title={speakingMsgId === msg.id ? t.aiVoiceStop : t.aiVoiceSpeak}
                           >
                             {speakingMsgId === msg.id ? (
                               <>
-                                <VolumeX className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 animate-pulse" />
-                                <span className="text-blue-600 dark:text-blue-400">{t.aiVoiceStop}</span>
+                                <VolumeX className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400 animate-pulse" />
+                                <span className="text-brand-600 dark:text-brand-400">{t.aiVoiceStop}</span>
                               </>
                             ) : (
                               <>
@@ -596,66 +579,17 @@ export const CampusAIView: React.FC = () => {
             })
           )}
 
-          {/* Thinking / Loading indicator */}
           {isLoading && (
-            <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-blue-600 text-white flex items-center justify-center shrink-0">
-                <Sparkles className="w-4 h-4 animate-spin" />
-              </div>
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce" />
-                <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:0.2s]" />
-                <span className="w-2 h-2 rounded-full bg-blue-600 animate-bounce [animation-delay:0.4s]" />
-                <span className="text-xs text-slate-500 dark:text-slate-400 ms-1 font-medium">
-                  Campus AI is analyzing live school metrics...
-                </span>
-              </div>
+            <div role="status" className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+              <RefreshCw size={15} className="animate-spin" aria-hidden="true" />
+              {t.loading}
             </div>
           )}
 
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Bar */}
         <div className="p-3 md:p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 space-y-2">
-          {activeConv.messages.length > 0 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] scrollbar-none">
-              <span className="text-slate-400 font-medium shrink-0 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-amber-500" />
-                Quick:
-              </span>
-              <button
-                type="button"
-                onClick={() => handleSendMessage('Who is absent today and what are their guardian phone numbers?')}
-                className="shrink-0 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-              >
-                Who is absent today?
-              </button>
-              {students[0] && (
-                <button
-                  type="button"
-                  onClick={() => handleSendMessage(`Tell me about student ${students[0].firstName} ${students[0].lastName} (${students[0].studentId})`)}
-                  className="shrink-0 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-                >
-                  About {students[0].firstName} {students[0].lastName}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => handleSendMessage('Which students have the most absences?')}
-                className="shrink-0 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-              >
-                Top Absentees
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSendMessage('Show all students in Grade 10-A')}
-                className="shrink-0 px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors cursor-pointer"
-              >
-                Grade 10-A Roster
-              </button>
-            </div>
-          )}
           {voiceNotice && (
             <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-xs">
               <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping shrink-0" />
@@ -664,15 +598,15 @@ export const CampusAIView: React.FC = () => {
           )}
 
           {speakingMsgId && !voiceNotice && (
-            <div className="flex items-center justify-between px-3.5 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 text-blue-700 dark:text-blue-300 text-xs">
+            <div className="flex items-center justify-between px-3.5 py-1.5 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-900/50 text-brand-700 dark:text-brand-300 text-xs">
               <div className="flex items-center gap-2">
-                <Volume2 className="w-4 h-4 animate-bounce text-blue-600 dark:text-blue-400" />
+                <Volume2 className="w-4 h-4 animate-bounce text-brand-600 dark:text-brand-400" />
                 <span>AI is currently speaking aloud...</span>
               </div>
               <button
                 type="button"
                 onClick={() => handleSpeak('', speakingMsgId)}
-                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline cursor-pointer"
               >
                 {t.aiVoiceStop}
               </button>
@@ -705,13 +639,15 @@ export const CampusAIView: React.FC = () => {
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
               placeholder={t.aiInputPlaceholder}
+              aria-label={t.aiInputPlaceholder}
               disabled={isLoading}
-              className="flex-1 px-4 py-2.5 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs md:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+              className="workspace-field min-w-0 flex-1 disabled:opacity-60"
             />
             <button
               type="submit"
               disabled={isLoading || !inputPrompt.trim()}
-              className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white font-medium text-xs md:text-sm rounded-xl transition-colors shadow-xs cursor-pointer disabled:cursor-not-allowed"
+              className="workspace-button workspace-button-primary min-h-11 shrink-0"
+              aria-label={t.aiSend}
             >
               <Send className="w-4 h-4" />
               <span className="hidden sm:inline">{t.aiSend}</span>

@@ -28,8 +28,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({
   const formattedDate = formatDateWithPattern(currentDate, settings.dateFormat);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-3xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-3xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Modal Controls (Not printed) */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/40 print:hidden">
           <div className="flex items-center gap-2">
@@ -42,7 +42,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
             <button
               type="button"
               onClick={handlePrint}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-xs transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold cursor-pointer shadow-xs transition-colors"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Print / Save as PDF</span>
@@ -62,7 +62,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
           {/* Institutional Header */}
           <div className="border-b pb-6 border-slate-200 dark:border-slate-800 flex items-start justify-between">
             <div>
-              <h2 className="text-xl font-bold tracking-tight text-blue-600 dark:text-blue-400">
+              <h2 className="text-xl font-bold tracking-tight text-brand-600 dark:text-brand-400">
                 {schoolInfo.name}
               </h2>
               <p className="text-xs text-slate-500 mt-1">
@@ -124,7 +124,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({
               </div>
               <div className="p-3 border rounded-xl border-slate-200 dark:border-slate-800">
                 <span className="text-[11px] text-slate-400 block">Attendance Rate</span>
-                <span className="text-lg font-bold text-blue-600">{dailyStats.attendanceRate}%</span>
+                <span className="text-lg font-bold text-brand-600">{dailyStats.attendanceRate}%</span>
               </div>
             </div>
           </div>

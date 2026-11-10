@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { LoginPage } from './components/auth/LoginPage';
 import { UserPortalView } from './components/portal/UserPortalView';
@@ -21,7 +21,8 @@ import { CampusAIFloatingWidget } from './components/ai/CampusAIFloatingWidget';
 import { StudentModal } from './components/students/StudentModal';
 import { ItemModal } from './components/lostfound/ItemModal';
 import { UserManagementView } from './components/users/UserManagementView';
-import { ShieldAlert, ArrowLeft } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, LoaderCircle } from 'lucide-react';
+import { CampusBrand } from './components/common/WorkspaceUI';
 
 const AccessDeniedView: React.FC<{ onReturnToPortal: () => void }> = ({ onReturnToPortal }) => {
   const { t } = useApp();
@@ -41,7 +42,7 @@ const AccessDeniedView: React.FC<{ onReturnToPortal: () => void }> = ({ onReturn
           <button
             type="button"
             onClick={onReturnToPortal}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs rounded-xl shadow-xs cursor-pointer transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs rounded-xl shadow-xs cursor-pointer transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>{t.backToPortal}</span>
@@ -52,21 +53,39 @@ const AccessDeniedView: React.FC<{ onReturnToPortal: () => void }> = ({ onReturn
   );
 };
 
+function Toast({ message }: { message: string | null }) {
+  if (!message) return null;
+  return (
+    <div role="status" className="fixed bottom-20 end-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-medium text-white shadow-lg dark:bg-slate-100 dark:text-slate-900">
+      <span className="size-2 shrink-0 rounded-full bg-brand-400" />
+      <span>{message}</span>
+    </div>
+  );
+}
+
 const MainLayout: React.FC = () => {
-  const { isVerifyingAuth, isAuthenticated, currentUser, activeTab, setActiveTab, toastMessage } = useApp();
+  const { isVerifyingAuth, isAuthenticated, currentUser, activeTab, setActiveTab, toastMessage, t } = useApp();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Quick Action Modals
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [isReportItemModalOpen, setIsReportItemModalOpen] = useState(false);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab, isAuthenticated]);
+
   // 0. Session verification on cold boot / fresh link opening
   if (isVerifyingAuth) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white text-center">
-        <div className="w-10 h-10 border-3 border-blue-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <h2 className="text-lg font-semibold tracking-tight text-white">Campus OS</h2>
-        <p className="text-xs text-slate-400 mt-1">Verifying secure session...</p>
+      <div className="grid min-h-svh place-items-center px-4">
+        <div role="status" className="grid justify-items-center gap-4">
+          <CampusBrand />
+          <p className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+            <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
+            {t.verifyingSession}
+          </p>
+        </div>
       </div>
     );
   }
@@ -82,12 +101,7 @@ const MainLayout: React.FC = () => {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors text-slate-900 dark:text-slate-100 antialiased">
         <UserPortalView />
         <CampusAIFloatingWidget />
-        {toastMessage && (
-          <div className="fixed bottom-6 end-6 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-2.5 rounded-xl shadow-xl text-xs font-medium flex items-center gap-2 border border-slate-700 dark:border-slate-200 animate-in fade-in slide-in-from-bottom-2 duration-150">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>{toastMessage}</span>
-          </div>
-        )}
+        <Toast message={toastMessage} />
       </div>
     );
   }
@@ -106,9 +120,9 @@ const MainLayout: React.FC = () => {
 
       {/* Main Content Viewport */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
-        <TopNavbar onOpenMobile={() => setMobileSidebarOpen(true)} />
+        <TopNavbar mobileOpen={mobileSidebarOpen} onOpenMobile={() => setMobileSidebarOpen(true)} />
 
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className={`workspace-content flex-1 ${activeTab === 'campus-ai' ? 'workspace-chat-content' : ''}`}>
           {!isValidAdminTab && (
             <AccessDeniedView onReturnToPortal={() => setActiveTab('dashboard')} />
           )}
@@ -147,13 +161,7 @@ const MainLayout: React.FC = () => {
       {/* Floating Campus AI Assistant */}
       <CampusAIFloatingWidget />
 
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed bottom-6 end-6 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-4 py-2.5 rounded-xl shadow-xl text-xs font-medium flex items-center gap-2 border border-slate-700 dark:border-slate-200 animate-in fade-in slide-in-from-bottom-2 duration-150">
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
+      <Toast message={toastMessage} />
     </div>
   );
 };

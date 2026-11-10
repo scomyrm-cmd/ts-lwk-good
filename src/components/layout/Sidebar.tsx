@@ -1,189 +1,132 @@
-import React from 'react';
+import { useEffect, useRef } from 'react';
 import {
-  LayoutDashboard,
-  Users,
-  UserCheck,
-  PackageSearch,
+  ClipboardCheck,
   History,
-  Sparkles,
-  Settings,
+  LayoutDashboard,
   LogOut,
-  Shield,
-  X,
+  PackageSearch,
+  Settings,
+  Sparkles,
   UserCog,
+  Users,
+  X,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { CampusBrand, WorkspaceAvatar } from '../common/WorkspaceUI';
 
 interface SidebarProps {
   mobileOpen: boolean;
   onCloseMobile: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, onCloseMobile }) => {
-  const {
-    activeTab,
-    setActiveTab,
-    adminProfile,
-    logout,
-    t,
-    schoolInfo,
-    settings,
-  } = useApp();
+export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
+  const { activeTab, setActiveTab, adminProfile, logout, t, schoolInfo } = useApp();
+  const drawer = useRef<HTMLDialogElement>(null);
 
-  const isRtl = settings.language === 'ar';
+  useEffect(() => {
+    const dialog = drawer.current;
+    if (!dialog) return;
+    if (!mobileOpen) {
+      if (dialog.open) dialog.close();
+      return;
+    }
 
-  const navItems = [
-    { id: 'dashboard', label: t.navDashboard, icon: LayoutDashboard },
-    { id: 'students', label: t.navStudents, icon: Users },
-    { id: 'attendance', label: t.navAttendance, icon: UserCheck },
-    { id: 'lostfound', label: t.navLostFound, icon: PackageSearch },
-    { id: 'users', label: t.navUsers, icon: UserCog },
-    { id: 'campus-ai', label: t.navCampusAI, icon: Sparkles, badge: 'AI' },
-    { id: 'activity', label: t.navActivity, icon: History },
-    { id: 'settings', label: t.navSettings, icon: Settings },
+    const desktop = window.matchMedia('(min-width: 48rem)');
+    if (desktop.matches) return;
+    if (!dialog.open) dialog.showModal();
+
+    const onResize = () => {
+      if (desktop.matches && dialog.open) dialog.close();
+    };
+    desktop.addEventListener('change', onResize);
+    return () => desktop.removeEventListener('change', onResize);
+  }, [mobileOpen]);
+
+  const groups = [
+    {
+      label: t.schoolOperations,
+      items: [
+        { id: 'dashboard', label: t.navDashboard, icon: LayoutDashboard },
+        { id: 'students', label: t.navStudents, icon: Users },
+        { id: 'attendance', label: t.navAttendance, icon: ClipboardCheck },
+        { id: 'lostfound', label: t.navLostFound, icon: PackageSearch },
+      ],
+    },
+    {
+      label: t.workspaceTools,
+      items: [
+        { id: 'users', label: t.navUsers, icon: UserCog },
+        { id: 'campus-ai', label: t.navCampusAI, icon: Sparkles },
+        { id: 'activity', label: t.navActivity, icon: History },
+        { id: 'settings', label: t.navSettings, icon: Settings },
+      ],
+    },
   ];
 
-  const getInitials = (name: string) => {
-    if (!name) return 'AD';
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return name.slice(0, 2).toUpperCase();
-  };
-
-  const sidebarContent = (
-    <div className="flex flex-col h-full bg-white dark:bg-slate-900 border-e border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 select-none">
-      {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-5 border-b border-slate-100 dark:border-slate-800/80">
-        <div className="flex items-center gap-3 overflow-hidden">
-          <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-            <Shield className="w-5 h-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="font-bold text-base tracking-tight text-slate-900 dark:text-slate-100 block leading-tight truncate">
-              {t.appName}
-            </span>
-            <span className="text-[11px] text-slate-500 dark:text-slate-400 block truncate leading-tight">
-              {schoolInfo.name}
-            </span>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onCloseMobile}
-          className="md:hidden p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg cursor-pointer"
-          aria-label="Close sidebar"
-        >
-          <X className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Nav Menu */}
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id;
-          const isAI = item.id === 'campus-ai';
-
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => {
-                setActiveTab(item.id);
-                onCloseMobile();
-              }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer relative ${
-                isActive
-                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
-              }`}
-            >
-              <Icon
-                className={`w-5 h-5 shrink-0 transition-colors ${
-                  isActive
-                    ? 'text-blue-600 dark:text-blue-400'
-                    : isAI
-                    ? 'text-amber-500 dark:text-amber-400'
-                    : 'text-slate-400 dark:text-slate-500'
-                }`}
-              />
-              <span className="truncate flex-1 text-start">{item.label}</span>
-              {item.badge && (
-                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
-                  {item.badge}
-                </span>
-              )}
-              {isActive && (
-                <span
-                  className={`absolute inset-y-1.5 w-1 bg-blue-600 dark:bg-blue-400 rounded-full ${
-                    isRtl ? 'start-0' : 'end-0'
-                  }`}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Admin Profile Footer */}
-      <div className="p-3 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/50">
-        <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-          <div className="w-9 h-9 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-700">
-            {adminProfile.profilePictureUrl ? (
-              <img
-                src={adminProfile.profilePictureUrl}
-                alt={adminProfile.displayName}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-                {getInitials(adminProfile.displayName)}
-              </span>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 truncate leading-tight">
-              {adminProfile.displayName}
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate leading-tight">
-              {adminProfile.role}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={logout}
-            title={t.logout}
-            className="p-1.5 text-slate-400 hover:text-red-600 dark:hover:text-red-400 rounded-lg hover:bg-white dark:hover:bg-slate-700/60 transition-colors cursor-pointer"
-            aria-label={t.logout}
-          >
-            <LogOut className="w-4 h-4" />
+  const sidebar = (mobile: boolean) => (
+    <div className="workspace-sidebar">
+      <div className="sidebar-brand">
+        <CampusBrand caption={schoolInfo.name} />
+        {mobile && (
+          <button type="button" autoFocus className="workspace-icon-button" onClick={onCloseMobile} aria-label={t.closeNavigation}>
+            <X size={19} />
           </button>
+        )}
+      </div>
+
+      <nav className="sidebar-navigation" aria-label={t.workspaceLabel}>
+        {groups.map((group) => (
+          <div className="sidebar-group" key={group.label}>
+            <p className="sidebar-label">{group.label}</p>
+            {group.items.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                className="sidebar-link"
+                aria-current={activeTab === id ? 'page' : undefined}
+                onClick={() => {
+                  setActiveTab(id);
+                  if (mobile) onCloseMobile();
+                }}
+              >
+                <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
+                <span className="truncate">{label}</span>
+              </button>
+            ))}
+          </div>
+        ))}
+      </nav>
+
+      <div className="sidebar-account">
+        <WorkspaceAvatar name={adminProfile.displayName} photo={adminProfile.profilePictureUrl} />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold">{adminProfile.displayName}</p>
+          <p className="mt-0.5 truncate text-xs text-[var(--nav-muted)]">{adminProfile.role}</p>
         </div>
+        <button type="button" className="workspace-icon-button" onClick={logout} aria-label={t.logout} title={t.logout}>
+          <LogOut size={17} />
+        </button>
       </div>
     </div>
   );
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:block w-64 h-screen sticky top-0 shrink-0 z-20">
-        {sidebarContent}
+      <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 md:block xl:w-60">
+        {sidebar(false)}
       </aside>
-
-      {/* Mobile Drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
-          <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
-            onClick={onCloseMobile}
-          />
-          <div className="relative w-64 max-w-[80vw] h-full z-10 animate-in slide-in-from-left duration-200">
-            {sidebarContent}
-          </div>
-        </div>
-      )}
+      <dialog
+        ref={drawer}
+        id="workspace-navigation"
+        className="sidebar-drawer"
+        aria-label={t.workspaceLabel}
+        onClose={onCloseMobile}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) onCloseMobile();
+        }}
+      >
+        {sidebar(true)}
+      </dialog>
     </>
   );
-};
+}

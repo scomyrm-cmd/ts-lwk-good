@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, UserPlus, Save } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { WorkspaceDialog } from '../common/WorkspaceDialog';
 import { Student } from '../../types';
 
 interface StudentModalProps {
@@ -93,12 +94,12 @@ export const StudentModal: React.FC<StudentModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+    <WorkspaceDialog label={studentToEdit ? t.editStudent : t.addStudent} onClose={onClose} className="max-w-lg">
+      <div className="workspace-panel">
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-4 dark:border-slate-800 sm:px-6">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400">
+            <div className="p-2 rounded-lg bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400">
               <UserPlus className="w-5 h-5" />
             </div>
             <div>
@@ -120,7 +121,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
         </div>
 
         {/* Modal Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
@@ -131,7 +132,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
                 value={studentId}
                 onChange={(e) => setStudentId(e.target.value)}
                 placeholder="e.g. STU-1001"
-                className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
                   errors.studentId ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                 }`}
               />
@@ -147,7 +148,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
               <select
                 value={className}
                 onChange={(e) => setClassName(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="Grade 9-A">Grade 9-A</option>
                 <option value="Grade 9-B">Grade 9-B</option>
@@ -171,7 +172,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="First name"
-                className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
                   errors.firstName ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                 }`}
               />
@@ -189,7 +190,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
                 placeholder="Family name"
-                className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
                   errors.lastName ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                 }`}
               />
@@ -207,7 +208,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
               <select
                 value={gender}
                 onChange={(e) => setGender(e.target.value as any)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
@@ -223,7 +224,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
                 type="date"
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
           </div>
@@ -237,7 +238,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
               value={guardianContact}
               onChange={(e) => setGuardianContact(e.target.value)}
               placeholder="e.g. +212 661 234 567 (Father / Mother)"
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
@@ -250,7 +251,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Health precautions, transportation notes, or special requirements..."
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
@@ -264,7 +265,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm rounded-lg transition-colors shadow-xs cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium text-sm rounded-lg transition-colors shadow-xs cursor-pointer"
             >
               <Save className="w-4 h-4" />
               <span>{t.save}</span>
@@ -272,6 +273,6 @@ export const StudentModal: React.FC<StudentModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </WorkspaceDialog>
   );
 };

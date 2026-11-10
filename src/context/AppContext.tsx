@@ -39,7 +39,7 @@ interface AppContextType {
     date: string;
     contact?: string;
   }) => Promise<{ success: boolean; error?: string }>;
-  fetchLostFoundFromServer: () => Promise<void>;
+  fetchLostFoundFromServer: (signal?: AbortSignal) => Promise<void>;
 
   // Excel Export
   exportStudentsToExcel: (filterClass?: string, filterStatus?: string) => Promise<{ success: boolean; error?: string }>;
@@ -295,14 +295,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return ()=>{cancelled=true;hydrated.current=false;};
   },[isAuthenticated,currentUser?.id,currentUser?.role]);
 
-  // Changes are saved to persistent private server storage; browser storage is never authoritative.
-  useEffect(()=>{
-    document.documentElement.lang=settings.language;
-    document.documentElement.dir=settings.language==='ar'?'rtl':'ltr';
-    const dark=settings.theme==='dark'||(settings.theme==='system'&&window.matchMedia('(prefers-color-scheme: dark)').matches);
-    document.documentElement.classList.toggle('dark',dark);
-  },[settings]);
+  useEffect(() => {
+    document.documentElement.lang = settings.language;
+    document.documentElement.dir = settings.language === 'ar' ? 'rtl' : 'ltr';
+  }, [settings.language]);
 
+  useEffect(() => {
+    const preference = window.matchMedia('(prefers-color-scheme: dark)');
+    const syncTheme = () => {
+      const dark = settings.theme === 'dark' || (settings.theme === 'system' && preference.matches);
+      document.documentElement.classList.toggle('dark', dark);
+    };
+    syncTheme();
+    if (settings.theme !== 'system') return;
+    preference.addEventListener('change', syncTheme);
+    return () => preference.removeEventListener('change', syncTheme);
+  }, [settings.theme]);
+
+  // Changes are saved to persistent private server storage; browser storage is never authoritative.
   useEffect(()=>{
     if(!isAuthenticated||currentUser?.role!=='admin'||!hydrated.current)return;
     const snapshot:any={students,attendance,lostFoundItems,activities,notifications,conversations,adminProfile,schoolInfo,settings};
@@ -354,7 +364,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     hydrated.current=false;persisted.current={};
     setCurrentUser(null);setIsAuthenticated(false);setActiveTab('dashboard');
     setStudents([]);setAttendance([]);setLostFoundItems([]);setActivities([]);setNotifications([]);
-    setConversations([]);setUserReports([]);setUsers([]);
+    setConversations([]);setUserReports([]);setUsers([]);setPendingAIPrompt(null);
   };
 
   const fetchUserReports = async () => {
@@ -424,22 +434,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const fetchLostFoundFromServer = async () => {
+  const fetchLostFoundFromServer = async (signal?: AbortSignal) => {
     try {
-      const res = await fetch('/api/admin/lost-found', {
-        headers: {
-        },
+      const response = await fetch('/api/admin/lost-found', {
+        credentials: 'include',
+        cache: 'no-store',
+        signal,
       });
-      if (res.ok) {
-        const text = await res.text();
-        const data = text ? JSON.parse(text) : {};
-        if (data.success && Array.isArray(data.items)) {
-          persisted.current.lostFoundItems=JSON.stringify(data.items);
-          setLostFoundItems(data.items);
-        }
+      if (!response.ok || signal?.aborted) return;
+      const data = await response.json();
+      if (!signal?.aborted && data.success && Array.isArray(data.items)) {
+        if (currentUser?.role === 'admin') persisted.current.lostFoundItems = JSON.stringify(data.items);
+        setLostFoundItems(data.items);
       }
-    } catch (err) {
-      console.error('Failed to fetch lost found items:', err);
+    } catch (error) {
+      if (!signal?.aborted) console.error('Failed to fetch lost and found items:', error);
     }
   };
 

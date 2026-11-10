@@ -18,6 +18,7 @@ import {
   FileSpreadsheet,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { MetricStrip, WorkspaceHeader } from '../common/WorkspaceUI';
 import { Student, AttendanceStatus } from '../../types';
 import {
   calculateDailyAttendance,
@@ -138,68 +139,33 @@ export const AttendanceView: React.FC = () => {
   });
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {t.attendanceTitle}
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            {t.attendanceSubtitle}
-          </p>
-        </div>
+    <div className="workspace-page">
+      <WorkspaceHeader title={t.attendanceTitle} description={t.attendanceSubtitle}>
+        {students.length > 0 && (
+          <button type="button" onClick={handleExportAttendance} className="workspace-button">
+            <Download size={16} />
+            {t.exportCsv}
+          </button>
+        )}
+      </WorkspaceHeader>
 
-        <div className="flex items-center gap-2">
-          {students.length > 0 && (
-            <button
-              type="button"
-              onClick={handleExportAttendance}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium transition-colors cursor-pointer"
-            >
-              <Download className="w-4 h-4" />
-              <span>{t.exportCsv}</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Sub Tabs Bar */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800">
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('daily')}
-          className={`pb-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
-            activeSubTab === 'daily'
-              ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          {t.tabDaily}
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('history')}
-          className={`pb-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
-            activeSubTab === 'history'
-              ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          {t.tabHistory}
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveSubTab('reports')}
-          className={`pb-3 px-4 text-xs md:text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
-            activeSubTab === 'reports'
-              ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          {t.tabReports}
-        </button>
-      </div>
+      <nav className="workspace-tabs" aria-label={t.attendanceTitle}>
+        {([
+          { id: 'daily', label: t.tabDaily },
+          { id: 'history', label: t.tabHistory },
+          { id: 'reports', label: t.tabReports },
+        ] as const).map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            className="workspace-tab"
+            aria-current={activeSubTab === id ? 'page' : undefined}
+            onClick={() => setActiveSubTab(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </nav>
 
       {/* TAB 1: DAILY REGISTER */}
       {activeSubTab === 'daily' && (
@@ -217,13 +183,14 @@ export const AttendanceView: React.FC = () => {
                   className="p-1 rounded text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer"
                   title="Previous Day"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-4 h-4 rtl:rotate-180" />
                 </button>
                 <input
                   type="date"
                   value={currentDate}
                   onChange={(e) => setCurrentDate(e.target.value)}
-                  className="px-2 py-1 bg-transparent text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
+                  aria-label={t.selectDate}
+                  className="px-2 py-1 bg-transparent text-sm font-medium text-slate-800 dark:text-slate-200"
                 />
                 <button
                   type="button"
@@ -231,7 +198,7 @@ export const AttendanceView: React.FC = () => {
                   className="p-1 rounded text-slate-500 hover:text-slate-900 dark:hover:text-slate-100 cursor-pointer"
                   title="Next Day"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-4 h-4 rtl:rotate-180" />
                 </button>
               </div>
             </div>
@@ -242,7 +209,7 @@ export const AttendanceView: React.FC = () => {
                 onClick={() => setCurrentDate(getTodayStr())}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   currentDate === getTodayStr()
-                    ? 'bg-blue-600 text-white shadow-xs'
+                    ? 'bg-brand-600 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                 }`}
               >
@@ -253,7 +220,7 @@ export const AttendanceView: React.FC = () => {
                 onClick={() => setCurrentDate(getYesterdayStr())}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   currentDate === getYesterdayStr()
-                    ? 'bg-blue-600 text-white shadow-xs'
+                    ? 'bg-brand-600 text-white shadow-xs'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                 }`}
               >
@@ -262,65 +229,23 @@ export const AttendanceView: React.FC = () => {
             </div>
           </div>
 
-          {/* Attendance Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-              <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold block">
-                {t.totalStudents}
-              </span>
-              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {dailyStats.totalStudents}
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30">
-              <span className="text-xs text-emerald-700 dark:text-emerald-400 uppercase tracking-wider font-semibold block">
-                {t.present}
-              </span>
-              <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400 mt-1">
-                {dailyStats.present}
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30">
-              <span className="text-xs text-rose-700 dark:text-rose-400 uppercase tracking-wider font-semibold block">
-                {t.absent}
-              </span>
-              <p className="text-2xl font-bold text-rose-700 dark:text-rose-400 mt-1">
-                {dailyStats.absent}
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30">
-              <span className="text-xs text-amber-700 dark:text-amber-400 uppercase tracking-wider font-semibold block">
-                {t.late}
-              </span>
-              <p className="text-2xl font-bold text-amber-700 dark:text-amber-400 mt-1">
-                {dailyStats.late}
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30">
-              <span className="text-xs text-blue-700 dark:text-blue-400 uppercase tracking-wider font-semibold block">
-                {t.excused}
-              </span>
-              <p className="text-2xl font-bold text-blue-700 dark:text-blue-400 mt-1">
-                {dailyStats.excused}
-              </p>
-            </div>
-          </div>
+          <MetricStrip items={[
+            { label: t.totalStudents, value: dailyStats.totalStudents },
+            { label: t.present, value: dailyStats.present },
+            { label: t.absent, value: dailyStats.absent },
+            { label: t.late, value: dailyStats.late },
+            { label: t.excused, value: dailyStats.excused },
+          ]} />
 
           {/* Daily Student Register Table */}
           {students.length === 0 ? (
-            <EmptyState
-              icon={CalendarCheck}
-              title={t.noStudentsTitle}
-              description="Register students first to start recording daily attendance."
-            />
+            <div className="workspace-panel">
+              <EmptyState icon={CalendarCheck} title={t.noStudentsTitle} description={t.noStudentsDesc} />
+            </div>
           ) : (
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+            <div className="workspace-panel overflow-hidden">
               {/* Table Filter Controls */}
-              <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50 dark:bg-slate-800/30">
+              <div className="flex flex-col justify-between gap-3 border-b border-slate-200 p-3 dark:border-slate-800 md:flex-row md:items-center">
                 <div className="relative flex-1 max-w-md">
                   <Search className="w-4 h-4 text-slate-400 absolute inset-y-0 start-3 my-auto pointer-events-none" />
                   <input
@@ -328,7 +253,7 @@ export const AttendanceView: React.FC = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search students in daily register..."
-                    className="w-full ps-9 pe-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full ps-9 pe-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
 
@@ -336,7 +261,7 @@ export const AttendanceView: React.FC = () => {
                   <select
                     value={selectedClass}
                     onChange={(e) => setSelectedClass(e.target.value)}
-                    className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   >
                     <option value="all">All Classes</option>
                     {classes.map((cls) => (
@@ -349,7 +274,7 @@ export const AttendanceView: React.FC = () => {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-2.5 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   >
                     <option value="all">All Statuses</option>
                     <option value="present">Present</option>
@@ -364,7 +289,7 @@ export const AttendanceView: React.FC = () => {
               {/* Table */}
               <div className="overflow-x-auto">
                 <table className="w-full text-start text-xs md:text-sm">
-                  <thead className="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                     <tr>
                       <th className="py-3 px-4 text-start">{t.studentId}</th>
                       <th className="py-3 px-4 text-start">{t.fullName}</th>
@@ -421,14 +346,14 @@ export const AttendanceView: React.FC = () => {
                                 </span>
                               )}
                               {status === 'excused' && (
-                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400">
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400">
                                   <UserCheck className="w-3 h-3" />
                                   <span>{t.excused}</span>
                                 </span>
                               )}
                               {!status && (
-                                <span className="text-[11px] text-slate-400 italic">
-                                  Unmarked
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                                  {t.notMarked}
                                 </span>
                               )}
                             </td>
@@ -443,50 +368,54 @@ export const AttendanceView: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => markAttendance(student.studentId, 'present')}
-                                  className={`px-2 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+                                  className={`min-h-8 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                                     status === 'present'
                                       ? 'bg-emerald-600 text-white shadow-xs'
                                       : 'bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 dark:bg-slate-800 dark:hover:bg-emerald-950 dark:hover:text-emerald-400 text-slate-600 dark:text-slate-300'
                                   }`}
-                                  title="Mark Present"
+                                  title={t.markPresent}
+                                  aria-pressed={status === 'present'}
                                 >
-                                  P
+                                  {t.present}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => openAbsenceModal(student, 'late')}
-                                  className={`px-2 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+                                  className={`min-h-8 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                                     status === 'late'
                                       ? 'bg-amber-500 text-white shadow-xs'
                                       : 'bg-slate-100 hover:bg-amber-50 hover:text-amber-700 dark:bg-slate-800 dark:hover:bg-amber-950 dark:hover:text-amber-400 text-slate-600 dark:text-slate-300'
                                   }`}
-                                  title="Mark Late with Reason"
+                                  title={t.markLate}
+                                  aria-pressed={status === 'late'}
                                 >
-                                  L
+                                  {t.late}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => openAbsenceModal(student, 'absent')}
-                                  className={`px-2 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+                                  className={`min-h-8 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                                     status === 'absent'
                                       ? 'bg-rose-600 text-white shadow-xs'
                                       : 'bg-slate-100 hover:bg-rose-50 hover:text-rose-700 dark:bg-slate-800 dark:hover:bg-rose-950 dark:hover:text-rose-400 text-slate-600 dark:text-slate-300'
                                   }`}
-                                  title="Mark Absent with Reason"
+                                  title={t.markAbsent}
+                                  aria-pressed={status === 'absent'}
                                 >
-                                  A
+                                  {t.absent}
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => openAbsenceModal(student, 'excused')}
-                                  className={`px-2 py-1 text-xs font-medium rounded transition-colors cursor-pointer ${
+                                  className={`min-h-8 whitespace-nowrap rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                                     status === 'excused'
-                                      ? 'bg-blue-600 text-white shadow-xs'
-                                      : 'bg-slate-100 hover:bg-blue-50 hover:text-blue-700 dark:bg-slate-800 dark:hover:bg-blue-950 dark:hover:text-blue-400 text-slate-600 dark:text-slate-300'
+                                      ? 'bg-brand-600 text-white shadow-xs'
+                                      : 'bg-slate-100 hover:bg-brand-50 hover:text-brand-700 dark:bg-slate-800 dark:hover:bg-brand-950 dark:hover:text-brand-400 text-slate-600 dark:text-slate-300'
                                   }`}
-                                  title="Mark Excused Absence"
+                                  title={t.markExcused}
+                                  aria-pressed={status === 'excused'}
                                 >
-                                  E
+                                  {t.excused}
                                 </button>
                               </div>
                             </td>
@@ -528,7 +457,7 @@ export const AttendanceView: React.FC = () => {
           ) : (
             <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
               <table className="w-full text-start text-xs md:text-sm">
-                <thead className="bg-slate-50/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                   <tr>
                     <th className="py-3 px-4 text-start">{t.date}</th>
                     <th className="py-3 px-4 text-start">{t.studentId}</th>
@@ -556,7 +485,7 @@ export const AttendanceView: React.FC = () => {
                               ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'
                               : record.status === 'late'
                               ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400'
-                              : 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400'
+                              : 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400'
                           }`}
                         >
                           {record.status}
@@ -619,7 +548,7 @@ export const AttendanceView: React.FC = () => {
                         <div
                           style={{ width: `${Math.min(100, item.absenceRate)}%` }}
                           className={`h-full transition-all ${
-                            item.absenceRate > 20 ? 'bg-rose-500' : 'bg-blue-500'
+                            item.absenceRate > 20 ? 'bg-rose-500' : 'bg-brand-500'
                           }`}
                         />
                       </div>
@@ -671,7 +600,7 @@ export const AttendanceView: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleExportAttendance}
-                  className="text-xs font-semibold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
+                  className="text-xs font-semibold text-brand-600 hover:underline flex items-center gap-1 cursor-pointer"
                 >
                   <FileSpreadsheet className="w-3.5 h-3.5" />
                   <span>Download Full Report</span>

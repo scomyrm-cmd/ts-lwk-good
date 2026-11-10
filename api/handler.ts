@@ -176,7 +176,11 @@ async function route(req:VercelRequest,res:VercelResponse){
     }
   }
   if(routeName==='admin/lost-found'&&method==='GET') {
-    const items=admin?s.lostFoundItems:s.lostFoundItems.map(({contactInformation,reporterName,...safe}:any)=>safe);
+    const items = admin ? s.lostFoundItems : s.lostFoundItems
+      .filter(({ status }) => status === 'lost' || status === 'found')
+      .map(({ id, itemName, category, description, reportType, dateReported, location, status, createdAt }) => ({
+        id, itemName, category, description, reportType, dateReported, location, status, createdAt,
+      }));
     return res.status(200).json({success:true,items});
   }
   if(routeName==='campus-ai') {

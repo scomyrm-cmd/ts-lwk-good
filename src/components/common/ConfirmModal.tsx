@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { WorkspaceDialog } from './WorkspaceDialog';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -27,8 +28,8 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 rounded-xl max-w-md w-full p-6 border border-slate-200 dark:border-slate-800 shadow-xl">
+    <WorkspaceDialog label={title} onClose={onCancel} className="max-w-md">
+      <div className="workspace-panel p-5 sm:p-6">
         <div className="flex items-start gap-4">
           <div
             className={`p-2.5 rounded-full shrink-0 ${
@@ -63,13 +64,13 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             className={`px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors cursor-pointer ${
               isDestructive
                 ? 'bg-red-600 hover:bg-red-700 focus:ring-red-500'
-                : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+                : 'bg-brand-600 hover:bg-brand-700 focus:ring-brand-500'
             }`}
           >
             {confirmLabel || (isDestructive ? t.delete : t.confirm)}
           </button>
         </div>
       </div>
-    </div>
+    </WorkspaceDialog>
   );
 };

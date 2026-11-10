@@ -22,6 +22,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { MetricStrip, WorkspaceHeader } from '../common/WorkspaceUI';
 import { LostFoundItem, ItemCategory, ItemStatus } from '../../types';
 import { calculateLostFoundStats, formatDateWithPattern } from '../../utils/analytics';
 import { EmptyState } from '../common/EmptyState';
@@ -95,123 +96,77 @@ export const LostFoundView: React.FC = () => {
       return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
     });
 
-  const statCards = [
-    { label: t.totalReported, value: stats.totalReported, color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-950/40' },
-    { label: t.lostItems, value: stats.lostCount, color: 'text-rose-600', bg: 'bg-rose-50 dark:bg-rose-950/40' },
-    { label: t.foundItems, value: stats.foundCount, color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-950/40' },
-    { label: t.claimedItems, value: stats.claimedCount, color: 'text-emerald-600', bg: 'bg-emerald-50 dark:bg-emerald-950/40' },
+  const metrics = [
+    { label: t.totalReported, value: stats.totalReported, icon: PackageSearch },
+    { label: t.lostItems, value: stats.lostCount, icon: Search },
+    { label: t.foundItems, value: stats.foundCount, icon: Archive },
+    { label: t.claimedItems, value: stats.claimedCount, icon: CheckCircle },
   ];
+  const pendingReports = userReports.filter((report) => report.status === 'pending').length;
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {t.lostFoundTitle}
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            {t.lostFoundSubtitle}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            type="button"
-            onClick={async () => {
-              setIsRefreshing(true);
-              await Promise.all([fetchAdminReports(), fetchLostFoundFromServer()]);
-              setTimeout(() => setIsRefreshing(false), 500);
-            }}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs md:text-sm font-medium transition-colors cursor-pointer"
-            title="Synchronize student reports and inventory with server database"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-blue-600' : ''}`} />
-            <span>{isRefreshing ? 'Syncing...' : 'Sync Server'}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setItemToEdit(null);
-              setReportType('lost');
-              setIsReportModalOpen(true);
-            }}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/40 text-xs md:text-sm font-medium transition-colors cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t.reportLostItem}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setItemToEdit(null);
-              setReportType('found');
-              setIsReportModalOpen(true);
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs md:text-sm font-medium transition-colors shadow-xs cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t.reportFoundItem}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Sub-tab Switcher: Official Catalog vs Student Incident Reports */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+    <div className="workspace-page">
+      <WorkspaceHeader title={t.lostFoundTitle} description={t.lostFoundSubtitle}>
         <button
           type="button"
-          onClick={() => setActiveSubTab('catalog')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all cursor-pointer ${
-            activeSubTab === 'catalog'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
-          }`}
+          onClick={async () => {
+            setIsRefreshing(true);
+            await Promise.all([fetchAdminReports(), fetchLostFoundFromServer()]);
+            setTimeout(() => setIsRefreshing(false), 500);
+          }}
+          disabled={isRefreshing}
+          className="workspace-button"
+          title="Synchronize student reports and inventory with server database"
         >
-          <PackageSearch className="w-4 h-4" />
-          <span>Official Catalog ({lostFoundItems.length})</span>
+          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-brand-600' : ''}`} />
+          <span>{isRefreshing ? 'Syncing...' : 'Sync Server'}</span>
         </button>
 
         <button
           type="button"
-          onClick={() => setActiveSubTab('student-reports')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs md:text-sm font-semibold transition-all cursor-pointer ${
-            activeSubTab === 'student-reports'
-              ? 'bg-blue-600 text-white shadow-xs'
-              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800'
-          }`}
+          onClick={() => {
+            setItemToEdit(null);
+            setReportType('lost');
+            setIsReportModalOpen(true);
+          }}
+          className="workspace-button"
         >
-          <FileText className="w-4 h-4" />
-          <span>Student Incident Reports ({userReports.length})</span>
-          {userReports.filter((r) => r.status === 'pending').length > 0 && (
-            <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
-              {userReports.filter((r) => r.status === 'pending').length} pending
+          <Plus className="w-4 h-4" />
+          <span>{t.reportLostItem}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setItemToEdit(null);
+            setReportType('found');
+            setIsReportModalOpen(true);
+          }}
+          className="workspace-button workspace-button-primary"
+        >
+          <Plus className="w-4 h-4" />
+          <span>{t.reportFoundItem}</span>
+        </button>
+      </WorkspaceHeader>
+
+      <nav className="workspace-tabs" aria-label={t.lostFoundTitle}>
+        <button type="button" className="workspace-tab" aria-current={activeSubTab === 'catalog' ? 'page' : undefined} onClick={() => setActiveSubTab('catalog')}>
+          <PackageSearch size={16} aria-hidden="true" />
+          {t.officialCatalog}
+        </button>
+        <button type="button" className="workspace-tab" aria-current={activeSubTab === 'student-reports' ? 'page' : undefined} onClick={() => setActiveSubTab('student-reports')}>
+          <FileText size={16} aria-hidden="true" />
+          {t.studentReports}
+          {pendingReports > 0 && (
+            <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-300">
+              <span className="sr-only">{t.reportsAwaitingReview} </span>
+              {pendingReports}
             </span>
           )}
         </button>
-      </div>
+      </nav>
 
-      {/* 4 Statistics Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {statCards.map((c) => (
-          <div
-            key={c.label}
-            className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between"
-          >
-            <div>
-              <span className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-wider font-semibold block">
-                {c.label}
-              </span>
-              <p className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {c.value}
-              </p>
-            </div>
-            <div className={`w-3 h-3 rounded-full ${c.color.replace('text-', 'bg-')}`} />
-          </div>
-        ))}
-      </div>
+      {activeSubTab === 'catalog' && <MetricStrip items={metrics} />}
 
       {/* Main Content Area */}
       {activeSubTab === 'catalog' && (
@@ -242,7 +197,7 @@ export const LostFoundView: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search items by name, location, keyword..."
-                className="w-full ps-9 pe-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full ps-9 pe-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
@@ -251,7 +206,7 @@ export const LostFoundView: React.FC = () => {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="all">All Categories</option>
                 {categories.map((cat) => (
@@ -265,7 +220,7 @@ export const LostFoundView: React.FC = () => {
               <select
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
-                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-2.5 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 <option value="all">All Statuses</option>
                 <option value="found">Found (Unclaimed)</option>
@@ -301,7 +256,7 @@ export const LostFoundView: React.FC = () => {
               {filteredItems.map((item) => (
                 <div
                   key={item.id}
-                  className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all"
+                  className="workspace-panel overflow-hidden flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all"
                 >
                   <div>
                     {/* Image / Header bar */}
@@ -390,7 +345,7 @@ export const LostFoundView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setItemToView(item)}
-                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-xs font-semibold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <Eye className="w-3.5 h-3.5" />
                       <span>{t.view} Details</span>
@@ -468,7 +423,7 @@ export const LostFoundView: React.FC = () => {
                 await fetchAdminReports();
                 setTimeout(() => setIsRefreshing(false), 400);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 text-xs font-semibold hover:bg-blue-100 cursor-pointer w-fit"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 dark:bg-brand-950/50 text-brand-600 dark:text-brand-400 text-xs font-semibold hover:bg-brand-100 cursor-pointer w-fit"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
               <span>Refresh Reports</span>
@@ -513,7 +468,7 @@ export const LostFoundView: React.FC = () => {
                           report.status === 'resolved'
                             ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
                             : report.status === 'reviewed'
-                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                            ? 'bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300'
                             : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
                         }`}
                       >
@@ -543,7 +498,7 @@ export const LostFoundView: React.FC = () => {
                       {report.contact && (
                         <div className="flex items-center justify-between">
                           <span className="text-slate-500">Contact / Phone:</span>
-                          <span className="font-semibold text-blue-600 dark:text-blue-400">
+                          <span className="font-semibold text-brand-600 dark:text-brand-400">
                             {report.contact}
                           </span>
                         </div>
@@ -579,7 +534,7 @@ export const LostFoundView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => updateAdminReportStatus(report.id, 'reviewed')}
-                          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white cursor-pointer transition-colors"
+                          className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-brand-600 hover:bg-brand-700 text-white cursor-pointer transition-colors"
                         >
                           Mark Reviewed
                         </button>
@@ -645,8 +600,8 @@ export const LostFoundView: React.FC = () => {
 
       {/* Item Details View Modal */}
       {itemToView && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">

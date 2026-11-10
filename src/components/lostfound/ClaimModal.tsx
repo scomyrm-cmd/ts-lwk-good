@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, CheckCircle, Save } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { WorkspaceDialog } from '../common/WorkspaceDialog';
 import { LostFoundItem } from '../../types';
 
 interface ClaimModalProps {
@@ -35,10 +36,10 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-md border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+    <WorkspaceDialog label={t.confirmClaim} onClose={onClose} className="max-w-md">
+      <div className="workspace-panel">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-4 dark:border-slate-800 sm:px-6">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
               <CheckCircle className="w-5 h-5" />
@@ -80,7 +81,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
                 setError('');
               }}
               placeholder="Full name of student, guardian, or staff member"
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
@@ -93,7 +94,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
               placeholder="e.g. STU-1002"
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
@@ -106,7 +107,7 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
               value={claimNotes}
               onChange={(e) => setClaimNotes(e.target.value)}
               placeholder="Verification method used (e.g. matched identity card, locker key verified)..."
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
@@ -128,6 +129,6 @@ export const ClaimModal: React.FC<ClaimModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </WorkspaceDialog>
   );
 };

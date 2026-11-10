@@ -1,14 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Sparkles,
-  MessageSquare,
   X,
   Send,
   Maximize2,
-  Minimize2,
-  Trash2,
-  Bot,
-  User as UserIcon,
   Mic,
   MicOff,
   Volume2,
@@ -22,6 +17,10 @@ import { speechController } from '../../utils/speechVoice';
 export const CampusAIFloatingWidget: React.FC = () => {
   const {
     isAuthenticated,
+    currentUser,
+    pendingAIPrompt,
+    setPendingAIPrompt,
+    t,
     activeTab,
     setActiveTab,
     students,
@@ -35,10 +34,11 @@ export const CampusAIFloatingWidget: React.FC = () => {
     adminProfile,
   } = useApp();
 
+  const isAdmin = currentUser?.role === 'admin';
   const [isOpen, setIsOpen] = useState(false);
   const [inputPrompt, setInputPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageLog = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isRtlText = (text: string) => {
@@ -51,10 +51,6 @@ export const CampusAIFloatingWidget: React.FC = () => {
     messages: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
@@ -111,11 +107,13 @@ export const CampusAIFloatingWidget: React.FC = () => {
   };
 
   useEffect(() => {
-    if (isOpen) {
-      scrollToBottom();
-      setTimeout(() => inputRef.current?.focus(), 150);
-    }
+    const log = messageLog.current;
+    if (log) log.scrollTop = log.scrollHeight;
   }, [isOpen, activeConv.messages, isLoading]);
+
+  useEffect(() => {
+    if (isOpen) inputRef.current?.focus({ preventScroll: true });
+  }, [isOpen]);
 
   const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || inputPrompt).trim();
@@ -193,97 +191,64 @@ export const CampusAIFloatingWidget: React.FC = () => {
     }
   };
 
-  const sampleStudent = students[0];
+  useEffect(() => {
+    if (!isAdmin && pendingAIPrompt) {
+      setIsOpen(true);
+      setInputPrompt(pendingAIPrompt);
+      setPendingAIPrompt(null);
+    }
+  }, [isAdmin, pendingAIPrompt, setPendingAIPrompt]);
 
-  // If already on the full-page campus-ai view or not authenticated, hide floating widget
-  if (!isAuthenticated || activeTab === 'campus-ai') {
-    return null;
-  }
+  if (!isAuthenticated || (isAdmin && activeTab === 'campus-ai')) return null;
+
+  const prompts = isAdmin
+    ? [t.aiSuggestedPrompt1, t.aiSuggestedPrompt2, t.aiSuggestedPrompt3]
+    : [t.aiClaimPrompt];
 
   return (
-    <div className="fixed bottom-5 end-5 z-40 flex flex-col items-end">
-      {/* Floating Chat Modal / Drawer */}
+    <div className="fixed bottom-4 end-4 z-40 flex flex-col items-end sm:bottom-5 sm:end-5">
       {isOpen && (
-        <div className="w-[360px] sm:w-[420px] h-[520px] max-h-[80vh] bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden mb-3 animate-in zoom-in-95 fade-in duration-200">
-          {/* Header */}
-          <div className="px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex items-center justify-between shadow-xs shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-white/20 backdrop-blur-xs flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-amber-300" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold leading-tight flex items-center gap-1.5">
-                  <span>Campus AI Assistant</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
-                </h4>
-                <p className="text-[10px] text-blue-100 leading-tight">
-                  Student & School Intelligence Online
-                </p>
-              </div>
-            </div>
-
+        <section aria-label={t.navCampusAI} className="workspace-panel flex h-[min(31rem,calc(100dvh-2rem))] w-[min(25rem,calc(100vw-2rem))] flex-col overflow-hidden shadow-xl">
+          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3.5 py-2 dark:border-slate-800">
+            <h2 className="flex items-center gap-2 text-sm font-semibold">
+              <Sparkles size={17} className="text-brand-600 dark:text-brand-300" aria-hidden="true" />
+              {t.navCampusAI}
+            </h2>
             <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsOpen(false);
-                  setActiveTab('campus-ai');
-                }}
-                className="p-1 text-white/80 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer"
-                title="Expand to Full Hub"
-              >
-                <Maximize2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="p-1 text-white/80 hover:text-white hover:bg-white/10 rounded-md transition-colors cursor-pointer"
-                title="Close chat"
-              >
-                <X className="w-4 h-4" />
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    setActiveTab('campus-ai');
+                  }}
+                  className="workspace-icon-button"
+                  aria-label={t.aiExpand}
+                  title={t.aiExpand}
+                >
+                  <Maximize2 size={16} />
+                </button>
+              )}
+              <button type="button" onClick={() => setIsOpen(false)} className="workspace-icon-button" aria-label={t.close}>
+                <X size={18} />
               </button>
             </div>
           </div>
 
           {/* Messages Stream */}
-          <div className="flex-1 overflow-y-auto p-3.5 space-y-3.5 bg-slate-50/50 dark:bg-slate-950/40">
+          <div ref={messageLog} className="flex-1 space-y-3.5 overflow-y-auto p-4" role="log" aria-label={t.navCampusAI}>
             {activeConv.messages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-4">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-2">
-                  <Bot className="w-5 h-5" />
-                </div>
-                <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  How can I help you today?
-                </h5>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 max-w-xs">
-                  Ask me anything about registered students, who is absent today, class rosters, or drafting letters to guardians.
+              <div className="flex min-h-full flex-col justify-center gap-2 py-3">
+                <p className="text-sm font-semibold">{t.aiWelcomeTitle}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {isAdmin ? t.aiWelcomeSubtitle : t.portalAIDescription}
                 </p>
-
-                {/* Quick start suggestions */}
-                <div className="mt-4 w-full space-y-1.5 text-start">
-                  <button
-                    type="button"
-                    onClick={() => handleSendMessage('Who is absent today and what are their guardian phone numbers?')}
-                    className="w-full p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/60 text-[11px] text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:border-blue-400 transition-all text-start cursor-pointer"
-                  >
-                    📋 Who is marked absent today?
-                  </button>
-                  {sampleStudent && (
-                    <button
-                      type="button"
-                      onClick={() => handleSendMessage(`Tell me about student ${sampleStudent.firstName} ${sampleStudent.lastName} (${sampleStudent.studentId})`)}
-                      className="w-full p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/60 text-[11px] text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:border-blue-400 transition-all text-start cursor-pointer"
-                    >
-                      🎓 Tell me about {sampleStudent.firstName} {sampleStudent.lastName}
+                <div className="mt-3 grid gap-2">
+                  {prompts.map((prompt) => (
+                    <button key={prompt} type="button" onClick={() => handleSendMessage(prompt)} className="workspace-button justify-start text-start">
+                      {prompt}
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => handleSendMessage('Which students have the highest absence count?')}
-                    className="w-full p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200/70 dark:border-slate-700/60 text-[11px] text-slate-700 dark:text-slate-300 hover:text-blue-600 hover:border-blue-400 transition-all text-start cursor-pointer"
-                  >
-                    ⚠️ Show top students with absences
-                  </button>
+                  ))}
                 </div>
               </div>
             ) : (
@@ -298,11 +263,11 @@ export const CampusAIFloatingWidget: React.FC = () => {
                   >
                     <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 flex items-center justify-center text-[10px] font-bold">
                       {isUser ? (
-                        <div className="w-full h-full bg-blue-600 text-white flex items-center justify-center">
-                          {adminProfile.displayName.slice(0, 1).toUpperCase()}
+                        <div className="w-full h-full bg-brand-600 text-white flex items-center justify-center">
+                          {(isAdmin ? adminProfile.displayName : currentUser?.displayName || currentUser?.username || '').slice(0, 1).toUpperCase()}
                         </div>
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-tr from-amber-500 to-blue-600 text-white flex items-center justify-center">
+                        <div className="w-full h-full bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-300 flex items-center justify-center">
                           <Sparkles className="w-3 h-3 text-white" />
                         </div>
                       )}
@@ -311,7 +276,7 @@ export const CampusAIFloatingWidget: React.FC = () => {
                     <div
                       className={`max-w-[85%] rounded-xl px-3 py-2 text-xs leading-relaxed ${
                         isUser
-                          ? 'bg-blue-600 text-white rounded-tr-none'
+                          ? 'bg-brand-600 text-white rounded-tr-none'
                           : msg.isError
                           ? 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300 border border-red-200 dark:border-red-900/40 rounded-tl-none'
                           : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-tl-none shadow-2xs'
@@ -331,11 +296,11 @@ export const CampusAIFloatingWidget: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleSpeak(msg.content, msg.id)}
-                            className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 p-0.5 rounded cursor-pointer"
+                            className="text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 p-0.5 rounded cursor-pointer"
                             title={speakingMsgId === msg.id ? 'Stop speaking' : 'Read aloud'}
                           >
                             {speakingMsgId === msg.id ? (
-                              <VolumeX className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+                              <VolumeX className="w-3.5 h-3.5 text-brand-600 animate-pulse" />
                             ) : (
                               <Volume2 className="w-3.5 h-3.5" />
                             )}
@@ -350,12 +315,11 @@ export const CampusAIFloatingWidget: React.FC = () => {
 
             {isLoading && (
               <div className="flex items-center gap-2 text-xs text-slate-400 italic ps-8">
-                <Sparkles className="w-3.5 h-3.5 animate-spin text-blue-500" />
+                <Sparkles className="w-3.5 h-3.5 animate-spin text-brand-500" />
                 <span>Campus AI is thinking...</span>
               </div>
             )}
 
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Footer Input */}
@@ -384,20 +348,22 @@ export const CampusAIFloatingWidget: React.FC = () => {
                 type="text"
                 value={inputPrompt}
                 onChange={(e) => setInputPrompt(e.target.value)}
-                placeholder="Ask about students, absences, guardians..."
+                placeholder={isAdmin ? t.aiInputPlaceholder : t.portalAIDescription}
+                aria-label={t.aiInputPlaceholder}
                 disabled={isLoading}
-                className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60"
+                className="workspace-field min-w-0 flex-1 disabled:opacity-60"
               />
               <button
                 type="submit"
                 disabled={isLoading || !inputPrompt.trim()}
-                className="p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 dark:disabled:bg-slate-800 text-white rounded-xl transition-colors cursor-pointer disabled:cursor-not-allowed shadow-xs"
+                className="workspace-button workspace-button-primary size-11 shrink-0 p-0"
+                aria-label={t.aiSend}
               >
                 <Send className="w-3.5 h-3.5" />
               </button>
             </form>
           </div>
-        </div>
+        </section>
       )}
 
       {/* Floating Trigger Button */}
@@ -405,17 +371,11 @@ export const CampusAIFloatingWidget: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="group flex items-center gap-2.5 px-4 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-xl shadow-blue-500/25 transition-all duration-200 hover:scale-105 cursor-pointer font-medium text-xs select-none border border-white/20"
-          aria-label="Open Campus AI Assistant"
+          className="workspace-button workspace-button-primary shadow-lg"
+          aria-label={t.openAssistant}
         >
-          <div className="relative">
-            <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-            <span className="absolute -top-1 -end-1 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-blue-600" />
-          </div>
-          <span className="font-semibold tracking-wide">Campus AI</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 text-white font-bold uppercase tracking-wider">
-            Ask
-          </span>
+          <Sparkles size={16} aria-hidden="true" />
+          {t.navCampusAI}
         </button>
       )}
     </div>

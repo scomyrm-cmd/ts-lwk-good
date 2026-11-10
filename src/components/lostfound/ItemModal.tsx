@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, PackageSearch, Upload, Image as ImageIcon, Save } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { WorkspaceDialog } from '../common/WorkspaceDialog';
 import { LostFoundItem, ItemCategory } from '../../types';
 
 interface ItemModalProps {
@@ -119,10 +120,10 @@ export const ItemModal: React.FC<ItemModalProps> = ({
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
+    <WorkspaceDialog label={itemToEdit ? t.edit : type === 'lost' ? t.reportLostItem : t.reportFoundItem} onClose={onClose} className="max-w-lg">
+      <div className="workspace-panel">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-4 dark:border-slate-800 sm:px-6">
           <div className="flex items-center gap-2.5">
             <div
               className={`p-2 rounded-lg ${
@@ -156,7 +157,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="space-y-4 p-4 sm:p-6">
           {/* Report Type selector */}
           {!itemToEdit && (
             <div>
@@ -199,7 +200,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               value={itemName}
               onChange={(e) => setItemName(e.target.value)}
               placeholder="e.g. Scientific Calculator fx-991, Blue Backpack..."
-              className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
                 errors.itemName ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
               }`}
             />
@@ -216,7 +217,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as ItemCategory)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               >
                 {categories.map((c) => (
                   <option key={c} value={c}>
@@ -234,7 +235,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                 type="date"
                 value={dateReported}
                 onChange={(e) => setDateReported(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
           </div>
@@ -248,7 +249,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="e.g. Science Lab 3, Library 2nd floor, Main Gymnasium..."
-              className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
                 errors.location ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
               }`}
             />
@@ -267,7 +268,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                 value={reporterName}
                 onChange={(e) => setReporterName(e.target.value)}
                 placeholder="Name of finder or student"
-                className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500 ${
                   errors.reporterName ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
                 }`}
               />
@@ -285,7 +286,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
                 value={contactInformation}
                 onChange={(e) => setContactInformation(e.target.value)}
                 placeholder="Phone or staff extension"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
           </div>
@@ -299,7 +300,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Color, brand, distinguishing marks, stickers, serial details..."
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
           </div>
 
@@ -349,7 +350,7 @@ export const ItemModal: React.FC<ItemModalProps> = ({
             </button>
             <button
               type="submit"
-              className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs md:text-sm rounded-lg transition-colors shadow-xs cursor-pointer"
+              className="flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs md:text-sm rounded-lg transition-colors shadow-xs cursor-pointer"
             >
               <Save className="w-4 h-4" />
               <span>{t.save}</span>
@@ -357,6 +358,6 @@ export const ItemModal: React.FC<ItemModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </WorkspaceDialog>
   );
 };

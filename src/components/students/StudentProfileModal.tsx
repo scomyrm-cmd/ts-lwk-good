@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { WorkspaceDialog } from '../common/WorkspaceDialog';
 import { Student } from '../../types';
 import { formatDateWithPattern } from '../../utils/analytics';
 
@@ -55,12 +56,12 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <WorkspaceDialog label={t.viewProfile} onClose={onClose} className="max-w-2xl">
+      <div className="workspace-panel max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/30">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-brand-600 text-white flex items-center justify-center font-bold text-base shadow-sm">
               {getInitials(student.firstName, student.lastName)}
             </div>
             <div>
@@ -68,7 +69,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                 <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                   {student.firstName} {student.lastName}
                 </h3>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 font-semibold">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300 font-semibold">
                   {student.studentId}
                 </span>
               </div>
@@ -85,10 +86,10 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                 onClose();
                 openAIChat(`Tell me everything about student ${student.firstName} ${student.lastName} (${student.studentId}), including attendance record and guardian contact.`);
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-xs font-semibold transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 dark:bg-brand-950/60 dark:hover:bg-brand-900/60 text-brand-700 dark:text-brand-300 text-xs font-semibold transition-colors cursor-pointer"
               title="Ask Campus AI about this student"
             >
-              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <Sparkles className="w-3.5 h-3.5 text-brand-600 dark:text-brand-400" />
               <span>Ask AI</span>
             </button>
             <button
@@ -97,7 +98,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                 onClose();
                 onEdit(student);
               }}
-              className="p-2 text-slate-500 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              className="p-2 text-slate-500 hover:text-brand-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
               title={t.editStudent}
             >
               <Edit className="w-4 h-4" />
@@ -117,7 +118,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
           {/* Key Info Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
-              <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 Class / Grade
               </span>
               <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-1 block">
@@ -126,7 +127,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
-              <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 {t.dateOfBirth}
               </span>
               <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-1 block">
@@ -137,7 +138,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
             </div>
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
-              <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
                 {t.guardianContact}
               </span>
               <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-1 block truncate">
@@ -148,7 +149,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
 
           {/* Attendance Stats Overview */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
               <UserCheck className="w-4 h-4" />
               <span>Attendance History Summary</span>
             </h4>
@@ -180,8 +181,8 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30">
-                <span className="text-xs text-blue-700 dark:text-blue-400 font-medium">
+              <div className="p-3 rounded-xl bg-brand-50/60 dark:bg-brand-950/20 border border-brand-100 dark:border-brand-900/30">
+                <span className="text-xs text-brand-700 dark:text-brand-400 font-medium">
                   Presence Rate
                 </span>
                 <p className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-1">
@@ -193,12 +194,12 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
 
           {/* Recent Absences Table */}
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 flex items-center gap-1.5">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
               <span>Absence & Late Log</span>
             </h4>
             {studentAttendance.filter((a) => a.status !== 'present').length === 0 ? (
-              <p className="text-xs text-slate-400 dark:text-slate-500 italic py-2">
+              <p className="text-xs text-slate-500 dark:text-slate-400 italic py-2">
                 No recorded absences or delays for this student. Perfect record!
               </p>
             ) : (
@@ -224,7 +225,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                             ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'
                             : rec.status === 'late'
                             ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400'
-                            : 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400'
+                            : 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-400'
                         }`}
                       >
                         {rec.status}
@@ -238,7 +239,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
           {/* Linked Lost & Found items */}
           {linkedItems.length > 0 && (
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2 flex items-center gap-1.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2 flex items-center gap-1.5">
                 <PackageSearch className="w-4 h-4" />
                 <span>Associated Lost & Found Items</span>
               </h4>
@@ -252,7 +253,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                       <p className="font-semibold text-slate-800 dark:text-slate-200">
                         {item.itemName}
                       </p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                         {item.category} · {item.location}
                       </p>
                     </div>
@@ -268,7 +269,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
           {/* Notes */}
           {student.notes && (
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800">
-              <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider block mb-1">
+              <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
                 Additional Notes
               </span>
               <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
@@ -278,6 +279,6 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </WorkspaceDialog>
   );
 };

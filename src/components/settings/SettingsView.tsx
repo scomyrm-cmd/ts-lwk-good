@@ -19,6 +19,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { WorkspaceHeader } from '../common/WorkspaceUI';
 import { Language, ThemeMode, DateFormat, TimeFormat } from '../../types';
 
 export const SettingsView: React.FC = () => {
@@ -132,20 +133,12 @@ export const SettingsView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          {t.settingsTitle}
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-          {t.settingsSubtitle}
-        </p>
-      </div>
+    <div className="workspace-page">
+      <WorkspaceHeader title={t.settingsTitle} description={t.settingsSubtitle} />
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-start">
+      <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[12.5rem_minmax(0,1fr)]">
         {/* Settings Navigation Sidebar */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-2 shadow-xs space-y-1">
+        <nav className="workspace-panel flex gap-1 overflow-x-auto p-1.5 xl:flex-col" aria-label={t.settingsTitle}>
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = settingsSubTab === tab.id;
@@ -154,25 +147,26 @@ export const SettingsView: React.FC = () => {
                 key={tab.id}
                 type="button"
                 onClick={() => setSettingsSubTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs md:text-sm font-medium transition-colors cursor-pointer text-start ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm font-medium whitespace-nowrap transition-colors xl:w-full ${
                   isActive
-                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 font-semibold'
+                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-semibold'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
                 <Icon
                   className={`w-4 h-4 shrink-0 ${
-                    isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'
+                    isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'
                   }`}
                 />
                 <span className="truncate">{tab.label}</span>
               </button>
             );
           })}
-        </div>
+        </nav>
 
         {/* Settings Content Pane */}
-        <div className="md:col-span-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs">
+        <div className="workspace-panel p-4 sm:p-6">
           {/* TAB: ADMINISTRATOR PROFILE */}
           {settingsSubTab === 'admin-profile' && (
             <div className="space-y-6">
@@ -207,7 +201,7 @@ export const SettingsView: React.FC = () => {
                       {t.profilePicture}
                     </span>
                     <div className="flex items-center gap-3">
-                      <label className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors shadow-xs">
+                      <label className="flex items-center gap-2 px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-medium cursor-pointer transition-colors shadow-xs">
                         <Upload className="w-3.5 h-3.5" />
                         <span>{t.changePhoto}</span>
                         <input
@@ -245,7 +239,7 @@ export const SettingsView: React.FC = () => {
                       value={profileDisplayName}
                       onChange={(e) => setProfileDisplayName(e.target.value)}
                       placeholder="e.g. Islam Nour Bouya"
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -277,7 +271,7 @@ export const SettingsView: React.FC = () => {
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
                   <button
                     type="submit"
-                    className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs md:text-sm rounded-lg transition-colors shadow-xs cursor-pointer"
+                    className="flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs md:text-sm rounded-lg transition-colors shadow-xs cursor-pointer"
                   >
                     <Save className="w-4 h-4" />
                     <span>{t.saveChanges}</span>
@@ -313,7 +307,7 @@ export const SettingsView: React.FC = () => {
                   <button
                     type="button"
                     onClick={seedDemoData}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors shadow-xs cursor-pointer"
+                    className="flex items-center gap-2 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-medium transition-colors shadow-xs cursor-pointer"
                   >
                     <Database className="w-4 h-4" />
                     <span>Populate 20 Sample Records</span>
@@ -346,9 +340,9 @@ export const SettingsView: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
-                  { id: 'light' as ThemeMode, label: t.lightTheme, icon: Sun, desc: 'Clean white background & soft borders' },
-                  { id: 'dark' as ThemeMode, label: t.darkTheme, icon: Moon, desc: 'Linear-inspired #0B1120 deep palette' },
-                  { id: 'system' as ThemeMode, label: t.systemTheme, icon: Laptop, desc: 'Sync automatically with OS preferences' },
+                  { id: 'light' as ThemeMode, label: t.lightTheme, icon: Sun, desc: 'Light surfaces and soft borders' },
+                  { id: 'dark' as ThemeMode, label: t.darkTheme, icon: Moon, desc: 'Deep navy surfaces' },
+                  { id: 'system' as ThemeMode, label: t.systemTheme, icon: Laptop, desc: 'Match your device theme' },
                 ].map((th) => {
                   const Icon = th.icon;
                   const isSelected = settings.theme === th.id;
@@ -357,9 +351,10 @@ export const SettingsView: React.FC = () => {
                       key={th.id}
                       type="button"
                       onClick={() => updateSettings({ theme: th.id })}
+                      aria-pressed={isSelected}
                       className={`p-4 rounded-xl border text-start transition-all cursor-pointer flex flex-col justify-between ${
                         isSelected
-                          ? 'border-blue-600 bg-blue-50/50 dark:bg-blue-950/40 ring-2 ring-blue-500/20'
+                          ? 'border-brand-600 bg-brand-50/50 dark:bg-brand-950/40 ring-2 ring-brand-500/20'
                           : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 hover:border-slate-300'
                       }`}
                     >
@@ -367,13 +362,13 @@ export const SettingsView: React.FC = () => {
                         <div
                           className={`p-2 rounded-lg ${
                             isSelected
-                              ? 'bg-blue-600 text-white'
+                              ? 'bg-brand-600 text-white'
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
                           }`}
                         >
                           <Icon className="w-5 h-5" />
                         </div>
-                        {isSelected && <Check className="w-4 h-4 text-blue-600 dark:text-blue-400" />}
+                        {isSelected && <Check className="w-4 h-4 text-brand-600 dark:text-brand-400" />}
                       </div>
                       <div>
                         <span className="font-semibold text-xs md:text-sm text-slate-900 dark:text-slate-100 block">
@@ -419,7 +414,7 @@ export const SettingsView: React.FC = () => {
                         onClick={() => updateSettings({ language: item.code })}
                         className={`p-3.5 rounded-xl border text-start transition-all cursor-pointer ${
                           settings.language === item.code
-                            ? 'border-blue-600 bg-blue-50/60 dark:bg-blue-950/40 text-blue-900 dark:text-blue-100 ring-2 ring-blue-500/20'
+                            ? 'border-brand-600 bg-brand-50/60 dark:bg-brand-950/40 text-brand-900 dark:text-brand-100 ring-2 ring-brand-500/20'
                             : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30'
                         }`}
                       >
@@ -440,7 +435,7 @@ export const SettingsView: React.FC = () => {
                     <select
                       value={settings.dateFormat}
                       onChange={(e) => updateSettings({ dateFormat: e.target.value as DateFormat })}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     >
                       <option value="DD/MM/YYYY">DD/MM/YYYY (Moroccan Standard)</option>
                       <option value="MM/DD/YYYY">MM/DD/YYYY (US Format)</option>
@@ -507,7 +502,7 @@ export const SettingsView: React.FC = () => {
                         }}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-blue-600" />
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-brand-600" />
                     </label>
                   </div>
                 ))}
@@ -537,7 +532,7 @@ export const SettingsView: React.FC = () => {
                     required
                     value={schoolName}
                     onChange={(e) => setSchoolName(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
 
@@ -550,7 +545,7 @@ export const SettingsView: React.FC = () => {
                       type="text"
                       value={schoolCity}
                       onChange={(e) => setSchoolCity(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -562,7 +557,7 @@ export const SettingsView: React.FC = () => {
                       type="text"
                       value={schoolCountry}
                       onChange={(e) => setSchoolCountry(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
                 </div>
@@ -575,7 +570,7 @@ export const SettingsView: React.FC = () => {
                     type="text"
                     value={schoolAddress}
                     onChange={(e) => setSchoolAddress(e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
 
@@ -588,7 +583,7 @@ export const SettingsView: React.FC = () => {
                       type="email"
                       value={schoolEmail}
                       onChange={(e) => setSchoolEmail(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
@@ -600,7 +595,7 @@ export const SettingsView: React.FC = () => {
                       type="text"
                       value={schoolPhone}
                       onChange={(e) => setSchoolPhone(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
                 </div>
@@ -608,7 +603,7 @@ export const SettingsView: React.FC = () => {
                 <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end">
                   <button
                     type="submit"
-                    className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs md:text-sm rounded-lg transition-colors shadow-xs cursor-pointer"
+                    className="flex items-center gap-2 px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-medium text-xs md:text-sm rounded-lg transition-colors shadow-xs cursor-pointer"
                   >
                     <Save className="w-4 h-4" />
                     <span>{t.saveChanges}</span>
@@ -705,7 +700,7 @@ export const SettingsView: React.FC = () => {
                         aiAssistant: { ...settings.aiAssistant, enabled: e.target.checked },
                       })
                     }
-                    className="w-4 h-4 text-blue-600 rounded"
+                    className="w-4 h-4 text-brand-600 rounded"
                   />
                 </div>
 

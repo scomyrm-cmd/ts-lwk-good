@@ -14,8 +14,8 @@ const COOKIE = 'campus_session';
 export const setupUsername = () => process.env.CAMPUS_ADMIN_USERNAME?.trim().toLowerCase();
 
 export function safeUser(user: Account) {
-  const { id, username, email, displayName, role, createdAt, lastLogin, disabledAt, language } = user;
-  return { id, username, email, displayName, role, createdAt, lastLogin, disabledAt, language };
+  const { id, username, email, displayName, role, createdAt, lastLogin, disabledAt, language, mustChangePassword } = user;
+  return { id, username, email, displayName, role, createdAt, lastLogin, disabledAt, language, mustChangePassword };
 }
 
 export function usernameField(value: unknown) {
@@ -82,6 +82,7 @@ export async function getCurrentUser(req: VercelRequest) {
 export function requireUser(req: VercelRequest, db: SchoolState, admin = false) {
   const user = authUser(req, db);
   if (!user) throw new HttpError(401, 'Sign in to continue');
+  if (user.mustChangePassword) throw new HttpError(403, 'Change your temporary password before accessing school records');
   if (admin && user.role !== 'admin') throw new HttpError(403, 'Administrator permission required');
   return user;
 }
@@ -125,7 +126,8 @@ export async function login(req: VercelRequest, res: VercelResponse) {
   const state = await readState();
   const candidate = state.users.find((user) => user.username === identity || user.email === identity);
   const matched = await bcrypt.compare(password, candidate?.passwordHash || DUMMY_HASH);
-  if (!matched || !candidate || candidate.disabledAt || (candidate.role === 'admin' && rejectAdminPassword(password))) {
+  if (!matched || !candidate || candidate.disabledAt ||
+    (candidate.role === 'admin' && !candidate.mustChangePassword && rejectAdminPassword(password))) {
     throw new HttpError(401, 'Invalid username or password');
   }
   if ((body.requireAdmin === true) !== (candidate.role === 'admin')) {
@@ -186,7 +188,10 @@ export async function setUpAdministrator(req: VercelRequest, res: VercelResponse
     throw new HttpError(401, 'Administrator setup code is invalid or unavailable');
   }
   const fingerprint = digest(configured);
-  const hash = await passwordHash(newPassword(password, true));
+  const temporaryHash = process.env.CAMPUS_ADMIN_TEMPORARY_PASSWORD_HASH;
+  const isTemporary = typeof password === 'string' && Buffer.byteLength(password) <= 72 &&
+    Boolean(temporaryHash) && await bcrypt.compare(password, temporaryHash!);
+  const hash = isTemporary ? temporaryHash! : await passwordHash(newPassword(password, true));
   const { user, token } = await mutateState((db) => {
     if (db.adminSetupFingerprint === fingerprint || db.usedAdminSetupCodes?.includes(fingerprint)) {
       throw new HttpError(409, 'This setup code has already been used');
@@ -209,6 +214,8 @@ export async function setUpAdministrator(req: VercelRequest, res: VercelResponse
       }
     }
     primary.passwordHash = hash;
+    if (isTemporary) primary.mustChangePassword = true;
+    else delete primary.mustChangePassword;
     delete primary.disabledAt;
     db.usedAdminSetupCodes = [...new Set([...db.usedAdminSetupCodes ?? [], ...(db.adminSetupFingerprint ? [db.adminSetupFingerprint] : []), fingerprint])];
     db.adminSetupFingerprint = fingerprint;
@@ -229,16 +236,17 @@ export async function changePassword(req: VercelRequest, res: VercelResponse, ac
   const replacement = newPassword(body.password, account.role === 'admin');
   if (old === replacement) throw new HttpError(400, 'Choose a different password');
   const hash = await passwordHash(replacement);
-  const token = await mutateState((db) => {
-    const live = requireUser(req, db);
-    if (live.id !== account.id || live.passwordHash !== account.passwordHash) throw new HttpError(401, 'Sign in again');
+  const { token, user } = await mutateState((db) => {
+    const live = authUser(req, db);
+    if (!live || live.id !== account.id || live.passwordHash !== account.passwordHash) throw new HttpError(401, 'Sign in again');
     live.passwordHash = hash;
+    delete live.mustChangePassword;
     revokeUserSessions(db, live);
     addAuditEvent(db, live.id, 'password_changed');
-    return openSession(db, live);
+    return { token: openSession(db, live), user: safeUser(live) };
   });
   setCookie(res, token, SESSION_SECONDS);
-  return res.status(200).json({ success: true });
+  return res.status(200).json({ success: true, user });
 }
 
 export async function setUserLanguage(req: VercelRequest, res: VercelResponse) {

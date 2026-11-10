@@ -222,13 +222,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [lastSavedStudentsAt, setLastSavedStudentsAt] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || currentUser?.role !== 'admin') return;
+    if (!isAuthenticated || currentUser?.role !== 'admin' || currentUser.mustChangePassword) return;
     fetchAdminUsers();
     fetchAdminReports();
     // Poll for reports from other devices, so new student submissions appear automatically.
     const timer = setInterval(()=>{fetchAdminReports();fetchLostFoundFromServer();},15000);
     return ()=>clearInterval(timer);
-  }, [isAuthenticated,currentUser?.role,currentUser?.id]);
+  }, [isAuthenticated,currentUser?.role,currentUser?.id,currentUser?.mustChangePassword]);
 
 
   // Private records are loaded only after the server verifies the session.
@@ -268,7 +268,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   useEffect(() => {
-    if (!isAuthenticated || currentUser?.role !== 'admin') return;
+    if (!isAuthenticated || currentUser?.role !== 'admin' || currentUser.mustChangePassword) return;
     const request = new AbortController();
     setAdminDataStatus('loading');
     hydrated.current = false;
@@ -312,7 +312,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       request.abort();
       hydrated.current = false;
     };
-  }, [isAuthenticated, currentUser?.id, currentUser?.role]);
+  }, [isAuthenticated, currentUser?.id, currentUser?.role, currentUser?.mustChangePassword]);
 
   useEffect(() => {
     document.documentElement.lang = settings.language;
@@ -393,6 +393,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (establishSession) {
         startSession(result.user);
         window.history.replaceState(null, '', result.user.role === 'admin' ? '/admin' : '/');
+      } else if (result.user) {
+        sessionUser.current = result.user;
+        setCurrentUser(result.user);
       }
       return { success: true };
     } catch {

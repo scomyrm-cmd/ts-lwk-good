@@ -12,6 +12,7 @@ export type Account = {
   createdAt: string;
   lastLogin?: string;
   disabledAt?: string;
+  mustChangePassword?: boolean;
   language?: Language;
   sessionVersion: number;
 };

@@ -155,6 +155,7 @@ export interface AuthUser {
   username: string;
   email: string;
   role: UserRole;
+  mustChangePassword?: boolean;
   displayName: string;
   createdAt?: string;
   lastLogin?: string;

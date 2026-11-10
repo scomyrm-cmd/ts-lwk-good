@@ -6,6 +6,7 @@
 import React, { useEffect, useState } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { LoginPage } from './components/auth/LoginPage';
+import { PasswordChangePage } from './components/auth/PasswordChangePage';
 import { UserPortalView } from './components/portal/UserPortalView';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopNavbar } from './components/layout/TopNavbar';
@@ -93,6 +94,10 @@ const MainLayout: React.FC = () => {
   // Strictly enforce authentication - unauthorized link copying cannot bypass!
   if (!isAuthenticated || !currentUser) {
     return <><LoginPage /><Toast message={toastMessage} /></>;
+  }
+
+  if (currentUser.mustChangePassword) {
+    return <PasswordChangePage />;
   }
 
   // 1. Role = 'user' (Normal User Portal)

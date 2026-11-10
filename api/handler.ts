@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { UserReport } from '../src/types/index.js';
 import {
-  changePassword, emailField, getCurrentUser, hasSession, identityTaken, login, logout, newPassword, passwordHash,
+  authUser, changePassword, emailField, getCurrentUser, hasSession, identityTaken, login, logout, newPassword, passwordHash,
   register, requireUser, revokeUserSessions, safeUser, setUpAdministrator, setupUsername, setUserLanguage, usernameField,
 } from '../src/server/auth.js';
 import { answerAssistant, deleteConversations, listConversations } from '../src/server/campusAssistant.js';
@@ -207,8 +207,12 @@ async function route(req: VercelRequest, res: VercelResponse) {
 
   if (!hasSession(req)) throw new HttpError(401, 'Sign in to continue');
   const db = await readState();
+  if (name === 'auth/password') {
+    const user = authUser(req, db);
+    if (!user) throw new HttpError(401, 'Sign in to continue');
+    return changePassword(req, res, user);
+  }
   const account = requireUser(req, db, name.startsWith('admin/') || name === 'campus-ai');
-  if (name === 'auth/password') return changePassword(req, res, account);
 
   if (name === 'user/lost-found') return success(res, { items: publicCatalog(db) });
   if (name === 'user/reports') {

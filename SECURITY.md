@@ -8,6 +8,8 @@ Open `/admin/login`, select **Set up administrator**, and use the one-time code 
 
 Remove the setup code from Vercel after activation. To recover access again, generate a different code and redeploy. Existing administrators can change their own password from **Settings → Security**. A password change invalidates the account’s other sessions.
 
+For owner-managed provisioning with an initial temporary password, set its bcrypt hash in `CAMPUS_ADMIN_TEMPORARY_PASSWORD_HASH` and submit it with the one-time setup code to the administrator setup endpoint. This creates the account with a mandatory password change. That session can use account and password-change endpoints. School records, AI, exports, and all administrative APIs require the password change to be completed. The new private password must meet the usual administrator policy. Reusing the consumed setup code cannot reset the account.
+
 ## Server storage
 
 Production uses the existing private `campus-os/private/state.json` Blob. Missing session, audit, and recovery fields are initialized automatically without a migration. Older cookies must be replaced by signing in again. Preview deployments use isolated paths. When configuring an integration test, set `CAMPUS_PREVIEW_NAMESPACE` only on its preview branch and check that `/api/health` reports `isolated-preview` before writing test records.

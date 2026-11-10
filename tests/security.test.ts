@@ -67,6 +67,7 @@ registerHooks({
 
 const { default: handle } = await import('../api/handler.js');
 const { digest } = await import('../src/server/security.js');
+const { passwordHash } = await import('../src/server/auth.js');
 const { schoolDate } = await import('../src/server/records.js');
 
 const host = 'campus.example.test';
@@ -248,6 +249,48 @@ test('server roles, private persistence, controlled catalog, export, AI, and rot
   assert.equal((await api('auth/logout', 'POST', {}, newAdmin)).code, 200);
   assert.equal((await api('auth/me', 'GET', undefined, newAdmin)).data.authenticated, false);
   assert.equal((await api('admin/state', 'GET', undefined, newAdmin)).code, 401);
+});
+
+test('temporary administrator passwords require a server-enforced change and cannot be replayed', async () => {
+  const before = JSON.parse(blobs.get('campus-os/private/state.json')!.json);
+  process.env.CAMPUS_ADMIN_SETUP_CODE = 'temporary-owner-one-time-code-fixture-123456789';
+  process.env.CAMPUS_ADMIN_USERNAME = 'qa_temporary_owner';
+  const initialPassword = 'Temp-123';
+  process.env.CAMPUS_ADMIN_TEMPORARY_PASSWORD_HASH = await passwordHash(initialPassword);
+  const setup = await api('auth/admin-setup', 'POST', {
+    code: process.env.CAMPUS_ADMIN_SETUP_CODE, password: initialPassword,
+  });
+  assert.equal(setup.code, 200);
+  assert.equal(setup.data.user.mustChangePassword, true);
+  const initialSession = session(await api('auth/login', 'POST', {
+    username: 'qa_temporary_owner', password: initialPassword, requireAdmin: true,
+  }));
+  assert.equal((await api('auth/me', 'GET', undefined, initialSession)).data.user.mustChangePassword, true);
+  assert.equal((await api('admin/state', 'GET', undefined, initialSession)).code, 403);
+  assert.equal((await api('campus-ai', 'GET', undefined, initialSession)).code, 403);
+  assert.equal((await api('admin/students/export-excel', 'POST', { confirmed: true }, initialSession)).code, 403);
+  assert.equal((await api('auth/admin-setup', 'POST', {
+    code: process.env.CAMPUS_ADMIN_SETUP_CODE, password: initialPassword,
+  })).code, 409);
+  assert.equal((await api('auth/password', 'POST', {
+    currentPassword: initialPassword, password: 'too-short',
+  }, initialSession)).code, 400);
+  const changed = await api('auth/password', 'POST', {
+    currentPassword: initialPassword, password: 'qa-owner-new-private-password',
+  }, initialSession);
+  assert.equal(changed.code, 200);
+  assert.equal(changed.data.user.mustChangePassword, undefined);
+  const admin = session(changed);
+  assert.equal((await api('admin/state', 'GET', undefined, initialSession)).code, 401);
+  assert.equal((await api('admin/state', 'GET', undefined, admin)).code, 200);
+  assert.equal((await api('auth/login', 'POST', {
+    username: 'qa_temporary_owner', password: initialPassword, requireAdmin: true,
+  })).code, 401);
+  const after = JSON.parse(blobs.get('campus-os/private/state.json')!.json);
+  assert.deepEqual(after.students, before.students);
+  assert.deepEqual(after.attendance, before.attendance);
+  assert.equal(after.users.filter((user: any) => user.role === 'admin' && !user.disabledAt).length, 1);
+  delete process.env.CAMPUS_ADMIN_TEMPORARY_PASSWORD_HASH;
 });
 
 test('distributed rate counters survive separate requests and reject oversized bodies', async () => {

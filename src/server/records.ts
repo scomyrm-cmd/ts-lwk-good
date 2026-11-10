@@ -1,7 +1,7 @@
 import type { AdminProfile, AppSettings, AttendanceRecord, Student, UserReport } from '../types/index.js';
 import { choice, digest, field, HttpError, object } from './security.js';
 import type { Account, SchoolState, StoredItem } from './storage.js';
-import { isEmailAddress, studentContact } from '../utils/studentContact.js';
+import { isEmailAddress } from '../utils/studentContact.js';
 export { schoolDate } from '../utils/dates.js';
 
 export const categories = ['Electronics', 'Clothing', 'Bags', 'Books', 'Accessories', 'School Supplies', 'Other'] as const;
@@ -223,7 +223,6 @@ export function versionOf(value: unknown) {
 export function getAdminState(db: SchoolState, account: Account) {
   return {
     state: { ...Object.fromEntries(editableKeys.map((key) => [key, db[key]])), adminProfile: adminProfile(db, account),
-      students: db.students.map((student) => ({ ...student, guardianEmail: studentContact(student).email, guardianPhone: studentContact(student).phone })),
       studentsLastSaved: db.studentsLastSaved },
     versions: Object.fromEntries(editableKeys.map((key) => [key, versionOf(key === 'adminProfile' ? adminProfile(db, account) : db[key])])),
   };

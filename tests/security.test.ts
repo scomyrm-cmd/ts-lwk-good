@@ -80,6 +80,7 @@ const { default: handle } = await import('../api/handler.js');
 const { digest } = await import('../src/server/security.js');
 const { passwordHash } = await import('../src/server/auth.js');
 const { schoolDate } = await import('../src/server/records.js');
+const { studentContact } = await import('../src/utils/studentContact.js');
 
 const host = 'campus.example.test';
 const origin = 'https://' + host;
@@ -333,8 +334,8 @@ test('administrator profiles and saved attendance emails stay isolated and dedup
   const saved = await api('admin/state', 'PUT', { state: { students: [mailStudent] }, versions: state.versions }, owner);
   assert.equal(saved.code, 200);
   const normalized = (await api('admin/state', 'GET', undefined, owner)).data.state.students[0];
-  assert.equal(normalized.guardianEmail, 'parent@example.invalid');
-  assert.equal(normalized.guardianPhone, '');
+  assert.equal(studentContact(normalized).email, 'parent@example.invalid');
+  assert.equal(studentContact(normalized).phone, '');
   process.env.EMAILJS_SERVICE_ID = 'fixture-service';
   process.env.EMAILJS_TEMPLATE_ID = 'fixture-template';
   process.env.EMAILJS_PUBLIC_KEY = 'fixture-public';

@@ -45,6 +45,7 @@ const mock = {
   provider(args: (typeof providerRequests)[number]) {
     providerRequests.push(args);
     if (args.model === 'retired-fixture-model') throw Object.assign(new Error('Fixture model not found'), { status: 404 });
+    if (JSON.stringify(args.contents).includes('Fixture timeout')) throw new DOMException('Request timed out', 'TimeoutError');
     const instruction = args.config.systemInstruction;
     const text = instruction.includes('Moroccan Darija') ? 'هادي خلاصة الحضور.' :
       instruction.includes('Answer in French') ? 'Voici le bilan de présence.' : 'Here is the attendance summary.';
@@ -223,6 +224,12 @@ test('server roles, private persistence, controlled catalog, export, AI, and rot
   }
   assert.equal((await api('admin/state', 'GET', undefined, admin)).data.conversations[0].messages.length, 8);
   assert.equal((await api('admin/state', 'GET', undefined, secondary)).data.conversations.length, 0);
+  const limited = await api('campus-ai', 'POST', {
+    conversationId: 'fixture-provider-timeout', prompt: 'Fixture timeout. Summarize student STU-42.',
+  }, admin);
+  assert.equal(limited.code, 200);
+  assert.equal(limited.data.source, 'school-records');
+  assert.match(limited.data.text, /Maya River[\s\S]*temporarily unavailable/);
 
   process.env.CAMPUS_ADMIN_SETUP_CODE = 'different-one-time-setup-code-for-local-test-987654';
   const retiredPassword = 'qa-owner-first-private-passphrase';

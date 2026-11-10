@@ -21,7 +21,7 @@
   ],
   "functions": {
     "api/handler.ts": {
-      "maxDuration": 45
+      "maxDuration": 60
     }
   },
   "headers": [

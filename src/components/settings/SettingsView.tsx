@@ -94,7 +94,7 @@ export const SettingsView: React.FC = () => {
       reader.onload = (event) => {
         const img = new Image();
         img.onload = () => {
-          // Resize image to max 256x256 using Canvas to protect localStorage quota
+          // Resize the image before saving it to the server.
           const canvas = document.createElement('canvas');
           const maxDim = 256;
           let width = img.width;

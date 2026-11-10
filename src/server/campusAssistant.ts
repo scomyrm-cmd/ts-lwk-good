@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, type ThinkingLevel } from '@google/genai';
 import type { ChatMessage, Student } from '../types/index.js';
 import { requireUser } from './auth.js';
 import { DEFAULT_GEMINI_MODEL, detectLanguage, languageNames, type DetectedLanguage } from './aiMultilingual.js';
@@ -61,19 +61,23 @@ const schoolLabels = {
   en: { className: 'Class', marked: 'Attendance records', present: 'present', late: 'late', absent: 'absent', excused: 'excused',
     rate: 'Attendance rate', noRate: 'No marked days', latest: 'Latest recorded absences', none: 'None recorded', guardian: 'Guardian contact',
     clarify: 'Which student do you mean? Use the full name or student number so I can check the correct record.',
-    ambiguous: 'I found multiple matches. Please give me the student number.', },
+    ambiguous: 'I found multiple matches. Please give me the student number.',
+    unavailable: 'These figures are from the school record. The AI explanation is temporarily unavailable.', },
   fr: { className: 'Classe', marked: 'Présences enregistrées', present: 'présences', late: 'retards', absent: 'absences', excused: 'absences justifiées',
     rate: 'Taux de présence', noRate: 'Aucune journée renseignée', latest: 'Dernières absences enregistrées', none: 'Aucune', guardian: 'Contact du responsable',
     clarify: 'De quel élève s’agit-il ? Indiquez son nom complet ou son identifiant pour que je vérifie le bon dossier.',
-    ambiguous: 'Plusieurs élèves correspondent. Indiquez le numéro de l’élève.', },
+    ambiguous: 'Plusieurs élèves correspondent. Indiquez le numéro de l’élève.',
+    unavailable: 'Ces chiffres proviennent du dossier scolaire. L’explication de l’IA est temporairement indisponible.', },
   ar: { className: 'القسم', marked: 'سجلات الحضور', present: 'حضور', late: 'تأخر', absent: 'غياب', excused: 'غياب مبرر',
     rate: 'نسبة الحضور', noRate: 'لا توجد أيام مسجلة', latest: 'آخر الغيابات المسجلة', none: 'لا يوجد', guardian: 'جهة اتصال ولي الأمر',
     clarify: 'أي طالب تقصد؟ اكتب اسمه الكامل أو رقمه للتحقق من السجل الصحيح.',
-    ambiguous: 'وجدت أكثر من طالب مطابق. يرجى تحديد رقم الطالب.', },
+    ambiguous: 'وجدت أكثر من طالب مطابق. يرجى تحديد رقم الطالب.',
+    unavailable: 'هذه الأرقام من سجل المدرسة. شرح المساعد غير متاح مؤقتاً.', },
   darija: { className: 'القسم', marked: 'أيام تسجّل فيها الحضور', present: 'حضور', late: 'تأخر', absent: 'غياب', excused: 'غياب مبرر',
     rate: 'نسبة الحضور', noRate: 'ما كايناش أيام مسجلة', latest: 'آخر الغيابات اللي تسجلو', none: 'ما تسجّل والو', guardian: 'تواصل ولي الأمر',
     clarify: 'شكون التلميذ اللي كتقصد؟ عطيني السمية كاملة ولا الرقم ديالو باش نقلب فالسجل الصحيح.',
-    ambiguous: 'لقيت كثر من تلميذ بنفس المواصفات. عطيني الرقم ديالو عفاك.', },
+    ambiguous: 'لقيت كثر من تلميذ بنفس المواصفات. عطيني الرقم ديالو عفاك.',
+    unavailable: 'هاد الأرقام من سجل المدرسة. الشرح ديال المساعد ما متوفرش دابا.', },
 } satisfies Record<DetectedLanguage, Record<string, string>>;
 
 function exactStudentFacts(student: Student, stats: ReturnType<typeof attendanceFacts>, lang: DetectedLanguage, query: string) {
@@ -212,12 +216,15 @@ export async function answerAssistant(req: VercelRequest, res: VercelResponse, d
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new HttpError(503, 'Campus AI provider is not configured');
     try {
-      const ai = new GoogleGenAI({ apiKey: key, httpOptions: { timeout: 25_000 } });
+      const ai = new GoogleGenAI({ apiKey: key, httpOptions: { retryOptions: { attempts: 1 } } });
+      const deadline = AbortSignal.timeout(42_000);
       const generate = (modelName: string) => ai.models.generateContent({
         model: modelName,
         contents: [...prepared.safeHistory, { role: 'user', parts: [{ text: prepared.safePrompt }] }],
         config: {
-          maxOutputTokens: 1600,
+          abortSignal: deadline,
+          maxOutputTokens: 2400,
+          ...(modelName === DEFAULT_GEMINI_MODEL && { thinkingConfig: { thinkingLevel: 'MINIMAL' as ThinkingLevel } }),
           temperature: 0.45,
           systemInstruction: [
             'You are Campus AI, a conversational school assistant for an authorized administrator.',
@@ -240,12 +247,19 @@ export async function answerAssistant(req: VercelRequest, res: VercelResponse, d
         result = await generate(model);
       }
       responseText = result.text?.trim();
-      if (!responseText) throw new Error('Empty AI response');
-      responseText = prepared.restoreLabels(responseText.slice(0, 6000));
-      source = 'gemini-api';
+      if (responseText) {
+        responseText = prepared.restoreLabels(responseText.slice(0, 6000));
+        source = 'gemini-api';
+      } else {
+        console.warn('Campus AI provider returned no answer', result.candidates?.[0]?.finishReason ?? 'no-candidate');
+      }
     } catch (error) {
-      console.error('Campus AI provider request failed', providerStatus(error) ?? 'provider_error');
+      const timeout = error instanceof Error && /timeout|timed out|abort/i.test(error.name + ' ' + error.message);
+      console.error('Campus AI provider request failed', providerStatus(error) ?? (timeout ? 'timeout' : 'provider_error'));
+    }
+    if (!responseText) {
       if (!prepared.verifiedFacts) throw new HttpError(502, 'Campus AI provider is unavailable. Please try again.');
+      responseText = schoolLabels[prepared.language].unavailable;
     }
   }
 

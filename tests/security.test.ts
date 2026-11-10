@@ -6,6 +6,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 type MockBlob = { etag: string; json: string };
 class BlobPreconditionFailedError extends Error {}
+class BlobNotFoundError extends Error {}
 const blobs = new Map<string, MockBlob>();
 let revision = 0;
 let providerRequests: Array<{ model: string; contents: unknown; config: { systemInstruction: string } }> = [];
@@ -23,7 +24,12 @@ const mock = {
     assert.equal(options.access, 'private');
     assert.equal(options.useCache, false);
     const record = blobs.get(path);
-    return record ? { statusCode: 200, blob: { etag: record.etag }, stream: new Response(record.json).body } : null;
+    return record ? { statusCode: 200, blob: { etag: 'origin-etag-' + record.etag }, stream: new Response(record.json).body } : null;
+  },
+  async head(path: string) {
+    const record = blobs.get(path);
+    if (!record) throw new BlobNotFoundError();
+    return { etag: record.etag };
   },
   async put(path: string, json: string, options: { ifMatch?: string; allowOverwrite: boolean; access: string }) {
     assert.equal(options.access, 'private');
@@ -43,10 +49,10 @@ const mock = {
     return { text };
   },
 };
-Object.assign(globalThis, { campusTestDoubles: { ...mock, BlobPreconditionFailedError } });
+Object.assign(globalThis, { campusTestDoubles: { ...mock, BlobPreconditionFailedError, BlobNotFoundError } });
 
 const source = (code: string) => 'data:text/javascript,' + encodeURIComponent(code);
-const storage = source('export const { get, put, BlobPreconditionFailedError } = globalThis.campusTestDoubles;');
+const storage = source('export const { get, head, put, BlobPreconditionFailedError, BlobNotFoundError } = globalThis.campusTestDoubles;');
 const provider = source('export class GoogleGenAI { models = { generateContent: globalThis.campusTestDoubles.provider } }');
 registerHooks({
   resolve(specifier, context, next) {

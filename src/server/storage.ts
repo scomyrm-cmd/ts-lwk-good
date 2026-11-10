@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { BlobPreconditionFailedError, get, put } from '@vercel/blob';
+import { BlobNotFoundError, BlobPreconditionFailedError, get, head, put } from '@vercel/blob';
 import type { ActivityLogItem, AdminProfile, AppSettings, AttendanceRecord, Conversation, Language, LostFoundItem, NotificationItem, SchoolInfo, Student, UserReport } from '../types/index.js';
 
 export type Account = {
@@ -84,12 +84,22 @@ async function readBlob<T>(path: string, initial: () => T) {
   } catch (error) {
     throw new StorageFailure(collection + '-read', storageReason(error));
   }
-  if (!blob) return { value: initial(), etag: undefined };
-  if (blob.statusCode !== 200 || !blob.stream || !blob.blob.etag) {
-    throw new StorageFailure(collection + '-read', 'missing-content-or-version');
-  }
+  if (!blob) return { value: initial(), exists: false };
+  if (blob.statusCode !== 200 || !blob.stream) throw new StorageFailure(collection + '-read', 'missing-content');
   const value = await new Response(blob.stream).json() as T;
-  return { value, etag: blob.blob.etag };
+  return { value, exists: true };
+}
+
+async function writeVersion(path: string) {
+  try {
+    const metadata = await head(path);
+    if (!metadata.etag) throw new StorageFailure('metadata-read', 'missing-version');
+    return metadata.etag;
+  } catch (error) {
+    if (error instanceof BlobNotFoundError) return undefined;
+    if (error instanceof StorageFailure) throw error;
+    throw new StorageFailure('metadata-read', storageReason(error));
+  }
 }
 
 function isWriteConflict(error: unknown, creating: boolean) {
@@ -106,7 +116,11 @@ export async function updateBlob<T, R>(
 ): Promise<R> {
   const path = privatePath(file);
   for (let attempt = 0; attempt < 6; attempt++) {
-    const { value, etag } = await readBlob(path, initial);
+    // The write API uses the Blob metadata ETag. A private origin read can report a different HTTP ETag.
+    // Capture the metadata version before reading the body so a newer write cannot be overwritten.
+    const etag = await writeVersion(path);
+    const { value, exists } = await readBlob(path, initial);
+    if (Boolean(etag) !== exists) continue;
     const { result, skipWrite } = apply(value);
     if (skipWrite) return result;
     try {

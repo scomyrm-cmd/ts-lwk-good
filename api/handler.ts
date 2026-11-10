@@ -11,7 +11,7 @@ import {
   applyUpdates, attendanceStatuses, categories, getAdminState, isoDate, publicCatalog, publishReport, schoolDate, versionOf,
 } from '../src/server/records.js';
 import { choice, enforceLimit, field, guardRequest, HttpError, object } from '../src/server/security.js';
-import { addAuditEvent, mutateState, readState, storeReady, type Account, type SchoolState } from '../src/server/storage.js';
+import { addAuditEvent, mutateState, privatePath, readState, storeReady, type Account, type SchoolState } from '../src/server/storage.js';
 import { attendanceFacts, indexAttendance } from '../src/server/studentFacts.js';
 
 const routes: Record<string, { methods: readonly string[]; bytes?: number }> = {
@@ -184,6 +184,7 @@ async function route(req: VercelRequest, res: VercelResponse) {
 
   if (name === 'health') return res.status(200).json({
     status: 'ok', storageConfigured: storeReady(), aiConfigured: Boolean(process.env.GEMINI_API_KEY),
+    storageMode: privatePath('state.json').includes('/previews/') ? 'isolated-preview' : 'production',
   });
 
   if (name === 'admin/entry') {

@@ -10,7 +10,7 @@ Remove the setup code from Vercel after activation. To recover access again, gen
 
 ## Server storage
 
-Production uses the existing private `campus-os/private/state.json` Blob. Missing session, audit, and recovery fields are initialized automatically without a migration. Older cookies must be replaced by signing in again. Preview deployments use isolated paths and never read the production state file.
+Production uses the existing private `campus-os/private/state.json` Blob. Missing session, audit, and recovery fields are initialized automatically without a migration. Older cookies must be replaced by signing in again. Preview deployments use isolated paths. When configuring an integration test, set `CAMPUS_PREVIEW_NAMESPACE` only on its preview branch and check that `/api/health` reports `isolated-preview` before writing test records.
 
 Blob writes use a conditional update tied to the version read. The dashboard checks record versions before saving. If two edits conflict, the stale write is rejected. Refresh the affected data before reapplying the edit.
 

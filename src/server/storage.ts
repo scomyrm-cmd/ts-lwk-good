@@ -49,8 +49,10 @@ export function storeReady() {
 }
 
 export function privatePath(file: string) {
-  if (process.env.VERCEL_ENV !== 'preview') return 'campus-os/private/' + file;
-  const branch = process.env.VERCEL_GIT_COMMIT_REF || process.env.VERCEL_URL;
+  const namespace = process.env.CAMPUS_PREVIEW_NAMESPACE;
+  if (process.env.VERCEL_ENV === 'production' && namespace) throw new Error('Preview namespace configured for production');
+  if (process.env.VERCEL_ENV !== 'preview' && !namespace) return 'campus-os/private/' + file;
+  const branch = namespace || process.env.VERCEL_GIT_COMMIT_REF || process.env.VERCEL_URL;
   if (!branch) throw new Error('Preview storage namespace unavailable');
   const key = createHash('sha256').update(branch).digest('hex').slice(0, 24);
   return 'campus-os/previews/' + key + '/private/' + file;

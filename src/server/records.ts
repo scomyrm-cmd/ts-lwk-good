@@ -1,6 +1,8 @@
-import type { AppSettings, AttendanceRecord, Student, UserReport } from '../types/index.js';
+import type { AdminProfile, AppSettings, AttendanceRecord, Student, UserReport } from '../types/index.js';
 import { choice, digest, field, HttpError, object } from './security.js';
-import type { SchoolState, StoredItem } from './storage.js';
+import type { Account, SchoolState, StoredItem } from './storage.js';
+import { isEmailAddress, studentContact } from '../utils/studentContact.js';
+export { schoolDate } from '../utils/dates.js';
 
 export const categories = ['Electronics', 'Clothing', 'Bags', 'Books', 'Accessories', 'School Supplies', 'Other'] as const;
 export const attendanceStatuses = ['present', 'absent', 'late', 'excused'] as const;
@@ -45,6 +47,8 @@ function image(value: unknown) {
 }
 
 function student(value: Record<string, unknown>): Student {
+  const guardianEmail = field(value.guardianEmail, 160);
+  if (guardianEmail && !isEmailAddress(guardianEmail)) throw new HttpError(400, 'Enter a valid guardian email address');
   return {
     id: field(value.id, 120, true), studentId: field(value.studentId, 120, true),
     firstName: field(value.firstName, 120, true), lastName: field(value.lastName, 120, true),
@@ -52,6 +56,8 @@ function student(value: Record<string, unknown>): Student {
     gender: value.gender ? choice(value.gender, ['Male', 'Female', 'Other'] as const) : undefined,
     dateOfBirth: value.dateOfBirth ? isoDate(value.dateOfBirth) : undefined,
     guardianContact: field(value.guardianContact, 220), notes: field(value.notes, 4000), createdAt: timestamp(value.createdAt),
+    guardianEmail: value.guardianEmail == null ? undefined : guardianEmail,
+    guardianPhone: value.guardianPhone == null ? undefined : field(value.guardianPhone, 80),
   };
 }
 
@@ -119,12 +125,6 @@ function validatedList<T extends { id: string }>(
   });
 }
 
-export function schoolDate(timeZone = 'Africa/Casablanca') {
-  const options: Intl.DateTimeFormatOptions = { year: 'numeric', month: '2-digit', day: '2-digit', timeZone };
-  try { return new Intl.DateTimeFormat('sv-SE', options).format(new Date()); }
-  catch { return new Date().toISOString().slice(0, 10); }
-}
-
 function readSettings(value: Record<string, unknown>, previous?: AppSettings): AppSettings {
   const notifications = object(value.notifications);
   const ai = object(value.aiAssistant);
@@ -152,14 +152,23 @@ function readSettings(value: Record<string, unknown>, previous?: AppSettings): A
   };
 }
 
-export function applyUpdates(db: SchoolState, updates: Record<string, unknown>, versions: Record<string, unknown>) {
+export function adminProfile(db: SchoolState, account: Account): AdminProfile {
+  const legacy = db.adminProfile?.username === account.username ? db.adminProfile : undefined;
+  return {
+    displayName: account.displayName, username: account.username, email: account.email, role: 'Administrator',
+    profilePictureUrl: account.profilePictureUrl ?? legacy?.profilePictureUrl,
+  };
+}
+
+export function applyUpdates(db: SchoolState, updates: Record<string, unknown>, versions: Record<string, unknown>, account?: Account) {
   const keys = Object.keys(updates);
   if (!keys.length || keys.some((key) => !editableKeys.includes(key as EditableKey))) {
     throw new HttpError(400, 'Invalid state field');
   }
 
   for (const key of keys as EditableKey[]) {
-    if (versions[key] !== versionOf(db[key])) throw new HttpError(409, 'These records changed on the server. Refresh before saving again.');
+    const previous = key === 'adminProfile' && account ? adminProfile(db, account) : db[key];
+    if (versions[key] !== versionOf(previous)) throw new HttpError(409, 'These records changed on the server. Refresh before saving again.');
     const value = updates[key];
     switch (key) {
       case 'students': {
@@ -183,12 +192,10 @@ export function applyUpdates(db: SchoolState, updates: Record<string, unknown>, 
         db.notifications = validatedList(value, db.notifications, notification, 500);
         break;
       case 'adminProfile': {
+        if (!account) throw new HttpError(403, 'Administrator account required');
         const profile = object(value);
-        db.adminProfile = {
-          displayName: field(profile.displayName, 120, true), profilePictureUrl: image(profile.profilePictureUrl),
-          username: db.adminProfile?.username || '', email: db.adminProfile?.email || '',
-          role: db.adminProfile?.role || 'Administrator',
-        };
+        account.displayName = field(profile.displayName, 120, true);
+        account.profilePictureUrl = image(profile.profilePictureUrl);
         break;
       }
       case 'schoolInfo': {
@@ -206,17 +213,19 @@ export function applyUpdates(db: SchoolState, updates: Record<string, unknown>, 
     }
   }
 
-  return Object.fromEntries(keys.map((key) => [key, versionOf(db[key as EditableKey])]));
+  return Object.fromEntries(keys.map((key) => [key, versionOf(key === 'adminProfile' && account ? adminProfile(db, account) : db[key as EditableKey])]));
 }
 
 export function versionOf(value: unknown) {
   return digest(JSON.stringify(value ?? null));
 }
 
-export function getAdminState(db: SchoolState) {
+export function getAdminState(db: SchoolState, account: Account) {
   return {
-    state: { ...Object.fromEntries(editableKeys.map((key) => [key, db[key]])), studentsLastSaved: db.studentsLastSaved },
-    versions: Object.fromEntries(editableKeys.map((key) => [key, versionOf(db[key])])),
+    state: { ...Object.fromEntries(editableKeys.map((key) => [key, db[key]])), adminProfile: adminProfile(db, account),
+      students: db.students.map((student) => ({ ...student, guardianEmail: studentContact(student).email, guardianPhone: studentContact(student).phone })),
+      studentsLastSaved: db.studentsLastSaved },
+    versions: Object.fromEntries(editableKeys.map((key) => [key, versionOf(key === 'adminProfile' ? adminProfile(db, account) : db[key])])),
   };
 }
 

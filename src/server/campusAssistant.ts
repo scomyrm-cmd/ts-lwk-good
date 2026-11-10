@@ -8,6 +8,7 @@ import { schoolDate } from './records.js';
 import { choice, enforceLimit, field, HttpError, object } from './security.js';
 import { addAuditEvent, mutateState, type Account, type SchoolState, type StoredConversation } from './storage.js';
 import { attendanceFacts, indexAttendance, studentLabel } from './studentFacts.js';
+import { studentContact } from '../utils/studentContact.js';
 
 function normalize(value: string) {
   return value.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
@@ -30,7 +31,7 @@ function literal(value: string) {
 function makeRedactor(db: SchoolState) {
   const identities = new Set<string>();
   for (const student of db.students) {
-    for (const value of [studentLabel(student), student.firstName, student.lastName, student.studentId, student.guardianContact, student.dateOfBirth]) {
+    for (const value of [studentLabel(student), student.firstName, student.lastName, student.studentId, student.guardianContact, student.guardianEmail, student.guardianPhone, student.dateOfBirth]) {
       if (value && value.trim().length >= 3) identities.add(value.trim());
     }
   }
@@ -91,7 +92,8 @@ function exactStudentFacts(student: Student, stats: ReturnType<typeof attendance
     copy.latest + ': ' + (stats.latestAbsences.join(', ') || copy.none),
   ];
   if (/guardian|parent.{0,16}(?:phone|contact)|tuteur|téléphone|ولي الأمر|والديه|نمرة|نمر/iu.test(query)) {
-    rows.push(copy.guardian + ': ' + (student.guardianContact || copy.none));
+    const contact = studentContact(student);
+    rows.push(copy.guardian + ': ' + ([contact.email, contact.phone].filter(Boolean).join(' · ') || copy.none));
   }
   return rows.join('\n');
 }

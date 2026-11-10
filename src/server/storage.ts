@@ -13,6 +13,7 @@ export type Account = {
   lastLogin?: string;
   disabledAt?: string;
   mustChangePassword?: boolean;
+  profilePictureUrl?: string;
   language?: Language;
   sessionVersion: number;
 };
@@ -20,6 +21,20 @@ export type Account = {
 export type StoredItem = LostFoundItem & { source?: 'student_report' };
 export type StoredConversation = Conversation & { ownerId?: string; focusedStudentId?: string };
 export type Session = { id: string; userId: string; version: number; expiresAt: number };
+export type AttendanceEmail = {
+  id: string;
+  studentId: string;
+  date: string;
+  attendanceStatus: 'absent' | 'late';
+  status: 'pending' | 'sending' | 'sent' | 'failed' | 'uncertain' | 'cancelled';
+  createdAt: string;
+  updatedAt: string;
+  attempts: number;
+  recipient?: string;
+  error?: string;
+  sentAt?: string;
+  retryAt?: number;
+};
 
 export interface SchoolState {
   users: Account[];
@@ -38,11 +53,13 @@ export interface SchoolState {
   adminSetupFingerprint?: string;
   usedAdminSetupCodes?: string[];
   auditEvents: Array<{ actorId: string; at: string; type: string }>;
+  attendanceEmails: AttendanceEmail[];
+  emailDispatch?: { owner: string; expiresAt: number; nextSendAt: number };
 }
 
 const emptyState = (): SchoolState => ({
   users: [], reports: [], students: [], lostFoundItems: [], attendance: [], activities: [],
-  notifications: [], conversations: [], sessions: [], auditEvents: [],
+  notifications: [], conversations: [], sessions: [], auditEvents: [], attendanceEmails: [],
 });
 
 export function storeReady() {

@@ -16,6 +16,7 @@ import { useApp } from '../../context/AppContext';
 import { WorkspaceDialog } from '../common/WorkspaceDialog';
 import { Student } from '../../types';
 import { formatDateWithPattern } from '../../utils/analytics';
+import { studentContact } from '../../utils/studentContact';
 
 interface StudentProfileModalProps {
   isOpen: boolean;
@@ -139,15 +140,19 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
 
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
               <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                {t.guardianContact}
+                {t.guardianPhone}
               </span>
               <span className="text-sm font-semibold text-slate-800 dark:text-slate-200 mt-1 block truncate">
-                {student.guardianContact || 'No contact provided'}
+                {studentContact(student).phone || '—'}
               </span>
             </div>
           </div>
 
           {/* Attendance Stats Overview */}
+          <div className="rounded-lg border border-slate-200 p-4 dark:border-slate-700">
+            <p className="auth-label">{t.guardianEmail}</p>
+            <p className="break-all text-sm">{studentContact(student).email || '—'}</p>
+          </div>
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3 flex items-center gap-1.5">
               <UserCheck className="w-4 h-4" />

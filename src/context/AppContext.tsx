@@ -17,6 +17,7 @@ import {
   ItemCategory,
 } from '../types';
 import { translations, Translations } from '../i18n/translations';
+import { schoolDate } from '../utils/dates';
 
 interface AppContextType {
   isVerifyingAuth: boolean;
@@ -182,7 +183,7 @@ const defaultSettings: AppSettings = {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const getTodayStr = () => new Date().toISOString().split('T')[0];
+  const getTodayStr = () => schoolDate(defaultSettings.timeZone);
 
   // STRICT SERVER-AUTHORITATIVE AUTHENTICATION
   // Never default to true on cold-load or link copying; session MUST be verified with the server!
@@ -372,7 +373,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   function startSession(user: AuthUser) {
+    hydrated.current = false;
+    persisted.current = {};
+    versions.current = {};
     sessionUser.current = user;
+    setAdminProfile({ ...defaultAdminProfile, displayName: user.displayName, username: user.username, email: user.email, role: user.role });
     setCurrentUser(user);
     setIsAuthenticated(true);
     setAdminDataStatus('loading');
@@ -393,7 +398,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (establishSession) {
         startSession(result.user);
         window.history.replaceState(null, '', result.user.role === 'admin' ? '/admin' : '/');
-      } else if (result.user) {
+      } else if (result.user && sessionUser.current?.id === result.user.id) {
         sessionUser.current = result.user;
         setCurrentUser(result.user);
       }

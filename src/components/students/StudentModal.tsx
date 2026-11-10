@@ -3,6 +3,7 @@ import { X, UserPlus, Save } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { WorkspaceDialog } from '../common/WorkspaceDialog';
 import { Student } from '../../types';
+import { isEmailAddress, studentContact } from '../../utils/studentContact';
 
 interface StudentModalProps {
   isOpen: boolean;
@@ -23,7 +24,8 @@ export const StudentModal: React.FC<StudentModalProps> = ({
   const [className, setClassName] = useState('Grade 10-A');
   const [gender, setGender] = useState<'Male' | 'Female' | 'Other'>('Male');
   const [dateOfBirth, setDateOfBirth] = useState('');
-  const [guardianContact, setGuardianContact] = useState('');
+  const [guardianEmail, setGuardianEmail] = useState('');
+  const [guardianPhone, setGuardianPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -35,7 +37,8 @@ export const StudentModal: React.FC<StudentModalProps> = ({
       setClassName(studentToEdit.className);
       setGender(studentToEdit.gender || 'Male');
       setDateOfBirth(studentToEdit.dateOfBirth || '');
-      setGuardianContact(studentToEdit.guardianContact || '');
+      setGuardianEmail(studentContact(studentToEdit).email);
+      setGuardianPhone(studentContact(studentToEdit).phone);
       setNotes(studentToEdit.notes || '');
     } else {
       // Default new student ID
@@ -45,7 +48,8 @@ export const StudentModal: React.FC<StudentModalProps> = ({
       setClassName('Grade 10-A');
       setGender('Male');
       setDateOfBirth('');
-      setGuardianContact('');
+      setGuardianEmail('');
+      setGuardianPhone('');
       setNotes('');
     }
     setErrors({});
@@ -59,6 +63,7 @@ export const StudentModal: React.FC<StudentModalProps> = ({
     if (!firstName.trim()) errs.firstName = t.required;
     if (!lastName.trim()) errs.lastName = t.required;
     if (!className.trim()) errs.className = t.required;
+    if (guardianEmail.trim() && !isEmailAddress(guardianEmail.trim())) errs.guardianEmail = 'Enter a valid email address';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -75,7 +80,8 @@ export const StudentModal: React.FC<StudentModalProps> = ({
         className: className.trim(),
         gender,
         dateOfBirth: dateOfBirth || undefined,
-        guardianContact: guardianContact.trim() || undefined,
+        guardianEmail: guardianEmail.trim(),
+        guardianPhone: guardianPhone.trim(),
         notes: notes.trim() || undefined,
       });
     } else {
@@ -86,7 +92,8 @@ export const StudentModal: React.FC<StudentModalProps> = ({
         className: className.trim(),
         gender,
         dateOfBirth: dateOfBirth || undefined,
-        guardianContact: guardianContact.trim() || undefined,
+        guardianEmail: guardianEmail.trim(),
+        guardianPhone: guardianPhone.trim(),
         notes: notes.trim() || undefined,
       });
     }
@@ -229,17 +236,16 @@ export const StudentModal: React.FC<StudentModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
-              {t.guardianContact}
-            </label>
-            <input
-              type="text"
-              value={guardianContact}
-              onChange={(e) => setGuardianContact(e.target.value)}
-              placeholder="e.g. +212 661 234 567 (Father / Mother)"
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="guardian-email" className="auth-label">{t.guardianEmail}</label>
+              <input id="guardian-email" type="email" className="workspace-field" autoComplete="email" maxLength={160} value={guardianEmail} onChange={(event) => setGuardianEmail(event.target.value)} aria-invalid={Boolean(errors.guardianEmail)} />
+              {errors.guardianEmail && <p role="alert" className="mt-1 text-xs text-red-600">{errors.guardianEmail}</p>}
+            </div>
+            <div>
+              <label htmlFor="guardian-phone" className="auth-label">{t.guardianPhone}</label>
+              <input id="guardian-phone" type="tel" className="workspace-field" autoComplete="tel" maxLength={80} value={guardianPhone} onChange={(event) => setGuardianPhone(event.target.value)} />
+            </div>
           </div>
 
           <div>

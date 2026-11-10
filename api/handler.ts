@@ -11,12 +11,16 @@ import { generateStudentsExcelWorkbook } from '../src/server/excelExport.js';
 import {
   applyUpdates, attendanceStatuses, categories, getAdminState, isoDate, publicCatalog, publishReport, schoolDate, versionOf,
 } from '../src/server/records.js';
-import { choice, enforceLimit, field, guardRequest, HttpError, object } from '../src/server/security.js';
+import { choice, digest, enforceLimit, field, guardRequest, HttpError, object } from '../src/server/security.js';
 import { addAuditEvent, mutateState, privatePath, readState, StorageFailure, storeReady, type Account, type SchoolState } from '../src/server/storage.js';
 import { attendanceFacts, indexAttendance } from '../src/server/studentFacts.js';
+import { attendanceEmailStatus, emailConfigured, enqueueAttendanceEmail, queueChangedAttendanceEmails, scheduleAttendanceEmails } from '../src/server/attendanceEmail.js';
+import { timingSafeEqual } from 'node:crypto';
 
 const routes: Record<string, { methods: readonly string[]; bytes?: number }> = {
   health: { methods: ['GET'] },
+  'cron/attendance-emails': { methods: ['GET'] },
+  'admin/attendance-emails': { methods: ['GET', 'POST'] },
   'auth/me': { methods: ['GET'] },
   'auth/login': { methods: ['POST'] },
   'auth/register': { methods: ['POST'] },
@@ -188,6 +192,16 @@ async function route(req: VercelRequest, res: VercelResponse) {
     storageMode: privatePath('state.json').includes('/previews/') ? 'isolated-preview' : 'production',
   });
 
+  if (name === 'cron/attendance-emails') {
+    const secret = process.env.CRON_SECRET;
+    const supplied = typeof req.headers.authorization === 'string' ? req.headers.authorization : '';
+    if (!secret || !timingSafeEqual(Buffer.from(digest(supplied)), Buffer.from(digest('Bearer ' + secret)))) {
+      throw new HttpError(401, 'Scheduler authorization required');
+    }
+    await scheduleAttendanceEmails();
+    return success(res);
+  }
+
   if (name === 'admin/entry') {
     const user = await getCurrentUser(req);
     if (user?.role === 'user') throw new HttpError(403, 'Administrator permission required');
@@ -232,6 +246,28 @@ async function route(req: VercelRequest, res: VercelResponse) {
 
   if (method !== 'GET') await enforceLimit(res, 'admin-write', account.id, 180, 15 * 60_000);
   if (name === 'admin/conversations') return deleteConversations(req, res);
+  if (name === 'admin/attendance-emails') {
+    if (method === 'GET') {
+      await scheduleAttendanceEmails();
+      return success(res, { configured: emailConfigured(), notifications: attendanceEmailStatus(db) });
+    }
+    const body = object(req.body);
+    const studentId = field(body.studentId, 120, true);
+    if (body.retry != null && typeof body.retry !== 'boolean') throw new HttpError(400, 'Invalid retry option');
+    if (body.confirmed != null && typeof body.confirmed !== 'boolean') throw new HttpError(400, 'Invalid confirmation');
+    const date = isoDate(body.date);
+    const job = await adminMutation(req, (live, admin) => {
+      const job = enqueueAttendanceEmail(live, studentId, date);
+      if (body.retry === true && (job.status === 'failed' || job.status === 'uncertain')) {
+        if (body.confirmed !== true) throw new HttpError(400, 'Confirm the retry after checking EmailJS history');
+        job.status = 'pending'; job.retryAt = Date.now(); job.error = undefined;
+        addAuditEvent(live, admin.id, 'attendance_email_retry');
+      }
+      return job;
+    });
+    await scheduleAttendanceEmails();
+    return success(res, { notification: job });
+  }
   if (name === 'admin/users') {
     return method === 'GET'
       ? success(res, { users: db.users.filter((user) => !user.disabledAt).map(safeUser) })
@@ -265,11 +301,18 @@ async function route(req: VercelRequest, res: VercelResponse) {
 
   if (name === 'admin/state') {
     if (method === 'GET') return success(res, {
-      ...getAdminState(db), conversations: listConversations(db, account),
+      ...getAdminState(db, account), conversations: listConversations(db, account),
     });
     const body = object(req.body);
-    const versions = await adminMutation(req, (live) => applyUpdates(live, object(body.state), object(body.versions)));
-    return success(res, { versions });
+    const saved = await adminMutation(req, (live, admin) => {
+      const previous = live.attendance;
+      const state = object(body.state);
+      const versions = applyUpdates(live, state, object(body.versions), admin);
+      const queued = Object.hasOwn(state, 'attendance') ? queueChangedAttendanceEmails(live, previous) : 0;
+      return { versions, queued };
+    });
+    if (saved.queued) await scheduleAttendanceEmails();
+    return success(res, { versions: saved.versions });
   }
 
   throw new HttpError(404, 'Unknown endpoint');

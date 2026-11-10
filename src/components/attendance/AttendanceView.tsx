@@ -28,6 +28,8 @@ import {
 } from '../../utils/analytics';
 import { EmptyState } from '../common/EmptyState';
 import { AbsenceModal } from './AbsenceModal';
+import { AttendanceEmails } from './AttendanceEmails';
+import { schoolDate } from '../../utils/dates';
 
 export const AttendanceView: React.FC = () => {
   const {
@@ -90,7 +92,7 @@ export const AttendanceView: React.FC = () => {
     setCurrentDate(d.toISOString().split('T')[0]);
   };
 
-  const getTodayStr = () => new Date().toISOString().split('T')[0];
+  const getTodayStr = () => schoolDate(settings.timeZone);
   const getYesterdayStr = () => {
     const d = new Date();
     d.setDate(d.getDate() - 1);
@@ -149,6 +151,7 @@ export const AttendanceView: React.FC = () => {
         )}
       </WorkspaceHeader>
 
+      <AttendanceEmails />
       <nav className="workspace-tabs" aria-label={t.attendanceTitle}>
         {([
           { id: 'daily', label: t.tabDaily },

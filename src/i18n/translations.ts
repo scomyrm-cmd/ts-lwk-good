@@ -154,6 +154,8 @@ export interface Translations {
   gender: string;
   dateOfBirth: string;
   guardianContact: string;
+  guardianEmail: string;
+  guardianPhone: string;
   attendanceStatus: string;
   viewProfile: string;
   editStudent: string;
@@ -411,6 +413,8 @@ export const translations: Record<Language, Translations> = {
     gender: 'Gender',
     dateOfBirth: 'Date of Birth',
     guardianContact: 'Guardian Contact',
+    guardianEmail: 'Guardian email',
+    guardianPhone: 'Guardian phone',
     attendanceStatus: 'Attendance Status',
     viewProfile: 'View Profile',
     editStudent: 'Edit Student',
@@ -696,6 +700,8 @@ export const translations: Record<Language, Translations> = {
     gender: 'Genre',
     dateOfBirth: 'Date de Naissance',
     guardianContact: 'Contact Tuteur',
+    guardianEmail: 'Email du responsable',
+    guardianPhone: 'Téléphone du responsable',
     attendanceStatus: 'Statut de Présence',
     viewProfile: 'Voir le Profil',
     editStudent: "Modifier l'Élève",
@@ -981,6 +987,8 @@ export const translations: Record<Language, Translations> = {
     gender: 'الجنس',
     dateOfBirth: 'تاريخ الازدياد',
     guardianContact: 'رقم ولي الأمر',
+    guardianEmail: 'البريد الإلكتروني لولي الأمر',
+    guardianPhone: 'هاتف ولي الأمر',
     attendanceStatus: 'حالة الحضور',
     viewProfile: 'معاينة الملف الشخصي',
     editStudent: 'تعديل بيانات الطالب',

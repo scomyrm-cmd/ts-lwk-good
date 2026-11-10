@@ -10,6 +10,18 @@ Remove the setup code from Vercel after activation. To recover access again, gen
 
 For owner-managed provisioning with an initial temporary password, set its bcrypt hash in `CAMPUS_ADMIN_TEMPORARY_PASSWORD_HASH` and submit it with the one-time setup code to the administrator setup endpoint. This creates the account with a mandatory password change. That session can use account and password-change endpoints. School records, AI, exports, and all administrative APIs require the password change to be completed. The new private password must meet the usual administrator policy. Reusing the consumed setup code cannot reset the account.
 
+## Administrator profiles and contacts
+
+Administrator identity and profile edits belong to the authenticated account. Student records have separate `guardianEmail` and `guardianPhone` fields. Older contact values are displayed through a compatibility parser and can be saved into the new fields.
+
+## Attendance email notices
+
+Set `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, and `EMAILJS_PUBLIC_KEY` in the production environment. If EmailJS private-key authorization is enabled, also set `EMAILJS_PRIVATE_KEY`. Enable non-browser API requests in EmailJS Account → Security. The template’s To Email field must be `{{to_email}}`, its subject `{{notification_subject}}`, and its body `{{attendance_message}}`. Names, classes, dates, and school details are supplied from saved server records. The messages are in French.
+
+Saving today’s attendance as absent or late creates a private delivery record. Current school time determines the date. A background function sends notices sequentially under a shared server lease. One saved student/date/status creates one notice. Ordinary re-saves reuse that notice. Pending notices are checked against the latest attendance before sending. Keep `EMAILJS_ALLOW_PREVIEW` unset or false on previews to isolate testing from actual mail delivery.
+
+Set a random `CRON_SECRET` for the daily recovery invocation. Large batches continue in a fresh authenticated invocation. Failed configuration requests remain visible in Attendance → Guardian email notices. A response accepted by EmailJS is recorded as sent. A network interruption or ambiguous provider failure is recorded for review, since EmailJS’s send API does not provide an idempotency key. Check EmailJS history before retrying uncertain delivery. The server refuses student requests and arbitrary recipient addresses on the notification API.
+
 ## Server storage
 
 Production uses the existing private `campus-os/private/state.json` Blob. Missing session, audit, and recovery fields are initialized automatically without a migration. Older cookies must be replaced by signing in again. Preview deployments use isolated paths. When configuring an integration test, set `CAMPUS_PREVIEW_NAMESPACE` only on its preview branch and check that `/api/health` reports `isolated-preview` before writing test records.

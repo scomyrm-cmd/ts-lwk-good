@@ -9,6 +9,8 @@ export interface Student {
   gender?: 'Male' | 'Female' | 'Other';
   dateOfBirth?: string;
   guardianContact?: string;
+  guardianEmail?: string;
+  guardianPhone?: string;
   notes?: string;
   createdAt: string;
 }

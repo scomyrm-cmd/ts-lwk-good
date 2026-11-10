@@ -10,6 +10,17 @@ class BlobNotFoundError extends Error {}
 const blobs = new Map<string, MockBlob>();
 let revision = 0;
 let providerRequests: Array<{ model: string; contents: unknown; config: { systemInstruction: string } }> = [];
+const emailRequests: Array<Record<string, any>> = [];
+let emailResponse = 200;
+const originalFetch = globalThis.fetch;
+globalThis.fetch = async (input, init) => {
+  if (String(input) === 'https://api.emailjs.com/api/v1.0/email/send') {
+    emailRequests.push(JSON.parse(String(init?.body)));
+    if (emailResponse === 0) throw new Error('Fixture interrupted response');
+    return new Response(emailResponse === 200 ? 'OK' : 'Fixture provider error', { status: emailResponse });
+  }
+  return originalFetch(input, init);
+};
 
 process.env.BLOB_READ_WRITE_TOKEN = 'isolated-storage-fixture';
 process.env.JWT_SECRET = 'isolated-test-signing-key-at-least-thirty-two-characters';
@@ -165,6 +176,7 @@ test('server roles, private persistence, controlled catalog, export, AI, and rot
   const second = session(await api('auth/register', 'POST', { ...userData, username: 'qa_other', email: 'other@example.invalid' }));
   assert.equal((await api('admin/entry', 'GET', undefined, learner)).code, 403);
   assert.equal((await api('admin/lost-found', 'GET', undefined, learner)).code, 403);
+  assert.equal((await api('admin/attendance-emails', 'GET', undefined, learner)).code, 403);
   assert.equal((await api('admin/students/export-excel', 'POST', { confirmed: true }, learner)).code, 403);
   assert.equal((await api('campus-ai', 'POST', { prompt: 'hi', conversationId: 'test' }, learner)).code, 403);
   assert.equal((await api('user/preferences', 'PATCH', { language: 'ar', role: 'admin' }, learner)).code, 400);
@@ -291,6 +303,92 @@ test('temporary administrator passwords require a server-enforced change and can
   assert.deepEqual(after.attendance, before.attendance);
   assert.equal(after.users.filter((user: any) => user.role === 'admin' && !user.disabledAt).length, 1);
   delete process.env.CAMPUS_ADMIN_TEMPORARY_PASSWORD_HASH;
+});
+
+test('administrator profiles and saved attendance emails stay isolated and deduplicated', async () => {
+  process.env.CAMPUS_ADMIN_SETUP_CODE = 'mail-owner-single-use-code-fixture-987654321';
+  process.env.CAMPUS_ADMIN_USERNAME = 'qa_mail_owner';
+  const setup = await api('auth/admin-setup', 'POST', { code: process.env.CAMPUS_ADMIN_SETUP_CODE, password: 'qa-mail-owner-private-password' });
+  assert.equal(setup.code, 200);
+  const owner = session(setup);
+  const second = await api('admin/users', 'POST', {
+    username: 'qa_mail_second', email: 'second-mail@example.invalid', displayName: 'Second Administrator',
+    password: 'qa-mail-second-private-password', role: 'admin',
+  }, owner);
+  assert.equal(second.code, 201);
+  const other = session(await api('auth/login', 'POST', {
+    username: 'qa_mail_second', password: 'qa-mail-second-private-password', requireAdmin: true,
+  }, undefined, {}, '192.0.2.60'));
+  let state = (await api('admin/state', 'GET', undefined, owner)).data;
+  assert.equal(state.state.adminProfile.username, 'qa_mail_owner');
+  assert.equal((await api('admin/state', 'GET', undefined, other)).data.state.adminProfile.displayName, 'Second Administrator');
+  const profile = await api('admin/state', 'PUT', {
+    state: { adminProfile: { displayName: 'First Administrator', profilePictureUrl: '' } }, versions: state.versions,
+  }, owner);
+  assert.equal(profile.code, 200);
+  assert.equal((await api('admin/state', 'GET', undefined, other)).data.state.adminProfile.displayName, 'Second Administrator');
+
+  const mailStudent = { ...student, id: 'mail-student', studentId: 'MAIL-42', guardianContact: 'parent@example.invalid', notes: '' };
+  state = (await api('admin/state', 'GET', undefined, owner)).data;
+  const saved = await api('admin/state', 'PUT', { state: { students: [mailStudent] }, versions: state.versions }, owner);
+  assert.equal(saved.code, 200);
+  const normalized = (await api('admin/state', 'GET', undefined, owner)).data.state.students[0];
+  assert.equal(normalized.guardianEmail, 'parent@example.invalid');
+  assert.equal(normalized.guardianPhone, '');
+  process.env.EMAILJS_SERVICE_ID = 'fixture-service';
+  process.env.EMAILJS_TEMPLATE_ID = 'fixture-template';
+  process.env.EMAILJS_PUBLIC_KEY = 'fixture-public';
+  const record = { id: 'mail-attendance', studentId: mailStudent.studentId, date: today, status: 'absent', updatedAt: new Date().toISOString() };
+  state = (await api('admin/state', 'GET', undefined, owner)).data;
+  assert.equal((await api('admin/state', 'PUT', { state: { attendance: [record] }, versions: state.versions }, owner)).code, 200);
+  assert.equal(emailRequests.length, 1);
+  assert.equal(emailRequests[0].template_params.to_email, 'parent@example.invalid');
+  assert.match(emailRequests[0].template_params.notification_subject, /^Absence de Maya River/);
+  assert.match(emailRequests[0].template_params.attendance_message, /classe de Form 2/);
+  state = (await api('admin/state', 'GET', undefined, owner)).data;
+  await api('admin/state', 'PUT', { state: { attendance: [record] }, versions: state.versions }, owner);
+  assert.equal(emailRequests.length, 1, 'An ordinary save must not resend a notice');
+  state = (await api('admin/state', 'GET', undefined, owner)).data;
+  const late = { ...record, status: 'late', time: '08:12', updatedAt: new Date(Date.now() + 1000).toISOString() };
+  await api('admin/state', 'PUT', { state: { attendance: [late] }, versions: state.versions }, owner);
+  assert.equal(emailRequests.length, 2);
+  assert.match(emailRequests[1].template_params.notification_subject, /^Retard de/);
+  assert.match(emailRequests[1].template_params.attendance_message, /en retard.*08:12/);
+  assert.doesNotMatch(emailRequests[1].template_params.attendance_message, /signalé\(e\) absent/);
+  const statuses = (await api('admin/attendance-emails', 'GET', undefined, owner)).data.notifications;
+  assert.equal(statuses.filter((job: any) => job.status === 'sent').length, 2);
+  await api('admin/attendance-emails', 'POST', { studentId: mailStudent.studentId, date: today }, owner);
+  assert.equal(emailRequests.length, 2);
+  assert.equal((await api('admin/attendance-emails')).code, 401);
+  assert.equal((await api('cron/attendance-emails')).code, 401);
+
+  const { mutateState } = await import('../src/server/storage.js');
+  const { dispatchAttendanceEmails } = await import('../src/server/attendanceEmail.js');
+  await mutateState((db) => {
+    const job = db.attendanceEmails.find((job) => job.attendanceStatus === 'late')!;
+    job.status = 'pending'; job.retryAt = 0;
+  });
+  emailResponse = 0;
+  await Promise.all([dispatchAttendanceEmails(), dispatchAttendanceEmails()]);
+  assert.equal(emailRequests.length, 3, 'Concurrent processors must acquire one server-side delivery lease');
+  assert.equal((await api('admin/attendance-emails', 'GET', undefined, owner)).data.notifications.find((job: any) => job.attendanceStatus === 'late').status, 'uncertain');
+  assert.equal(emailRequests.length, 3, 'An uncertain delivery must not be retried automatically');
+  assert.equal((await api('admin/attendance-emails', 'POST', { studentId: mailStudent.studentId, date: today, retry: true }, owner)).code, 400);
+  emailResponse = 200;
+  assert.equal((await api('admin/attendance-emails', 'POST', { studentId: mailStudent.studentId, date: today, retry: true, confirmed: true }, owner)).code, 200);
+  assert.equal(emailRequests.length, 4);
+  await mutateState((db) => {
+    const job = db.attendanceEmails.find((job) => job.attendanceStatus === 'late')!;
+    job.status = 'pending'; job.retryAt = 0;
+    db.attendance = db.attendance.map((row) => ({ ...row, status: 'present' }));
+  });
+  await dispatchAttendanceEmails();
+  assert.equal(emailRequests.length, 4, 'Correcting attendance must cancel a pending notice');
+  assert.equal((await api('admin/attendance-emails', 'GET', undefined, owner)).data.notifications.find((job: any) => job.attendanceStatus === 'late').status, 'cancelled');
+  assert.equal((await api('auth/logout', 'POST', {}, owner)).code, 200);
+  assert.equal((await api('auth/me', 'GET', undefined, owner)).data.authenticated, false);
+  assert.equal((await api('auth/me', 'GET', undefined, other)).data.user.username, 'qa_mail_second');
+  for (const key of ['EMAILJS_SERVICE_ID', 'EMAILJS_TEMPLATE_ID', 'EMAILJS_PUBLIC_KEY']) delete process.env[key];
 });
 
 test('distributed rate counters survive separate requests and reject oversized bodies', async () => {

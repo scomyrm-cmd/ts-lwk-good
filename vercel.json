@@ -21,9 +21,12 @@
   ],
   "functions": {
     "api/handler.ts": {
-      "maxDuration": 60
+      "maxDuration": 300
     }
   },
+  "crons": [
+    { "path": "/api/cron/attendance-emails", "schedule": "0 19 * * *" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

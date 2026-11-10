@@ -1,4 +1,5 @@
 import ExcelJS from 'exceljs';
+import { studentContact } from '../utils/studentContact.js';
 
 export interface StudentExportItem {
   id: string;
@@ -9,6 +10,8 @@ export interface StudentExportItem {
   gender?: string;
   dateOfBirth?: string;
   guardianContact?: string;
+  guardianEmail?: string;
+  guardianPhone?: string;
   todayStatus?: string;
   attendanceRatePercent?: number | null;
   totalAbsences?: number;
@@ -89,12 +92,14 @@ export async function generateStudentsExcelWorkbook(options: {
     { key: 'className', label: 'Class / Grade', width: 16 },
     { key: 'gender', label: 'Gender', width: 12 },
     { key: 'dateOfBirth', label: 'Date of Birth', width: 15 },
-    { key: 'guardianContact', label: 'Guardian Phone', width: 20 },
+    { key: 'guardianContact', label: 'Guardian Contact', width: 20 },
     { key: 'todayStatus', label: "Today's Status", width: 16 },
     { key: 'attendanceRate', label: 'Attendance %', width: 16 },
     { key: 'totalAbsences', label: 'Total Absences', width: 16 },
     { key: 'notes', label: 'Administrative Notes', width: 30 },
     { key: 'registeredDate', label: 'Registration Date', width: 18 },
+    { key: 'guardianEmail', label: 'Guardian Email', width: 28 },
+    { key: 'guardianPhone', label: 'Guardian Phone', width: 20 },
   ];
 
   const headerRow = worksheet.getRow(4);
@@ -141,6 +146,8 @@ export async function generateStudentsExcelWorkbook(options: {
       sanitizeExcelCell(s.totalAbsences ?? 0),
       sanitizeExcelCell(s.notes || '-'),
       excelDate(s.createdAt),
+      sanitizeExcelCell(studentContact(s).email || '-'),
+      sanitizeExcelCell(studentContact(s).phone || '-'),
     ];
 
     values.forEach((val, vIdx) => {

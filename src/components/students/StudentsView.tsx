@@ -28,6 +28,7 @@ import { EmptyState } from '../common/EmptyState';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { StudentModal } from './StudentModal';
 import { StudentProfileModal } from './StudentProfileModal';
+import { studentContact } from '../../utils/studentContact';
 
 export const StudentsView: React.FC = () => {
   const {
@@ -87,7 +88,7 @@ export const StudentsView: React.FC = () => {
   });
 
   const handleExportCsv = () => {
-    const headers = ['Student ID', 'First Name', 'LastName', 'Class', 'Gender', 'Date of Birth', 'Guardian Contact', 'Status Today'];
+    const headers = ['Student ID', 'First Name', 'LastName', 'Class', 'Gender', 'Date of Birth', 'Guardian Contact', 'Status Today', 'Guardian Email', 'Guardian Phone'];
     const rows = filteredStudents.map((s) => [
       s.studentId,
       s.firstName,
@@ -97,6 +98,8 @@ export const StudentsView: React.FC = () => {
       s.dateOfBirth ? formatDateWithPattern(s.dateOfBirth, settings.dateFormat) : '',
       s.guardianContact || '',
       attendanceMap.get(s.studentId) || 'Unmarked',
+      studentContact(s).email,
+      studentContact(s).phone,
     ]);
     exportToCSV(`students_list_${currentDate}`, headers, rows);
   };
@@ -128,6 +131,8 @@ export const StudentsView: React.FC = () => {
                   gender: ['Male', 'Female', 'Other'].includes(s.gender) ? s.gender : 'Other',
                   dateOfBirth: s.dateOfBirth || '',
                   guardianContact: s.guardianContact || '',
+                  guardianEmail: s.guardianEmail,
+                  guardianPhone: s.guardianPhone,
                   notes: s.notes || 'Imported via file',
                 });
                 importedCount++;
@@ -151,6 +156,8 @@ export const StudentsView: React.FC = () => {
                     gender: (gender?.toLowerCase() as any) || 'other',
                     dateOfBirth: dateOfBirth || '',
                     guardianContact: guardianContact || '',
+                    guardianEmail: cols[8] || undefined,
+                    guardianPhone: cols[9] || undefined,
                     notes: 'Imported via CSV',
                   });
                   importedCount++;
@@ -340,7 +347,8 @@ export const StudentsView: React.FC = () => {
                   <th className="py-3 px-4 text-start">{t.fullName}</th>
                   <th className="py-3 px-4 text-start">{t.className}</th>
                   <th className="py-3 px-4 text-start">{t.gender}</th>
-                  <th className="py-3 px-4 text-start">{t.guardianContact}</th>
+                  <th className="py-3 px-4 text-start">{t.guardianEmail}</th>
+                  <th className="py-3 px-4 text-start">{t.guardianPhone}</th>
                   <th className="py-3 px-4 text-start">{t.attendanceStatus}</th>
                   <th className="py-3 px-4 text-end">{t.actions}</th>
                 </tr>
@@ -348,7 +356,7 @@ export const StudentsView: React.FC = () => {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredStudents.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-10 text-xs text-slate-400">
+                    <td colSpan={8} className="text-center py-10 text-xs text-slate-400">
                       No students found matching your search filter.
                     </td>
                   </tr>
@@ -386,8 +394,9 @@ export const StudentsView: React.FC = () => {
                           {student.gender || '—'}
                         </td>
                         <td className="py-3 px-4 text-slate-500 dark:text-slate-400">
-                          {student.guardianContact || '—'}
+                          {studentContact(student).email || '—'}
                         </td>
+                        <td className="py-3 px-4 text-sm">{studentContact(student).phone || '—'}</td>
                         <td className="py-3 px-4">
                           {status === 'present' && (
                             <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400">

@@ -11,7 +11,7 @@ import {
   applyUpdates, attendanceStatuses, categories, getAdminState, isoDate, publicCatalog, publishReport, schoolDate, versionOf,
 } from '../src/server/records.js';
 import { choice, enforceLimit, field, guardRequest, HttpError, object } from '../src/server/security.js';
-import { addAuditEvent, mutateState, privatePath, readState, storeReady, type Account, type SchoolState } from '../src/server/storage.js';
+import { addAuditEvent, mutateState, privatePath, readState, StorageFailure, storeReady, type Account, type SchoolState } from '../src/server/storage.js';
 import { attendanceFacts, indexAttendance } from '../src/server/studentFacts.js';
 
 const routes: Record<string, { methods: readonly string[]; bytes?: number }> = {
@@ -276,7 +276,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return await route(req, res);
   } catch (error) {
     if (error instanceof HttpError) return res.status(error.status).json({ success: false, error: error.message });
-    console.error('Campus OS server operation failed', error instanceof Error ? error.name : 'UnknownError');
+    if (error instanceof StorageFailure) {
+      console.error('Campus OS storage request failed', error.operation, error.reason);
+    } else {
+      console.error('Campus OS server operation failed', error instanceof Error ? error.constructor.name : 'UnknownError');
+    }
     return res.status(503).json({ success: false, error: 'Server operation unavailable. Please try again.' });
   }
 }

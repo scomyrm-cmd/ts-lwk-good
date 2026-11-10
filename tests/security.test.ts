@@ -5,6 +5,7 @@ import ExcelJS from 'exceljs';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 type MockBlob = { etag: string; json: string };
+class BlobPreconditionFailedError extends Error {}
 const blobs = new Map<string, MockBlob>();
 let revision = 0;
 let providerRequests: Array<{ model: string; contents: unknown; config: { systemInstruction: string } }> = [];
@@ -29,9 +30,7 @@ const mock = {
     await new Promise((resolve) => setTimeout(resolve, 1));
     const current = blobs.get(path);
     if (options.ifMatch && current?.etag !== options.ifMatch) {
-      const conflict = new Error('ETag changed');
-      conflict.name = 'BlobPreconditionFailedError';
-      throw conflict;
+      throw new BlobPreconditionFailedError('ETag changed');
     }
     if (!options.allowOverwrite && current) throw new Error('Blob already exists');
     blobs.set(path, { etag: String(++revision), json });
@@ -44,10 +43,10 @@ const mock = {
     return { text };
   },
 };
-Object.assign(globalThis, { campusTestDoubles: mock });
+Object.assign(globalThis, { campusTestDoubles: { ...mock, BlobPreconditionFailedError } });
 
 const source = (code: string) => 'data:text/javascript,' + encodeURIComponent(code);
-const storage = source('export const { get, put } = globalThis.campusTestDoubles;');
+const storage = source('export const { get, put, BlobPreconditionFailedError } = globalThis.campusTestDoubles;');
 const provider = source('export class GoogleGenAI { models = { generateContent: globalThis.campusTestDoubles.provider } }');
 registerHooks({
   resolve(specifier, context, next) {

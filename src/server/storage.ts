@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { get, put } from '@vercel/blob';
+import { BlobPreconditionFailedError, get, put } from '@vercel/blob';
 import type { ActivityLogItem, AdminProfile, AppSettings, AttendanceRecord, Conversation, Language, LostFoundItem, NotificationItem, SchoolInfo, Student, UserReport } from '../types/index.js';
 
 export type Account = {
@@ -58,11 +58,35 @@ export function privatePath(file: string) {
   return 'campus-os/previews/' + key + '/private/' + file;
 }
 
+export class StorageFailure extends Error {
+  constructor(readonly operation: string, readonly reason: string) {
+    super('Private storage operation failed');
+  }
+}
+
+function storageReason(error: unknown) {
+  if (!(error instanceof Error)) return 'unknown';
+  const http = /^Vercel Blob: Failed to fetch blob: (\d{3}) /.exec(error.message)?.[1];
+  if (http) return 'upstream-http-' + http;
+  if (/already exists/i.test(error.message)) return 'already-exists';
+  if (/rate limit|too many requests/i.test(error.message)) return 'rate-limited';
+  if (/suspend|quota|limit reached/i.test(error.message)) return 'quota-or-suspended';
+  if (/not authorized|not allowed|forbidden/i.test(error.message)) return 'access-denied';
+  if (/ETag mismatch|precondition failed/i.test(error.message)) return 'version-conflict';
+  return error.constructor.name;
+}
+
 async function readBlob<T>(path: string, initial: () => T) {
-  const blob = await get(path, { access: 'private', useCache: false });
+  const collection = path.includes('/limits/') ? 'rate-limit' : 'state';
+  let blob: Awaited<ReturnType<typeof get>>;
+  try {
+    blob = await get(path, { access: 'private', useCache: false });
+  } catch (error) {
+    throw new StorageFailure(collection + '-read', storageReason(error));
+  }
   if (!blob) return { value: initial(), etag: undefined };
   if (blob.statusCode !== 200 || !blob.stream || !blob.blob.etag) {
-    throw new Error('Private storage returned an invalid response');
+    throw new StorageFailure(collection + '-read', 'missing-content-or-version');
   }
   const value = await new Response(blob.stream).json() as T;
   return { value, etag: blob.blob.etag };
@@ -71,7 +95,7 @@ async function readBlob<T>(path: string, initial: () => T) {
 function isWriteConflict(error: unknown, creating: boolean) {
   if (!(error instanceof Error)) return false;
   const status = 'statusCode' in error ? error.statusCode : undefined;
-  return error.name === 'BlobPreconditionFailedError' || status === 412 ||
+  return error instanceof BlobPreconditionFailedError || status === 412 ||
     (creating && (status === 409 || /already exists/i.test(error.message)));
 }
 
@@ -95,11 +119,13 @@ export async function updateBlob<T, R>(
       });
       return result;
     } catch (error) {
-      if (!isWriteConflict(error, !etag)) throw error;
+      if (!isWriteConflict(error, !etag)) {
+        throw new StorageFailure(file.startsWith('limits/') ? 'rate-limit-write' : 'state-write', storageReason(error));
+      }
       await new Promise((resolve) => setTimeout(resolve, 20 * (attempt + 1) + Math.random() * 30));
     }
   }
-  throw new Error('Private storage write conflict');
+  throw new StorageFailure(file.startsWith('limits/') ? 'rate-limit-write' : 'state-write', 'version-conflict');
 }
 
 function compatibleState(value: SchoolState): SchoolState {

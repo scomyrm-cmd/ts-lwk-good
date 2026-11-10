@@ -549,7 +549,7 @@ export const translations: Record<Language, Translations> = {
 
     adminPortal: "Administrator sign in",
     normalUserPortal: 'Student & Parent Portal',
-    adminLoginBtn: "Administrator",
+    adminLoginBtn: "Admin login",
     userLoginBtn: "Student / parent",
     registerBtn: 'Create Account',
     registerTitle: "Create an account",
@@ -834,7 +834,7 @@ export const translations: Record<Language, Translations> = {
 
     adminPortal: "Connexion administrateur",
     normalUserPortal: 'Portail Étudiants & Parents',
-    adminLoginBtn: "Administration",
+    adminLoginBtn: "Connexion admin",
     userLoginBtn: "Élève / parent",
     registerBtn: 'Créer un Compte',
     registerTitle: "Créer un compte",
@@ -1119,7 +1119,7 @@ export const translations: Record<Language, Translations> = {
 
     adminPortal: "تسجيل دخول الإدارة",
     normalUserPortal: 'بوابة الطلاب وأولياء الأمور',
-    adminLoginBtn: "الإدارة",
+    adminLoginBtn: "دخول الإدارة",
     userLoginBtn: "طالب / ولي أمر",
     registerBtn: 'إنشاء حساب جديد',
     registerTitle: "إنشاء حساب",

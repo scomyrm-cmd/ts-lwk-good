@@ -6,6 +6,7 @@ import {
   register, requireUser, revokeUserSessions, safeUser, setUpAdministrator, setupUsername, setUserLanguage, usernameField,
 } from '../src/server/auth.js';
 import { answerAssistant, deleteConversations, listConversations } from '../src/server/campusAssistant.js';
+import { DEFAULT_GEMINI_MODEL } from '../src/server/aiMultilingual.js';
 import { generateStudentsExcelWorkbook } from '../src/server/excelExport.js';
 import {
   applyUpdates, attendanceStatuses, categories, getAdminState, isoDate, publicCatalog, publishReport, schoolDate, versionOf,
@@ -221,7 +222,7 @@ async function route(req: VercelRequest, res: VercelResponse) {
   }
   if (name === 'campus-ai') {
     return method === 'GET'
-      ? success(res, { configured: Boolean(process.env.GEMINI_API_KEY), model: process.env.GEMINI_MODEL || 'gemini-2.5-flash' })
+      ? success(res, { configured: Boolean(process.env.GEMINI_API_KEY), model: process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL })
       : answerAssistant(req, res, db, account);
   }
 

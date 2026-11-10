@@ -3,7 +3,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenAI } from '@google/genai';
 import type { ChatMessage, Student } from '../types/index.js';
 import { requireUser } from './auth.js';
-import { detectLanguage, languageNames, type DetectedLanguage } from './aiMultilingual.js';
+import { DEFAULT_GEMINI_MODEL, detectLanguage, languageNames, type DetectedLanguage } from './aiMultilingual.js';
 import { schoolDate } from './records.js';
 import { choice, enforceLimit, field, HttpError, object } from './security.js';
 import { addAuditEvent, mutateState, type Account, type SchoolState, type StoredConversation } from './storage.js';
@@ -115,7 +115,7 @@ export function buildAssistantContext(
   const latestUser = messages.filter(({ sender }) => sender === 'user').at(-1);
   const language = detectLanguage(prompt, latestUser ? detectLanguage(latestUser.content, fallback) : fallback);
   const matches = matchStudent(prompt, db.students);
-  const isFollowup = /\b(they|them|their|she|he|his|her|that student|previous|continue|what about|elle|il|lui|ses|son|encore)\b|ديال[وه]|ديالها|ديالو|عليه|عليها|ديالو|وزيد|\bdyal[oha]+\b/iu.test(prompt);
+  const isFollowup = /\b(they|them|their|she|he|his|her|that student|previous|continue|what about|elle|il|lui|ses|son|encore)\b|ديال[وه]|ديالها|ديالو|عليه|عليها|حضور(?:ه|ها)|غياب(?:ه|ها)|الطالب نفسه|التلميذ نفسه|وزيد|\bdyal[oha]+\b/iu.test(prompt);
   const inferred = isFollowup && latestUser ? matchStudent(latestUser.content, db.students) : [];
   const focused = matches.length === 1 ? matches[0] : matches.length === 0 && isFollowup
     ? db.students.find((student) => student.id === priorStudentId) ?? (inferred.length === 1 ? inferred[0] : undefined)
@@ -184,6 +184,10 @@ export function buildAssistantContext(
   };
 }
 
+function providerStatus(error: unknown) {
+  return error instanceof Error && 'status' in error && typeof error.status === 'number' ? error.status : undefined;
+}
+
 export async function answerAssistant(req: VercelRequest, res: VercelResponse, db: SchoolState, account: Account) {
   if (db.settings?.aiAssistant?.enabled === false) throw new HttpError(403, 'Campus AI is disabled in settings');
   await enforceLimit(res, 'campus-ai', account.id, 40, 60 * 60_000);
@@ -203,14 +207,14 @@ export async function answerAssistant(req: VercelRequest, res: VercelResponse, d
 
   let responseText = prepared.clarification;
   let source = 'school-records';
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  let model = process.env.GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL;
   if (!responseText) {
     const key = process.env.GEMINI_API_KEY;
     if (!key) throw new HttpError(503, 'Campus AI provider is not configured');
     try {
       const ai = new GoogleGenAI({ apiKey: key, httpOptions: { timeout: 25_000 } });
-      const result = await ai.models.generateContent({
-        model,
+      const generate = (modelName: string) => ai.models.generateContent({
+        model: modelName,
         contents: [...prepared.safeHistory, { role: 'user', parts: [{ text: prepared.safePrompt }] }],
         config: {
           maxOutputTokens: 1600,
@@ -227,13 +231,20 @@ export async function answerAssistant(req: VercelRequest, res: VercelResponse, d
           ].join('\n'),
         },
       });
+      let result;
+      try {
+        result = await generate(model);
+      } catch (error) {
+        if (providerStatus(error) !== 404 || model === DEFAULT_GEMINI_MODEL) throw error;
+        model = DEFAULT_GEMINI_MODEL;
+        result = await generate(model);
+      }
       responseText = result.text?.trim();
       if (!responseText) throw new Error('Empty AI response');
       responseText = prepared.restoreLabels(responseText.slice(0, 6000));
       source = 'gemini-api';
     } catch (error) {
-      const status = error instanceof Error && 'status' in error && typeof error.status === 'number' ? error.status : undefined;
-      console.error('Campus AI provider request failed', status ?? 'provider_error');
+      console.error('Campus AI provider request failed', providerStatus(error) ?? 'provider_error');
       if (!prepared.verifiedFacts) throw new HttpError(502, 'Campus AI provider is unavailable. Please try again.');
     }
   }

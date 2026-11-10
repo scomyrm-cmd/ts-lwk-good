@@ -14,6 +14,7 @@ let providerRequests: Array<{ model: string; contents: unknown; config: { system
 process.env.BLOB_READ_WRITE_TOKEN = 'isolated-storage-fixture';
 process.env.JWT_SECRET = 'isolated-test-signing-key-at-least-thirty-two-characters';
 process.env.GEMINI_API_KEY = 'isolated-provider-fixture';
+process.env.GEMINI_MODEL = 'retired-fixture-model';
 process.env.CAMPUS_ADMIN_USERNAME = 'qa_owner';
 process.env.CAMPUS_ADMIN_SETUP_CODE = 'first-one-time-setup-code-for-local-test-123456789';
 process.env.VERCEL_ENV = 'production';
@@ -43,6 +44,7 @@ const mock = {
   },
   provider(args: (typeof providerRequests)[number]) {
     providerRequests.push(args);
+    if (args.model === 'retired-fixture-model') throw Object.assign(new Error('Fixture model not found'), { status: 404 });
     const instruction = args.config.systemInstruction;
     const text = instruction.includes('Moroccan Darija') ? 'هادي خلاصة الحضور.' :
       instruction.includes('Answer in French') ? 'Voici le bilan de présence.' : 'Here is the attendance summary.';
@@ -204,10 +206,14 @@ test('server roles, private persistence, controlled catalog, export, AI, and rot
   assert.equal(reply.code, 200);
   assert.equal(reply.data.detectedLanguage, 'en');
   assert.equal(reply.data.source, 'gemini-api');
+  assert.equal(reply.data.model, 'gemini-3.5-flash-lite');
   assert.match(reply.data.text, /Maya River \(STU-42\)/);
   const followup = await api('campus-ai', 'POST', { conversationId: thread, prompt: 'Et quel est son bilan ?', language: 'en' }, admin);
   assert.equal(followup.data.detectedLanguage, 'fr');
   assert.match(followup.data.text, /Maya River/);
+  const arabic = await api('campus-ai', 'POST', { conversationId: thread, prompt: 'هل يمكنك تلخيص حضوره؟', language: 'en' }, admin);
+  assert.equal(arabic.data.detectedLanguage, 'ar');
+  assert.match(arabic.data.text, /Maya River/);
   const darija = await api('campus-ai', 'POST', { conversationId: thread, prompt: 'عطيني الغياب ديالها', language: 'en' }, admin);
   assert.equal(darija.data.detectedLanguage, 'darija');
   assert.match(darija.data.text, /Maya River/);
@@ -215,7 +221,7 @@ test('server roles, private persistence, controlled catalog, export, AI, and rot
   for (const identifier of [student.firstName, student.lastName, student.studentId, student.dateOfBirth, student.guardianContact, student.notes]) {
     assert.equal(outbound.includes(identifier), false);
   }
-  assert.equal((await api('admin/state', 'GET', undefined, admin)).data.conversations[0].messages.length, 6);
+  assert.equal((await api('admin/state', 'GET', undefined, admin)).data.conversations[0].messages.length, 8);
   assert.equal((await api('admin/state', 'GET', undefined, secondary)).data.conversations.length, 0);
 
   process.env.CAMPUS_ADMIN_SETUP_CODE = 'different-one-time-setup-code-for-local-test-987654';

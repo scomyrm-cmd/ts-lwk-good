@@ -1,3 +1,5 @@
+export const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash-lite';
+
 export type DetectedLanguage = 'en' | 'fr' | 'ar' | 'darija';
 
 export function detectLanguage(text: string, fallback: DetectedLanguage = 'en'): DetectedLanguage {

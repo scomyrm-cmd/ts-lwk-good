@@ -198,7 +198,9 @@ async function route(req: VercelRequest, res: VercelResponse) {
     if (!secret || !timingSafeEqual(Buffer.from(digest(supplied)), Buffer.from(digest('Bearer ' + secret)))) {
       throw new HttpError(401, 'Scheduler authorization required');
     }
-    await scheduleAttendanceEmails();
+    const notice = field(req.query.notice, 64);
+    if (notice && !/^[a-f0-9]{64}$/.test(notice)) throw new HttpError(400, 'Invalid attendance notice');
+    await scheduleAttendanceEmails(notice || undefined);
     return success(res);
   }
 
@@ -265,7 +267,7 @@ async function route(req: VercelRequest, res: VercelResponse) {
       }
       return job;
     });
-    await scheduleAttendanceEmails();
+    await scheduleAttendanceEmails(job.id);
     return success(res, { notification: job });
   }
   if (name === 'admin/users') {

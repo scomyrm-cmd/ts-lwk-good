@@ -106,7 +106,8 @@ async function api(name: string, method = 'GET', body?: unknown, cookie?: string
     send(data: unknown) { this.data = data; return this; },
     end() { return this; },
   };
-  const request = { method, query: { route: name }, body, headers, socket: { remoteAddress: ip } };
+  const [route, search = ''] = name.split('?', 2);
+  const request = { method, query: { route, ...Object.fromEntries(new URLSearchParams(search)) }, body, headers, socket: { remoteAddress: ip } };
   await handle(request as unknown as VercelRequest, response as unknown as VercelResponse);
   return response;
 }
@@ -403,6 +404,21 @@ test('administrator profiles and saved attendance emails stay isolated and dedup
     studentId: mailStudent.studentId, date: pastDate, retry: true, confirmed: true,
   }, owner)).code, 200);
   assert.equal(emailRequests.length, 5, 'A failed recorded notice can be retried after the school date changes');
+  const targetId = digest([mailStudent.id, pastDate, 'absent'].join('\n'));
+  await mutateState((db) => {
+    db.attendance = db.attendance.map((row) => ({ ...row, status: 'absent' }));
+    for (const job of db.attendanceEmails.filter((job) => job.attendanceStatus === 'absent')) {
+      job.status = 'pending'; job.retryAt = 0;
+    }
+  });
+  process.env.CRON_SECRET = 'isolated-scheduler-fixture';
+  const authorization = { authorization: 'Bearer ' + process.env.CRON_SECRET };
+  assert.equal((await api('cron/attendance-emails?notice=invalid', 'GET', undefined, undefined, authorization)).code, 400);
+  assert.equal((await api('cron/attendance-emails?notice=' + targetId, 'GET', undefined, undefined, authorization)).code, 200);
+  assert.equal(emailRequests.length, 6, 'A scoped retry sends only the selected notice');
+  const remaining = JSON.parse(blobs.get('campus-os/private/state.json')!.json).attendanceEmails;
+  assert.equal(remaining.find((job: any) => job.date === today && job.attendanceStatus === 'absent').status, 'pending');
+  delete process.env.CRON_SECRET;
   assert.equal((await api('auth/logout', 'POST', {}, owner)).code, 200);
   assert.equal((await api('auth/me', 'GET', undefined, owner)).data.authenticated, false);
   assert.equal((await api('auth/me', 'GET', undefined, other)).data.user.username, 'qa_mail_second');

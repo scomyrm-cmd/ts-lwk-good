@@ -88,18 +88,18 @@ function providerError(status: number, text: string) {
 
 const sleep = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
-export async function dispatchAttendanceEmails() {
+export async function dispatchAttendanceEmails(notice?: string) {
   if (!emailConfigured()) return;
   const snapshot = await readState();
-  if (!snapshot.attendanceEmails.some((job) =>
+  if (!snapshot.attendanceEmails.some((job) => (!notice || job.id === notice) && (
     (job.status === 'pending' && (job.retryAt || 0) <= Date.now() + 2000) ||
-    (job.status === 'sending' && (snapshot.emailDispatch?.expiresAt || 0) <= Date.now()))) return;
+    (job.status === 'sending' && (snapshot.emailDispatch?.expiresAt || 0) <= Date.now())))) return;
   const owner = randomUUID();
   const acquired = await mutateState((db) => {
     const now = Date.now();
     if (db.emailDispatch && db.emailDispatch.expiresAt > now) return false;
     for (const job of db.attendanceEmails) {
-      if (job.status === 'sending') {
+      if (job.status === 'sending' && (!notice || job.id === notice)) {
         job.status = 'uncertain';
         job.error = 'Delivery was interrupted. Check EmailJS history before retrying';
         job.updatedAt = new Date().toISOString();
@@ -114,7 +114,8 @@ export async function dispatchAttendanceEmails() {
     while (Date.now() < deadline) {
       const next = await mutateState((db) => {
         if (db.emailDispatch?.owner !== owner) return null;
-        const job = db.attendanceEmails.find((row) => row.status === 'pending' && (row.retryAt || 0) <= Date.now() + 2000);
+        const job = db.attendanceEmails.find((row) => (!notice || row.id === notice) &&
+          row.status === 'pending' && (row.retryAt || 0) <= Date.now() + 2000);
         if (!job) return null;
         const student = db.students.find((row) => row.studentId === job.studentId);
         const record = indexAttendance(db.attendance).get(job.studentId)?.get(job.date);
@@ -170,7 +171,7 @@ export async function dispatchAttendanceEmails() {
     });
   }
   const domain = process.env.VERCEL_PROJECT_PRODUCTION_URL;
-  if (Date.now() >= deadline && process.env.VERCEL_ENV === 'production' && process.env.CRON_SECRET && domain) {
+  if (!notice && Date.now() >= deadline && process.env.VERCEL_ENV === 'production' && process.env.CRON_SECRET && domain) {
     // Continue a large saved register in a fresh invocation. The daily cron also recovers pending work.
     await fetch('https://' + domain + '/api/cron/attendance-emails', {
       headers: { Authorization: 'Bearer ' + process.env.CRON_SECRET }, signal: AbortSignal.timeout(10_000),
@@ -178,9 +179,9 @@ export async function dispatchAttendanceEmails() {
   }
 }
 
-export async function scheduleAttendanceEmails() {
+export async function scheduleAttendanceEmails(notice?: string) {
   if (!emailConfigured()) return;
-  const task = dispatchAttendanceEmails().catch(() => console.error('Attendance email processing interrupted'));
+  const task = dispatchAttendanceEmails(notice).catch(() => console.error('Attendance email processing interrupted'));
   if (process.env.VERCEL) waitUntil(task);
   else await task;
 }

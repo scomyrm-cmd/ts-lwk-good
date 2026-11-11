@@ -151,7 +151,6 @@ export const AttendanceView: React.FC = () => {
         )}
       </WorkspaceHeader>
 
-      <AttendanceEmails />
       <nav className="workspace-tabs" aria-label={t.attendanceTitle}>
         {([
           { id: 'daily', label: t.tabDaily },
@@ -291,7 +290,7 @@ export const AttendanceView: React.FC = () => {
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-start text-xs md:text-sm">
+                <table className="daily-register-table w-full text-start text-xs md:text-sm">
                   <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                     <tr>
                       <th className="py-3 px-4 text-start">{t.studentId}</th>
@@ -325,6 +324,7 @@ export const AttendanceView: React.FC = () => {
                             </td>
                             <td className="py-3 px-4 font-semibold text-slate-900 dark:text-slate-100">
                               {student.firstName} {student.lastName}
+                              <span className="student-mobile-meta">{student.studentId} · {student.className}</span>
                             </td>
                             <td className="py-3 px-4 text-slate-600 dark:text-slate-400">
                               {student.className}
@@ -363,7 +363,7 @@ export const AttendanceView: React.FC = () => {
                             <td className="py-3 px-4 text-slate-400 text-xs">
                               {rec?.time || '—'}
                             </td>
-                            <td className="py-3 px-4 text-xs text-slate-500 max-w-xs truncate">
+                            <td data-empty={!rec?.reason && !rec?.notes} className="py-3 px-4 text-xs text-slate-500 max-w-xs truncate">
                               {rec?.reason || rec?.notes || '—'}
                             </td>
                             <td className="py-3 px-4 text-end">
@@ -613,6 +613,8 @@ export const AttendanceView: React.FC = () => {
           </div>
         </div>
       )}
+
+      <AttendanceEmails />
 
       {/* Absence Form Modal */}
       <AbsenceModal

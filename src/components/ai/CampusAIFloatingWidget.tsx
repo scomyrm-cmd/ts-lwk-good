@@ -170,9 +170,9 @@ export const CampusAIFloatingWidget: React.FC = () => {
   const prompts = [t.aiSuggestedPrompt1, t.aiSuggestedPrompt2, t.aiSuggestedPrompt3];
 
   return (
-    <div className="fixed bottom-4 end-4 z-40 flex flex-col items-end sm:bottom-5 sm:end-5">
+    <div className="ai-floating fixed end-4 z-40 flex flex-col items-end sm:end-5">
       {isOpen && (
-        <section aria-label={t.navCampusAI} className="workspace-panel flex h-[min(31rem,calc(100dvh-2rem))] w-[min(25rem,calc(100vw-2rem))] flex-col overflow-hidden shadow-xl">
+        <section aria-label={t.navCampusAI} className="workspace-panel workspace-popover flex h-[min(31rem,calc(100dvh-8rem))] w-[min(25rem,calc(100vw-2rem))] flex-col overflow-hidden shadow-xl">
           <div className="flex shrink-0 items-center justify-between gap-2 border-b border-slate-200 px-3.5 py-2 dark:border-slate-800">
             <h2 className="flex items-center gap-2 text-sm font-semibold">
               <Sparkles size={17} className="text-brand-600 dark:text-brand-300" aria-hidden="true" />
@@ -339,7 +339,7 @@ export const CampusAIFloatingWidget: React.FC = () => {
           aria-label={t.openAssistant}
         >
           <Sparkles size={16} aria-hidden="true" />
-          {t.navCampusAI}
+          <span className="hidden sm:inline">{t.navCampusAI}</span>
         </button>
       )}
     </div>

@@ -255,7 +255,7 @@ export const LostFoundView: React.FC = () => {
               {filteredItems.map((item) => (
                 <div
                   key={item.id}
-                  className="workspace-panel overflow-hidden flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all"
+                  className="workspace-item-card workspace-panel overflow-hidden flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all"
                 >
                   <div>
                     {/* Image / Header bar */}

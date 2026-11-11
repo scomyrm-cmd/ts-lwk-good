@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, CheckCheck, ChevronDown, LogOut, Menu, Search, Settings, User } from 'lucide-react';
+import { Bell, CheckCheck, ChevronDown, LogOut, Menu, Moon, Search, Settings, Sun, User } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { LanguageControl, WorkspaceAvatar } from '../common/WorkspaceUI';
 
@@ -11,7 +11,7 @@ interface TopNavbarProps {
 export function TopNavbar({ mobileOpen, onOpenMobile }: TopNavbarProps) {
   const {
     activeTab, setActiveTab, setSettingsSubTab, setGlobalSearchOpen, notifications,
-    markNotificationRead, markAllNotificationsRead, adminProfile, logout, settings, t,
+    markNotificationRead, markAllNotificationsRead, adminProfile, logout, settings, updateSettings, t,
   } = useApp();
 
   const [panel, setPanel] = useState<'notifications' | 'account' | null>(null);
@@ -79,7 +79,7 @@ export function TopNavbar({ mobileOpen, onOpenMobile }: TopNavbarProps) {
         <button
           type="button"
           onClick={() => setGlobalSearchOpen(true)}
-          className="workspace-button min-h-9 px-2.5 text-slate-600 dark:text-slate-300"
+          className="topbar-search workspace-button min-h-9 px-2.5 text-slate-600 dark:text-slate-300"
           title={t.globalSearchPlaceholder}
           aria-label={t.search}
         >
@@ -87,6 +87,9 @@ export function TopNavbar({ mobileOpen, onOpenMobile }: TopNavbarProps) {
           <span className="hidden sm:inline">{t.search}</span>
         </button>
 
+        <button type="button" className="workspace-icon-button theme-toggle" aria-label={settings.theme === 'dark' ? t.lightTheme : t.darkTheme} onClick={() => updateSettings({ theme: settings.theme === 'dark' ? 'light' : 'dark' })}>
+          {settings.theme === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
+        </button>
         <div className="relative" ref={notificationsRef}>
           <button
             type="button"
@@ -100,7 +103,7 @@ export function TopNavbar({ mobileOpen, onOpenMobile }: TopNavbarProps) {
           </button>
 
           {panel === 'notifications' && (
-            <div className="workspace-panel absolute end-0 z-50 mt-2 w-[min(24rem,calc(100vw-5.75rem))] shadow-lg">
+            <div className="workspace-panel workspace-popover absolute end-0 z-50 mt-2 w-[min(24rem,calc(100vw-5.75rem))] shadow-lg">
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <p className="text-sm font-semibold">{t.notificationsTitle}{unreadCount > 0 ? ` · ${unreadCount}` : ''}</p>
                 {unreadCount > 0 && (
@@ -149,7 +152,7 @@ export function TopNavbar({ mobileOpen, onOpenMobile }: TopNavbarProps) {
           </button>
 
           {panel === 'account' && (
-            <div className="workspace-panel absolute end-0 z-50 mt-2 w-64 shadow-lg">
+            <div className="workspace-panel workspace-popover absolute end-0 z-50 mt-2 w-64 shadow-lg">
               <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 dark:border-slate-800">
                 <WorkspaceAvatar name={adminProfile.displayName} photo={adminProfile.profilePictureUrl} />
                 <div className="min-w-0">

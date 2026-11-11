@@ -133,7 +133,7 @@ export const UserPortalView: React.FC = () => {
   const userName = currentUser?.displayName || currentUser?.username || '';
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="portal-shell flex min-h-svh flex-col">
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="workspace-topbar portal-content border-0">
           <CampusBrand caption={t.normalUserPortal} />
@@ -167,7 +167,7 @@ export const UserPortalView: React.FC = () => {
         </nav>
       </div>
 
-      <main className="portal-content flex-1 pt-7 pb-24 md:pt-10">
+      <main className="portal-content portal-main flex-1 pt-7 pb-24 md:pt-10">
         {/* TAB 1: CATALOG */}
         {activeTab === 'catalog' && (
           <div className="workspace-page">
@@ -232,7 +232,7 @@ export const UserPortalView: React.FC = () => {
                 {filteredItems.map((item) => (
                   <div
                     key={item.id}
-                    className="workspace-panel flex flex-col justify-between p-5"
+                    className="workspace-item-card workspace-panel flex flex-col justify-between p-5"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2 mb-2">

@@ -2,6 +2,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { Globe, type LucideIcon } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import type { Language } from '../../types';
+import { AnimatedNumber } from './WorkspaceMotion';
 
 export function CampusBrand({ caption }: { caption?: string }) {
   const { t } = useApp();
@@ -71,17 +72,16 @@ export function MetricStrip({ items }: {
   items: ReadonlyArray<{ label: string; value: number; icon?: LucideIcon }>;
 }) {
   const { settings } = useApp();
-  const number = new Intl.NumberFormat(settings.language);
 
   return (
-    <dl className="workspace-panel workspace-metrics" style={{ '--metric-count': items.length } as CSSProperties}>
-      {items.map(({ label, value, icon: Icon }) => (
-        <div className="workspace-metric" key={label}>
+    <dl className="workspace-metrics" style={{ '--metric-count': items.length } as CSSProperties}>
+      {items.map(({ label, value, icon: Icon }, index) => (
+        <div className="workspace-metric" key={label} style={{ '--card-index': index } as CSSProperties}>
           <dt className="metric-label">
             {label}
-            {Icon && <Icon size={17} strokeWidth={1.75} aria-hidden="true" />}
+            {Icon && <span className="metric-icon"><Icon size={20} strokeWidth={1.8} aria-hidden="true" /></span>}
           </dt>
-          <dd className="metric-value">{number.format(value)}</dd>
+          <dd className="metric-value"><AnimatedNumber value={value} language={settings.language} /></dd>
         </div>
       ))}
     </dl>

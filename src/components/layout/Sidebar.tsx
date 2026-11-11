@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
 import {
   ClipboardCheck,
   History,
@@ -89,14 +90,19 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
                   if (mobile) onCloseMobile();
                 }}
               >
-                <Icon size={17} strokeWidth={1.8} aria-hidden="true" />
-                <span className="truncate">{label}</span>
+                {activeTab === id && <motion.span className="sidebar-active" layoutId={mobile ? 'mobile-sidebar-active' : 'desktop-sidebar-active'} transition={{ type: 'spring', stiffness: 400, damping: 35 }} />}
+                <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
+                <span className="relative min-w-0 flex-1">{label}</span>{id === 'campus-ai' && <span className="sidebar-ai-dot" aria-hidden="true" />}
               </button>
             ))}
           </div>
         ))}
       </nav>
 
+      <button type="button" className="sidebar-ai-card" onClick={() => { setActiveTab('campus-ai'); if (mobile) onCloseMobile(); }}>
+        <span className="sidebar-ai-orb" aria-hidden="true"><Sparkles size={21} /></span>
+        <span><strong>{t.navCampusAI}</strong><small>{t.aiSuggestions}</small></span>
+      </button>
       <div className="sidebar-account">
         <WorkspaceAvatar name={adminProfile.displayName} photo={adminProfile.profilePictureUrl} />
         <div className="min-w-0 flex-1">
@@ -112,7 +118,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
 
   return (
     <>
-      <aside className="sticky top-0 hidden h-dvh w-56 shrink-0 md:block xl:w-60">
+      <aside className="sidebar-desktop sticky top-0 hidden h-dvh w-60 shrink-0 md:block xl:w-64">
         {sidebar(false)}
       </aside>
       <dialog

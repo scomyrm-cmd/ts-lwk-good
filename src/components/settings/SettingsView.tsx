@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'motion/react';
 import {
   Settings,
   Sun,
@@ -172,7 +173,7 @@ export const SettingsView: React.FC = () => {
 
       <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[12.5rem_minmax(0,1fr)]">
         {/* Settings Navigation Sidebar */}
-        <nav className="workspace-panel flex gap-1 overflow-x-auto p-1.5 xl:flex-col" aria-label={t.settingsTitle}>
+        <nav className="settings-navigation workspace-panel flex gap-1 overflow-x-auto p-1.5 xl:flex-col" aria-label={t.settingsTitle}>
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = settingsSubTab === tab.id;
@@ -182,12 +183,13 @@ export const SettingsView: React.FC = () => {
                 type="button"
                 onClick={() => setSettingsSubTab(tab.id)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-2.5 text-start text-sm font-medium whitespace-nowrap transition-colors xl:w-full ${
+                className={`relative isolate flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-start text-sm font-medium whitespace-nowrap transition-colors xl:w-full ${
                   isActive
-                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/60 dark:text-brand-300 font-semibold'
+                    ? 'text-brand-700 dark:text-brand-300 font-semibold'
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
+                {isActive && <motion.span className="settings-active" layoutId="settings-active" transition={{ type: 'spring', stiffness: 400, damping: 35 }} />}
                 <Icon
                   className={`w-4 h-4 shrink-0 ${
                     isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'
@@ -209,7 +211,7 @@ export const SettingsView: React.FC = () => {
                   {t.adminProfileTitle}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Customize your personal administrative credentials and photo
+                  {{ en: 'Update your profile and photo.', fr: 'Personnalisez votre profil et votre photo.', ar: 'حدّث ملفك الشخصي وصورتك.' }[settings.language]}
                 </p>
               </div>
 
@@ -257,7 +259,7 @@ export const SettingsView: React.FC = () => {
                       )}
                     </div>
                     <p className="text-[11px] text-slate-400">
-                      PNG, JPG, or JPEG. Scaled down to prevent storage limits.
+                      {{ en: 'Choose a clear photo in PNG or JPG format.', fr: 'Choisissez une photo au format PNG ou JPG.', ar: 'اختر صورة واضحة بصيغة PNG أو JPG.' }[settings.language]}
                     </p>
                   </div>
                 </div>
@@ -272,14 +274,14 @@ export const SettingsView: React.FC = () => {
                       required
                       value={profileDisplayName}
                       onChange={(e) => setProfileDisplayName(e.target.value)}
-                      placeholder="e.g. Islam Nour Bouya"
+                      placeholder={t.displayName}
                       className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-lg text-xs md:text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500"
                     />
                   </div>
 
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1">
-                      {t.username} (Demo Login)
+                      {t.username}
                     </label>
                     <input
                       type="text"

@@ -4,6 +4,8 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { AnimatePresence, MotionConfig, motion, useReducedMotion } from 'motion/react';
+import { MobileNavigation } from './components/layout/MobileNavigation';
 import { AppProvider, useApp } from './context/AppContext';
 import { LoginPage } from './components/auth/LoginPage';
 import { PasswordChangePage } from './components/auth/PasswordChangePage';
@@ -33,9 +35,7 @@ const AccessDeniedView: React.FC<{ onReturnToPortal: () => void }> = ({ onReturn
         <div className="w-12 h-12 rounded-2xl bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400 flex items-center justify-center mx-auto">
           <ShieldAlert className="w-6 h-6" />
         </div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
-          {t.accessDenied}
-        </h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">{t.accessDenied}</h2>
         <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400">
           {t.adminRoleRequired}
         </p>
@@ -57,7 +57,10 @@ const AccessDeniedView: React.FC<{ onReturnToPortal: () => void }> = ({ onReturn
 function Toast({ message }: { message: string | null }) {
   if (!message) return null;
   return (
-    <div role="status" className="fixed bottom-20 end-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-medium text-white shadow-lg dark:bg-slate-100 dark:text-slate-900">
+    <div
+      role="status"
+      className="workspace-toast fixed bottom-24 end-4 z-50 flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-lg bg-slate-900 px-4 py-3 text-sm font-medium text-white shadow-lg dark:bg-slate-100 dark:text-slate-900"
+    >
       <span className="size-2 shrink-0 rounded-full bg-brand-400" />
       <span>{message}</span>
     </div>
@@ -65,7 +68,19 @@ function Toast({ message }: { message: string | null }) {
 }
 
 const MainLayout: React.FC = () => {
-  const { isVerifyingAuth, isAuthenticated, currentUser, adminDataStatus, logout, activeTab, setActiveTab, toastMessage, t } = useApp();
+  const {
+    isVerifyingAuth,
+    isAuthenticated,
+    currentUser,
+    adminDataStatus,
+    logout,
+    activeTab,
+    setActiveTab,
+    toastMessage,
+    t,
+    settings,
+  } = useApp();
+  const reducedMotion = useReducedMotion();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Quick Action Modals
@@ -93,7 +108,12 @@ const MainLayout: React.FC = () => {
 
   // Strictly enforce authentication - unauthorized link copying cannot bypass!
   if (!isAuthenticated || !currentUser) {
-    return <><LoginPage /><Toast message={toastMessage} /></>;
+    return (
+      <>
+        <LoginPage />
+        <Toast message={toastMessage} />
+      </>
+    );
   }
 
   if (currentUser.mustChangePassword) {
@@ -122,10 +142,20 @@ const MainLayout: React.FC = () => {
             </p>
           ) : (
             <>
-              <p role="alert" className="text-sm">School records could not be loaded from the server.</p>
+              <p role="alert" className="text-sm">
+                School records could not be loaded from the server.
+              </p>
               <div className="flex flex-wrap gap-2">
-                <button type="button" className="workspace-button workspace-button-primary" onClick={() => window.location.reload()}>Try again</button>
-                <button type="button" className="workspace-button" onClick={logout}>{t.logout}</button>
+                <button
+                  type="button"
+                  className="workspace-button workspace-button-primary"
+                  onClick={() => window.location.reload()}
+                >
+                  Try again
+                </button>
+                <button type="button" className="workspace-button" onClick={logout}>
+                  {t.logout}
+                </button>
               </div>
             </>
           )}
@@ -136,40 +166,69 @@ const MainLayout: React.FC = () => {
   }
 
   // 2. Role = 'admin' (Administrator Dashboard & Management)
-  const adminTabs = ['dashboard', 'students', 'attendance', 'lostfound', 'users', 'campus-ai', 'activity', 'settings'];
+  const adminTabs = [
+    'dashboard',
+    'students',
+    'attendance',
+    'lostfound',
+    'users',
+    'campus-ai',
+    'activity',
+    'settings',
+  ];
   const isValidAdminTab = adminTabs.includes(activeTab);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex transition-colors text-slate-900 dark:text-slate-100 antialiased">
+    <div className="workspace-shell min-h-screen bg-slate-50 dark:bg-slate-950 flex transition-colors text-slate-900 dark:text-slate-100 antialiased">
+      <a href="#main-content" className="workspace-skip-link">
+        {
+          { en: 'Skip to content', fr: 'Aller au contenu', ar: 'انتقل إلى المحتوى' }[
+            settings.language
+          ]
+        }
+      </a>
       {/* Sidebar Navigation */}
-      <Sidebar
-        mobileOpen={mobileSidebarOpen}
-        onCloseMobile={() => setMobileSidebarOpen(false)}
-      />
+      <Sidebar mobileOpen={mobileSidebarOpen} onCloseMobile={() => setMobileSidebarOpen(false)} />
 
       {/* Main Content Viewport */}
       <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         <TopNavbar mobileOpen={mobileSidebarOpen} onOpenMobile={() => setMobileSidebarOpen(true)} />
 
-        <main className={`workspace-content flex-1 ${activeTab === 'campus-ai' ? 'workspace-chat-content' : ''}`}>
-          {!isValidAdminTab && (
-            <AccessDeniedView onReturnToPortal={() => setActiveTab('dashboard')} />
-          )}
-          {activeTab === 'dashboard' && (
-            <DashboardView
-              onOpenAddStudent={() => setIsAddStudentModalOpen(true)}
-              onOpenReportItem={() => setIsReportItemModalOpen(true)}
-            />
-          )}
-          {activeTab === 'students' && <StudentsView />}
-          {activeTab === 'attendance' && <AttendanceView />}
-          {activeTab === 'lostfound' && <LostFoundView />}
-          {activeTab === 'users' && <UserManagementView />}
-          {activeTab === 'campus-ai' && <CampusAIView />}
-          {activeTab === 'activity' && <ActivityLogView />}
-          {activeTab === 'settings' && <SettingsView />}
+        <main
+          id="main-content"
+          className={`workspace-content flex-1 ${activeTab === 'campus-ai' ? 'workspace-chat-content' : ''}`}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={activeTab}
+              className="workspace-route"
+              initial={{ opacity: 0, y: reducedMotion ? 0 : 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }}
+              transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {!isValidAdminTab && (
+                <AccessDeniedView onReturnToPortal={() => setActiveTab('dashboard')} />
+              )}
+              {activeTab === 'dashboard' && (
+                <DashboardView
+                  onOpenAddStudent={() => setIsAddStudentModalOpen(true)}
+                  onOpenReportItem={() => setIsReportItemModalOpen(true)}
+                />
+              )}
+              {activeTab === 'students' && <StudentsView />}
+              {activeTab === 'attendance' && <AttendanceView />}
+              {activeTab === 'lostfound' && <LostFoundView />}
+              {activeTab === 'users' && <UserManagementView />}
+              {activeTab === 'campus-ai' && <CampusAIView />}
+              {activeTab === 'activity' && <ActivityLogView />}
+              {activeTab === 'settings' && <SettingsView />}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
+
+      <MobileNavigation onOpenMore={() => setMobileSidebarOpen(true)} />
 
       {/* Global Search Modal */}
       <GlobalSearchModal />
@@ -197,8 +256,10 @@ const MainLayout: React.FC = () => {
 
 export default function App() {
   return (
-    <AppProvider>
-      <MainLayout />
-    </AppProvider>
+    <MotionConfig reducedMotion="user">
+      <AppProvider>
+        <MainLayout />
+      </AppProvider>
+    </MotionConfig>
   );
 }

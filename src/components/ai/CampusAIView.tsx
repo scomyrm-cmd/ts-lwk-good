@@ -244,7 +244,7 @@ export const CampusAIView: React.FC = () => {
   const suggestedPrompts = [t.aiSuggestedPrompt1, t.aiSuggestedPrompt2, t.aiSuggestedPrompt3, t.aiSuggestedPrompt4];
 
   return (
-    <div className="workspace-panel relative flex h-[calc(100dvh-7rem)] min-h-[25rem] overflow-hidden">
+    <div className="workspace-panel ai-workspace relative flex min-h-[25rem] overflow-hidden">
       {sidebarOpen && (
         <div
           className="absolute inset-0 z-10 bg-slate-950/40 lg:hidden"
@@ -414,8 +414,8 @@ export const CampusAIView: React.FC = () => {
         <div ref={messageLog} className="flex-1 space-y-5 overflow-y-auto p-4 md:p-6" role="log" aria-label={t.navCampusAI}>
           {activeConv.messages.length === 0 ? (
             /* Welcome Screen */
-            <div className="mx-auto flex min-h-full max-w-xl flex-col items-center justify-center py-5 text-center">
-              <div className="workspace-empty-icon">
+            <div className="ai-welcome mx-auto flex min-h-full max-w-xl flex-col items-center justify-center py-5 text-center">
+              <div className="ai-orb">
                 <Sparkles size={22} className="text-brand-600 dark:text-brand-300" />
               </div>
               <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">

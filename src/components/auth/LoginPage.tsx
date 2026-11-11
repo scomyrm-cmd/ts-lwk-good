@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { AlertCircle, ArrowRight, Eye, EyeOff, GraduationCap, LoaderCircle, ShieldCheck } from 'lucide-react';
+import { AlertCircle, ArrowRight, ClipboardCheck, Eye, EyeOff, GraduationCap, LoaderCircle, PackageSearch, ShieldCheck, Sparkles } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { motion } from 'motion/react';
 import { CampusBrand, LanguageControl } from '../common/WorkspaceUI';
 
 type AuthMode = 'user-login' | 'user-register' | 'admin-login' | 'admin-setup';
@@ -18,8 +19,8 @@ function CampusIllustration() {
         <path d="M73 174v-28h14v28m15 0v-28h14v28m238 0v-28h14v28m15 0v-28h14v28M225 175v-35a10 10 0 0 1 20 0v35"/>
         <circle cx="235" cy="61" r="9"/>
       </g>
-      <path d="M121 85 235 28l114 57M121 85h228" stroke="#8ad7c8" strokeWidth="1.4" />
-      <path d="M22 198h51m324 0h50" stroke="#8ad7c8" />
+      <path d="M121 85 235 28l114 57M121 85h228" stroke="#c9baff" strokeWidth="1.4" />
+      <path d="M22 198h51m324 0h50" stroke="#c9baff" />
     </svg>
   );
 }
@@ -104,7 +105,12 @@ export function LoginPage() {
           <h2>{t.workspaceTitle}</h2>
           <p className="auth-editorial-description">{t.workspaceDescription}</p>
         </div>
-        <CampusIllustration />
+        <div className="auth-art" aria-hidden="true">
+          <span className="auth-float-card"><ClipboardCheck size={26} /></span>
+          <CampusIllustration />
+          <span className="auth-float-card"><PackageSearch size={25} /></span>
+        </div>
+        <div className="auth-feature-row"><span><ClipboardCheck size={13} />{t.navAttendance}</span><span><GraduationCap size={14} />{t.navStudents}</span><span><Sparkles size={13} />{t.navCampusAI}</span></div>
       </aside>
 
       <div className="auth-main">
@@ -115,6 +121,7 @@ export function LoginPage() {
 
         <main className="auth-content">
           <div className="auth-form">
+            <div className="auth-form-symbol" aria-hidden="true">{isAdmin ? <ShieldCheck size={23} /> : <GraduationCap size={24} />}</div>
             <h1 className="auth-heading">{isSettingUp ? t.adminSetupTitle : isRegistering ? t.registerTitle : isAdmin ? t.adminPortal : t.loginTitle}</h1>
             <p className="auth-description">
               {isSettingUp ? t.adminSetupDescription : isRegistering ? t.registerDescription : isAdmin ? t.adminSignInDescription : t.signInDescription}
@@ -122,6 +129,7 @@ export function LoginPage() {
 
             <div className="auth-modes">
               <button type="button" disabled={isLoading} aria-pressed={!isAdmin} onClick={() => switchMode('user-login')}>
+                {!isAdmin && <motion.span className="auth-mode-active" layoutId="auth-mode-active" transition={{ type: 'spring', stiffness: 400, damping: 35 }} />}
                 <GraduationCap size={17} aria-hidden="true" className="shrink-0" />
                 {t.userLoginBtn}
               </button>
@@ -132,6 +140,7 @@ export function LoginPage() {
                 aria-pressed={isAdmin}
                 onClick={() => switchMode('admin-login')}
               >
+                {isAdmin && <motion.span className="auth-mode-active" layoutId="auth-mode-active" transition={{ type: 'spring', stiffness: 400, damping: 35 }} />}
                 <ShieldCheck size={16} aria-hidden="true" className="shrink-0" />
                 {t.adminLoginBtn}
               </button>

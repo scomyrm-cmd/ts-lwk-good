@@ -390,6 +390,19 @@ test('administrator profiles and saved attendance emails stay isolated and dedup
   await dispatchAttendanceEmails();
   assert.equal(emailRequests.length, 4, 'Correcting attendance must cancel a pending notice');
   assert.equal((await api('admin/attendance-emails', 'GET', undefined, owner)).data.notifications.find((job: any) => job.attendanceStatus === 'late').status, 'cancelled');
+  const yesterday = new Date(today + 'T00:00:00Z');
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const pastDate = yesterday.toISOString().slice(0, 10);
+  await mutateState((db) => {
+    db.attendance.push({ ...record, id: 'older-record', date: pastDate, status: 'absent' });
+    db.attendanceEmails.push({ id: digest([mailStudent.id, pastDate, 'absent'].join('\n')), studentId: mailStudent.studentId,
+      date: pastDate, attendanceStatus: 'absent', status: 'failed', attempts: 1,
+      createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  });
+  assert.equal((await api('admin/attendance-emails', 'POST', {
+    studentId: mailStudent.studentId, date: pastDate, retry: true, confirmed: true,
+  }, owner)).code, 200);
+  assert.equal(emailRequests.length, 5, 'A failed recorded notice can be retried after the school date changes');
   assert.equal((await api('auth/logout', 'POST', {}, owner)).code, 200);
   assert.equal((await api('auth/me', 'GET', undefined, owner)).data.authenticated, false);
   assert.equal((await api('auth/me', 'GET', undefined, other)).data.user.username, 'qa_mail_second');

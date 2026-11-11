@@ -17,7 +17,6 @@ function noticeId(student: Student, date: string, status: string) {
 }
 
 export function enqueueAttendanceEmail(db: SchoolState, studentId: string, date: string) {
-  if (date !== schoolDate(db.settings?.timeZone)) throw new HttpError(400, 'Email notices are available for today’s attendance');
   const student = db.students.find((row) => row.studentId === studentId);
   if (!student) throw new HttpError(404, 'Student not found');
   if (!isEmailAddress(studentContact(student).email)) throw new HttpError(400, 'Add a valid guardian email to this student first');
@@ -26,6 +25,7 @@ export function enqueueAttendanceEmail(db: SchoolState, studentId: string, date:
   const id = noticeId(student, date, record.status);
   const previous = db.attendanceEmails.find((job) => job.id === id);
   if (previous && previous.status !== 'cancelled') return previous;
+  if (date !== schoolDate(db.settings?.timeZone)) throw new HttpError(400, 'New email notices are available for today’s attendance');
   const now = new Date().toISOString();
   const job: AttendanceEmail = {
     id, studentId, date, attendanceStatus: record.status, status: 'pending', createdAt: now, updatedAt: now,

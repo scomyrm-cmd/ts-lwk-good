@@ -16,6 +16,8 @@ import { addAuditEvent, mutateState, privatePath, readState, StorageFailure, sto
 import { attendanceFacts, indexAttendance } from '../src/server/studentFacts.js';
 import { attendanceEmailStatus, emailConfigured, enqueueAttendanceEmail, queueChangedAttendanceEmails, scheduleAttendanceEmails } from '../src/server/attendanceEmail.js';
 import { timingSafeEqual } from 'node:crypto';
+import { scanStudentDocument } from '../src/server/documentScanner.js';
+import { applyStudentProposal, prepareScan } from '../src/server/studentOperations.js';
 
 const routes: Record<string, { methods: readonly string[]; bytes?: number }> = {
   health: { methods: ['GET'] },
@@ -33,6 +35,9 @@ const routes: Record<string, { methods: readonly string[]; bytes?: number }> = {
   'user/preferences': { methods: ['PATCH'] },
   'campus-ai': { methods: ['GET', 'POST'], bytes: 100_000 },
   'admin/conversations': { methods: ['DELETE'] },
+  'admin/ai/scan': { methods: ['POST'], bytes: 3_800_000 },
+  'admin/ai/preview': { methods: ['POST'], bytes: 250_000 },
+  'admin/ai/apply': { methods: ['POST'], bytes: 750_000 },
   'admin/users': { methods: ['GET', 'POST'] },
   'admin/users/:id': { methods: ['DELETE', 'PATCH'] },
   'admin/reports': { methods: ['GET', 'PATCH'] },
@@ -247,6 +252,20 @@ async function route(req: VercelRequest, res: VercelResponse) {
   }
 
   if (method !== 'GET') await enforceLimit(res, 'admin-write', account.id, 180, 15 * 60_000);
+  if (name === 'admin/ai/scan') return scanStudentDocument(req, res, db, account);
+  if (name === 'admin/ai/preview') {
+    if (db.settings?.aiAssistant?.enabled === false) throw new HttpError(403, 'Campus AI is disabled in settings');
+    const body = object(req.body);
+    return success(res, { proposal: prepareScan(db, body.rows, choice(body.mode, ['roster', 'attendance'] as const)) ?? null });
+  }
+  if (name === 'admin/ai/apply') {
+    const result = await adminMutation(req, (live, admin) => {
+      const applied = applyStudentProposal(live, admin, req.body);
+      return { ...applied, ...getAdminState(live, admin) };
+    });
+    if (result.queued) await scheduleAttendanceEmails();
+    return success(res, result);
+  }
   if (name === 'admin/conversations') return deleteConversations(req, res);
   if (name === 'admin/attendance-emails') {
     if (method === 'GET') {

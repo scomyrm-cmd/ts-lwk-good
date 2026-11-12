@@ -54,6 +54,7 @@ export interface SchoolState {
   usedAdminSetupCodes?: string[];
   auditEvents: Array<{ actorId: string; at: string; type: string }>;
   attendanceEmails: AttendanceEmail[];
+  aiOperations?: Array<{ id: string; actorId: string; hash: string; at: string }>;
   emailDispatch?: { owner: string; expiresAt: number; nextSendAt: number };
 }
 

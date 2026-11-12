@@ -1,3 +1,4 @@
+import { DocumentScanner } from '../ai/DocumentScanner';
 import React, { useState } from 'react';
 import {
   CalendarCheck,
@@ -143,6 +144,7 @@ export const AttendanceView: React.FC = () => {
   return (
     <div className="workspace-page">
       <WorkspaceHeader title={t.attendanceTitle} description={t.attendanceSubtitle}>
+        <DocumentScanner mode="attendance" />
         {students.length > 0 && (
           <button type="button" onClick={handleExportAttendance} className="workspace-button">
             <Download size={16} />

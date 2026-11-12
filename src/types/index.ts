@@ -6,6 +6,7 @@ export interface Student {
   firstName: string;
   lastName: string;
   className: string;
+  classNumber?: string; // Roll number within this class; distinct from the Massar/student ID.
   gender?: 'Male' | 'Female' | 'Other';
   dateOfBirth?: string;
   guardianContact?: string;
@@ -94,6 +95,7 @@ export interface AdminProfile {
 }
 
 export interface SchoolInfo {
+  classGroups?: string[];
   name: string;
   logoUrl?: string;
   address: string;
@@ -140,6 +142,21 @@ export interface ChatMessage {
   timestamp: string;
   isError?: boolean;
   suggestedAction?: string;
+  proposal?: AIProposal;
+}
+
+export type StudentFields = Pick<Student, 'studentId' | 'firstName' | 'lastName' | 'className' | 'classNumber' | 'gender' | 'dateOfBirth' | 'guardianEmail' | 'guardianPhone' | 'guardianContact' | 'notes'>;
+export interface AIStudentChange { targetId: string; fields: Partial<StudentFields> }
+export interface AIAttendanceChange { studentId: string; date: string; status: AttendanceStatus; reason?: string; notes?: string }
+export interface AIProposal {
+  id: string;
+  studentChanges: AIStudentChange[];
+  attendanceChanges: AIAttendanceChange[];
+  versions: { students: string; attendance: string };
+}
+export interface ScanRow {
+  studentId: string; firstName: string; lastName: string; className: string; classNumber: string;
+  date: string; status: AttendanceStatus | ''; warning: string;
 }
 
 export interface Conversation {

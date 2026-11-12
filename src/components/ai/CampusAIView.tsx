@@ -1,3 +1,6 @@
+import { AIProposalCard } from './AIProposalCard';
+import { DocumentScanner } from './DocumentScanner';
+import { studentTools } from '../../i18n/studentTools';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Sparkles,
@@ -206,6 +209,7 @@ export const CampusAIView: React.FC = () => {
         id: 'msg_ai_' + Date.now(),
         sender: 'assistant',
         content: data.text,
+        proposal: data.proposal,
         timestamp: new Date().toISOString(),
       };
 
@@ -219,6 +223,7 @@ export const CampusAIView: React.FC = () => {
         handleSpeak(data.text, assistantMessage.id);
       }
     } catch (err: any) {
+      if (err?.name === 'SessionChangedError') return;
       const errorMessage: ChatMessage = {
         id: 'msg_err_' + Date.now(),
         sender: 'assistant',
@@ -387,6 +392,7 @@ export const CampusAIView: React.FC = () => {
               )}
             </button>
 
+            <DocumentScanner compact />
             <button
               type="button"
               onClick={() => setReportModalOpen(true)}
@@ -410,6 +416,7 @@ export const CampusAIView: React.FC = () => {
           </div>
         </div>
 
+        <p className="px-4 py-2 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800">{studentTools[settings.language].assistantHelp}</p>
         {/* Message Stream */}
         <div ref={messageLog} className="flex-1 space-y-5 overflow-y-auto p-4 md:p-6" role="log" aria-label={t.navCampusAI}>
           {activeConv.messages.length === 0 ? (
@@ -481,6 +488,7 @@ export const CampusAIView: React.FC = () => {
                     >
                       {msg.content}
                     </div>
+                    {msg.proposal && <AIProposalCard proposal={msg.proposal} />}
 
                     {!isUser && (
                       <div className="mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50 flex items-center justify-between text-[11px] text-slate-400">

@@ -543,7 +543,7 @@ export const translations: Record<Language, Translations> = {
     aiSuggestedPrompt6: 'Generate a monthly school report.',
     aiCopy: 'Copy response',
     aiCopied: 'Copied!',
-    aiPrivacyNotice: 'Privacy Protected: Individual names and private contact details are never transmitted to external AI.',
+    aiPrivacyNotice: 'Admin access: student records and uploaded documents are sent to Gemini for your requests. Review proposed changes before saving.',
     aiStatusConnected: 'Connected to Gemini API',
     aiStatusDemo: 'Demo Mode: Aggregated real statistics ready',
 
@@ -830,7 +830,7 @@ export const translations: Record<Language, Translations> = {
     aiSuggestedPrompt6: 'Génère un rapport mensuel de l’école.',
     aiCopy: 'Copier la réponse',
     aiCopied: 'Copié !',
-    aiPrivacyNotice: 'Protection des données : Les noms et coordonnées privées ne sont jamais transmis aux services IA externes.',
+    aiPrivacyNotice: 'Accès administrateur : les dossiers et documents sont transmis à Gemini pour vos demandes. Vérifiez les modifications avant de les enregistrer.',
     aiStatusConnected: 'Connecté à l’API Gemini',
     aiStatusDemo: 'Mode Démo : Statistiques réelles agrégées prêtes',
 
@@ -1117,7 +1117,7 @@ export const translations: Record<Language, Translations> = {
     aiSuggestedPrompt6: 'أصدر تقريراً إحصائياً شهرياً للمؤسسة.',
     aiCopy: 'نسخ الإجابة',
     aiCopied: 'تم النسخ!',
-    aiPrivacyNotice: 'حماية الخصوصية: لا يتم إرسال الأسماء الشخصية أو أرقام الهواتف أو البيانات الحساسة لأي خدمات ذكاء اصطناعي خارجية.',
+    aiPrivacyNotice: 'صلاحية الإدارة: تُرسل ملفات التلاميذ والوثائق إلى Gemini لمعالجة طلباتك. راجع التعديلات قبل الحفظ.',
     aiStatusConnected: 'متصل بنموذج Gemini الذكي',
     aiStatusDemo: 'وضع تجريبي تفاعلي: الإحصائيات المجمعة جاهزة للتحليل',
 

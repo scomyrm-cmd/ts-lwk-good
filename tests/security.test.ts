@@ -12,6 +12,7 @@ let revision = 0;
 let providerRequests: Array<{ model: string; contents: unknown; config: { systemInstruction: string } }> = [];
 const emailRequests: Array<Record<string, any>> = [];
 let emailResponse = 200;
+let providerOverride: unknown;
 const originalFetch = globalThis.fetch;
 globalThis.fetch = async (input, init) => {
   if (String(input) === 'https://api.emailjs.com/api/v1.0/email/send') {
@@ -57,10 +58,11 @@ const mock = {
     providerRequests.push(args);
     if (args.model === 'retired-fixture-model') throw Object.assign(new Error('Fixture model not found'), { status: 404 });
     if (JSON.stringify(args.contents).includes('Fixture timeout')) throw new DOMException('Request timed out', 'TimeoutError');
+    if (providerOverride !== undefined) return { text: JSON.stringify(providerOverride), candidates: [{ finishReason: 'STOP' }] };
     const instruction = args.config.systemInstruction;
     const text = instruction.includes('Moroccan Darija') ? 'هادي خلاصة الحضور.' :
       instruction.includes('Answer in French') ? 'Voici le bilan de présence.' : 'Here is the attendance summary.';
-    return { text };
+    return { text: JSON.stringify({ text, studentChanges: [], attendanceChanges: [] }) };
   },
 };
 Object.assign(globalThis, { campusTestDoubles: { ...mock, BlobPreconditionFailedError, BlobNotFoundError } });
@@ -233,10 +235,12 @@ test('server roles, private persistence, controlled catalog, export, AI, and rot
   const darija = await api('campus-ai', 'POST', { conversationId: thread, prompt: 'عطيني الغياب ديالها', language: 'en' }, admin);
   assert.equal(darija.data.detectedLanguage, 'darija');
   assert.match(darija.data.text, /Maya River/);
-  const outbound = JSON.stringify(providerRequests);
-  for (const identifier of [student.firstName, student.lastName, student.studentId, student.dateOfBirth, student.guardianContact, student.notes]) {
-    assert.equal(outbound.includes(identifier), false);
-  }
+  const providerContext = JSON.parse(providerRequests.at(-1)!.config.systemInstruction.split('\n').at(-1)!);
+  assert.equal(providerContext.students[0].firstName, student.firstName);
+  assert.equal(providerContext.students[0].guardianContact, student.guardianContact);
+  assert.equal(providerContext.students[0].notes, student.notes);
+  assert.equal(providerContext.attendance.length, 1);
+  for (const forbidden of ['users', 'sessions', 'passwordHash', 'adminSetupFingerprint']) assert.equal(forbidden in providerContext, false);
   assert.equal((await api('admin/state', 'GET', undefined, admin)).data.conversations[0].messages.length, 8);
   assert.equal((await api('admin/state', 'GET', undefined, secondary)).data.conversations.length, 0);
   const limited = await api('campus-ai', 'POST', {
@@ -245,6 +249,46 @@ test('server roles, private persistence, controlled catalog, export, AI, and rot
   assert.equal(limited.code, 200);
   assert.equal(limited.data.source, 'school-records');
   assert.match(limited.data.text, /Maya River[\s\S]*temporarily unavailable/);
+
+  // Photo/AI write boundaries: these calls use synthetic records and mocked private storage only.
+  for (const route of ['admin/ai/scan', 'admin/ai/preview', 'admin/ai/apply']) {
+    assert.equal((await api(route, 'POST', {}, learner)).code, 403);
+    assert.equal((await api(route, 'POST', {})).code, 401);
+  }
+  assert.equal((await api('admin/ai/scan', 'POST', { mode: 'roster', image: { mimeType: 'image/svg+xml', data: 'PHN2Zz4=' } }, admin)).code, 400);
+  providerOverride = { text: 'Review the proposed phone number update.', studentChanges: [{ targetId: student.id, fields: { guardianPhone: '+212600000002' } }], attendanceChanges: [] };
+  const editReply = await api('campus-ai', 'POST', { conversationId: 'edit-thread-fixture', prompt: 'Change the guardian phone for STU-42 to +212600000002' }, admin);
+  assert.equal(editReply.code, 200);
+  assert.equal(editReply.data.proposal.studentChanges[0].targetId, student.id);
+  assert.equal(privateState().students[0].guardianPhone, undefined, 'chat may propose but cannot write');
+  providerOverride = { summary: 'Synthetic extracted row', rows: [{ studentId: '', firstName: 'سلمى', lastName: 'العلمي', className: '2AC-3', classNumber: '١٧', date: '', status: '', warning: '' }] };
+  const scanned = await api('admin/ai/scan', 'POST', { mode: 'roster', language: 'ar', image: { mimeType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j6N0AAAAASUVORK5CYII=' } }, admin);
+  assert.equal(scanned.code, 200);
+  assert.equal(scanned.data.rows[0].classNumber, '17');
+  assert.equal(privateState().students.length, 1, 'image extraction may not write');
+  providerOverride = { rows: [{ firstName: 'Untrusted content', status: 'invented' }] };
+  assert.equal((await api('admin/ai/scan', 'POST', { mode: 'roster', image: { mimeType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j6N0AAAAASUVORK5CYII=' } }, admin)).code, 502);
+  assert.equal(privateState().students.length, 1);
+  providerOverride = undefined;
+
+  const scanRows = [{ studentId: 'MASSAR-FIXTURE-1', firstName: 'سلمى', lastName: 'العلمي', className: '2AC-3', classNumber: '١٧', date: '', status: '', warning: '' }];
+  const draft = await api('admin/ai/preview', 'POST', { mode: 'roster', rows: scanRows }, admin);
+  assert.equal(draft.code, 200);
+  assert.equal(draft.data.proposal.studentChanges[0].fields.classNumber, '17');
+  assert.equal(privateState().students.length, 1, 'preview must not write students');
+  assert.equal((await api('admin/ai/apply', 'POST', { proposal: draft.data.proposal }, admin)).code, 400);
+  const malicious = structuredClone(draft.data.proposal);
+  malicious.studentChanges[0].fields.role = 'admin';
+  assert.equal((await api('admin/ai/apply', 'POST', { proposal: malicious, confirmed: true }, admin)).code, 400);
+  const applied = await api('admin/ai/apply', 'POST', { proposal: draft.data.proposal, confirmed: true }, admin);
+  assert.equal(applied.code, 200);
+  assert.equal(applied.data.state.students.length, 2);
+  assert.equal((await api('admin/ai/apply', 'POST', { proposal: draft.data.proposal, confirmed: true }, admin)).data.replayed, true);
+  assert.equal(privateState().students.length, 2);
+  assert.equal((await api('admin/ai/preview', 'POST', { mode: 'roster', rows: scanRows }, admin)).data.proposal, null);
+  const stale = { ...draft.data.proposal, id: 'stale-review-fixture' };
+  assert.equal((await api('admin/ai/apply', 'POST', { proposal: stale, confirmed: true }, admin)).code, 409);
+  assert.equal(privateState().auditEvents.some((entry: any) => entry.type === 'ai_student_changes_applied'), true);
 
   process.env.CAMPUS_ADMIN_SETUP_CODE = 'different-one-time-setup-code-for-local-test-987654';
   const retiredPassword = 'qa-owner-first-private-passphrase';

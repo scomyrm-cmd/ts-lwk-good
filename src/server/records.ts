@@ -53,6 +53,7 @@ function student(value: Record<string, unknown>): Student {
     id: field(value.id, 120, true), studentId: field(value.studentId, 120, true),
     firstName: field(value.firstName, 120, true), lastName: field(value.lastName, 120, true),
     className: field(value.className, 120, true),
+    classNumber: value.classNumber == null ? undefined : field(value.classNumber, 20),
     gender: value.gender ? choice(value.gender, ['Male', 'Female', 'Other'] as const) : undefined,
     dateOfBirth: value.dateOfBirth ? isoDate(value.dateOfBirth) : undefined,
     guardianContact: field(value.guardianContact, 220), notes: field(value.notes, 4000), createdAt: timestamp(value.createdAt),
@@ -145,7 +146,7 @@ function readSettings(value: Record<string, unknown>, previous?: AppSettings): A
     },
     aiAssistant: {
       enabled: boolean(ai.enabled), saveHistory: boolean(ai.saveHistory),
-      strictPrivacyMode: true,
+      strictPrivacyMode: false,
       autoSpeak: ai.autoSpeak == null ? undefined : boolean(ai.autoSpeak),
       model: previous?.aiAssistant?.model || 'gemini-2.5-flash',
     },
@@ -201,7 +202,11 @@ export function applyUpdates(db: SchoolState, updates: Record<string, unknown>, 
       }
       case 'schoolInfo': {
         const school = object(value);
+        if (school.classGroups != null && (!Array.isArray(school.classGroups) || school.classGroups.length > 300)) {
+          throw new HttpError(400, 'Use at most 300 class groups');
+        }
         db.schoolInfo = {
+          ...(Array.isArray(school.classGroups) && { classGroups: [...new Set(school.classGroups.map(group => field(group, 120, true)))] }),
           name: field(school.name, 180, true), logoUrl: image(school.logoUrl), address: field(school.address, 300),
           city: field(school.city, 120), country: field(school.country, 120), email: field(school.email, 160),
           phone: field(school.phone, 80), website: httpsUrl(school.website),

@@ -1,3 +1,4 @@
+import { AIProposalCard } from './AIProposalCard';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Sparkles,
@@ -138,6 +139,7 @@ export const CampusAIFloatingWidget: React.FC = () => {
         id: 'msg_ai_' + Date.now(),
         sender: 'assistant',
         content: data.text,
+        proposal: data.proposal,
         timestamp: new Date().toISOString(),
       };
 
@@ -147,6 +149,7 @@ export const CampusAIFloatingWidget: React.FC = () => {
         updatedAt: new Date().toISOString(),
       });
     } catch (err: any) {
+      if (err?.name === 'SessionChangedError') return;
       const errorMessage: ChatMessage = {
         id: 'msg_err_' + Date.now(),
         sender: 'assistant',
@@ -254,6 +257,7 @@ export const CampusAIFloatingWidget: React.FC = () => {
                       >
                         {msg.content}
                       </div>
+                    {msg.proposal && <AIProposalCard proposal={msg.proposal} />}
 
                       {!isUser && !msg.isError && (
                         <div className="mt-1.5 pt-1 border-t border-slate-100 dark:border-slate-700/60 flex justify-end">

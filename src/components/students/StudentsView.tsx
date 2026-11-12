@@ -1,3 +1,6 @@
+import { DocumentScanner } from '../ai/DocumentScanner';
+import { MoroccanClassGroups } from './MoroccanClasses';
+import { availableClasses, classLabel, sortClasses } from '../../utils/moroccanClasses';
 import React, { useState } from 'react';
 import {
   Users,
@@ -33,6 +36,7 @@ import { studentContact } from '../../utils/studentContact';
 export const StudentsView: React.FC = () => {
   const {
     students,
+    schoolInfo,
     attendance,
     currentDate,
     deleteStudent,
@@ -60,7 +64,7 @@ export const StudentsView: React.FC = () => {
   const [actionMenuOpenId, setActionMenuOpenId] = useState<string | null>(null);
 
   // Extract unique classes
-  const classes = Array.from(new Set(students.map((s) => s.className))).sort();
+  const classes = availableClasses(students, schoolInfo.classGroups);
 
   // Map today's attendance for each student
   const todayRecords = attendance.filter((a) => a.date === currentDate);
@@ -85,7 +89,7 @@ export const StudentsView: React.FC = () => {
       studentStatus === selectedStatus;
 
     return matchesSearch && matchesClass && matchesStatus;
-  });
+  }).sort((a, b) => sortClasses(a.className, b.className) || (a.classNumber || '99999').localeCompare(b.classNumber || '99999', 'fr', { numeric: true }) || a.lastName.localeCompare(b.lastName, settings.language));
 
   const handleExportCsv = () => {
     const headers = ['Student ID', 'First Name', 'LastName', 'Class', 'Gender', 'Date of Birth', 'Guardian Contact', 'Status Today', 'Guardian Email', 'Guardian Phone'];
@@ -127,7 +131,7 @@ export const StudentsView: React.FC = () => {
                   studentId: s.studentId || `STU-${Math.floor(1000 + Math.random() * 9000)}`,
                   firstName: s.firstName,
                   lastName: s.lastName,
-                  className: s.className || 'Grade 10-A',
+                  className: s.className || '2AC-1',
                   gender: ['Male', 'Female', 'Other'].includes(s.gender) ? s.gender : 'Other',
                   dateOfBirth: s.dateOfBirth || '',
                   guardianContact: s.guardianContact || '',
@@ -152,7 +156,7 @@ export const StudentsView: React.FC = () => {
                     studentId: studentId || `STU-${Math.floor(1000 + Math.random() * 9000)}`,
                     firstName,
                     lastName,
-                    className: className || 'Grade 10-A',
+                    className: className || '2AC-1',
                     gender: (gender?.toLowerCase() as any) || 'other',
                     dateOfBirth: dateOfBirth || '',
                     guardianContact: guardianContact || '',
@@ -210,6 +214,8 @@ export const StudentsView: React.FC = () => {
       </WorkspaceHeader>
 
       <div className="registry-toolbar">
+        <DocumentScanner />
+        <MoroccanClassGroups />
         <button
           type="button"
           data-testid="save-students-server-btn"
@@ -314,7 +320,7 @@ export const StudentsView: React.FC = () => {
                   <option value="all">All Classes</option>
                   {classes.map((cls) => (
                     <option key={cls} value={cls}>
-                      {cls}
+                      {cls} · {classLabel(cls, settings.language)}
                     </option>
                   ))}
                 </select>
@@ -373,6 +379,7 @@ export const StudentsView: React.FC = () => {
                       >
                         <td className="py-3 px-4 font-mono font-medium text-slate-900 dark:text-slate-100">
                           {student.studentId}
+                          {student.classNumber && <span className="block text-xs text-slate-500 mt-1">N° {student.classNumber}</span>}
                         </td>
                         <td className="py-3 px-4">
                           <button

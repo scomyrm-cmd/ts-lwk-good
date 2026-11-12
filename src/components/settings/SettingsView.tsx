@@ -721,14 +721,14 @@ export const SettingsView: React.FC = () => {
                 <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                      Student data privacy
+                      Administrator AI access
                     </p>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      Campus OS reads student records on the server. Gemini receives selected attendance statistics with known identifiers removed.
+                      Campus AI can read all student fields and attendance records, including guardian contacts, through Gemini. Uploaded school documents are sent to Gemini for extraction. Changes require administrator review; account credentials are never included.
                     </p>
                   </div>
                   <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
-                    Always Enforced
+                    Admin only
                   </span>
                 </div>
 

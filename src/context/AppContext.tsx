@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   Student,
+  AIProposal,
+  ScanRow,
   AttendanceRecord,
   AttendanceStatus,
   LostFoundItem,
@@ -120,7 +122,8 @@ interface AppContextType {
 
   // Chat Conversations & AI Navigation
   saveConversation: (conv: Conversation) => void;
-  askCampusAI: (id: string, prompt: string, history: ChatMessage[]) => Promise<{ text: string; source: string }>;
+  requestStudentAI: (action: 'scan' | 'preview' | 'apply', body: Record<string, unknown>) => Promise<{ rows?: ScanRow[]; summary?: string; proposal?: AIProposal | null; replayed?: boolean }>;
+  askCampusAI: (id: string, prompt: string, history: ChatMessage[]) => Promise<{ text: string; source: string; proposal?: AIProposal }>;
   deleteConversation: (id: string) => void;
   clearAllConversations: () => void;
   pendingAIPrompt: string | null;
@@ -175,7 +178,7 @@ const defaultSettings: AppSettings = {
   aiAssistant: {
     enabled: true,
     model: 'gemini-2.5-flash',
-    strictPrivacyMode: true,
+    strictPrivacyMode: false,
     saveHistory: true,
   },
 };
@@ -283,7 +286,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const nextSettings = {
           ...defaultSettings, ...value.settings,
           notifications: { ...defaultSettings.notifications, ...value.settings?.notifications },
-          aiAssistant: { ...defaultSettings.aiAssistant, ...value.settings?.aiAssistant, strictPrivacyMode: true },
+          aiAssistant: { ...defaultSettings.aiAssistant, ...value.settings?.aiAssistant, strictPrivacyMode: false },
         };
         const next = {
           students: value.students ?? [], attendance: value.attendance ?? [], lostFoundItems: value.lostFoundItems ?? [],
@@ -954,7 +957,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const askCampusAI = async (id: string, prompt: string, history: ChatMessage[]) => {
+    const accountId = sessionUser.current?.id;
     await flushServerChanges();
+    if (sessionUser.current?.id !== accountId) throw Object.assign(new Error('Session changed'), { name: 'SessionChangedError' });
     const response = await fetch('/api/campus-ai', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -964,8 +969,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }),
     });
     const data = await parseApi(response);
+    if (sessionUser.current?.id !== accountId) throw Object.assign(new Error('Your session changed. Sign in again.'), { name: 'SessionChangedError' });
     if (!response.ok || typeof data.text !== 'string' || !data.text) throw new Error(data.error || 'Campus AI is unavailable');
-    return { text: data.text as string, source: data.source as string };
+    return { text: data.text as string, source: data.source as string, proposal: data.proposal as AIProposal | undefined };
+  };
+
+  const requestStudentAI: AppContextType['requestStudentAI'] = async (action, body) => {
+    const accountId = sessionUser.current?.id;
+    if (sessionUser.current?.role !== 'admin' || !hydrated.current) throw new Error('Administrator session required');
+    await flushServerChanges();
+    const operation = async () => {
+      if (sessionUser.current?.id !== accountId) throw Object.assign(new Error('Session changed'), { name: 'SessionChangedError' });
+      const response = await fetch('/api/admin/ai/' + action, {
+        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(90_000), body: JSON.stringify({ ...body, language: settings.language }),
+      });
+      const data = await parseApi(response);
+      if (!response.ok || !data.success) throw new Error(data.error || 'Student operation failed');
+      if (sessionUser.current?.id !== accountId) throw Object.assign(new Error('Your session changed. Sign in again.'), { name: 'SessionChangedError' });
+      if (action === 'apply') {
+        const value = data.state;
+        if (!value || !data.versions) throw new Error('Refresh the page to check the saved records.');
+        for (const key of ['students', 'attendance', 'activities']) {
+          latestState.current[key] = value[key];
+          persisted.current[key] = JSON.stringify(value[key]);
+          versions.current[key] = data.versions[key];
+        }
+        setStudents(value.students); setAttendance(value.attendance); setActivities(value.activities);
+        setLastSavedStudentsAt(value.studentsLastSaved ?? null);
+      }
+      return data;
+    };
+    if (action !== 'apply') return operation();
+    const task = saveChain.current.then(operation);
+    saveChain.current = task.then(() => {}, () => {});
+    return task;
   };
 
   const saveConversation = (conv: Conversation) => {
@@ -1000,26 +1038,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Seed realistic demo data when requested by user in settings
   const seedDemoData = () => {
     const demoStudents: Student[] = [
-      { id: 's1', studentId: 'STU-1001', firstName: 'Youssef', lastName: 'Benali', className: 'Grade 10-A', gender: 'Male', dateOfBirth: '2009-03-12', guardianContact: '+212 661 112 233', createdAt: '2026-09-01' },
-      { id: 's2', studentId: 'STU-1002', firstName: 'Sara', lastName: 'El Idrissi', className: 'Grade 10-A', gender: 'Female', dateOfBirth: '2009-07-22', guardianContact: '+212 662 334 455', createdAt: '2026-09-01' },
-      { id: 's3', studentId: 'STU-1003', firstName: 'Mehdi', lastName: 'Alami', className: 'Grade 10-A', gender: 'Male', dateOfBirth: '2009-01-15', guardianContact: '+212 663 556 677', createdAt: '2026-09-01' },
-      { id: 's4', studentId: 'STU-1004', firstName: 'Imane', lastName: 'Chraibi', className: 'Grade 10-A', gender: 'Female', dateOfBirth: '2009-11-04', guardianContact: '+212 664 778 899', createdAt: '2026-09-01' },
-      { id: 's5', studentId: 'STU-1005', firstName: 'Omar', lastName: 'Berrada', className: 'Grade 10-B', gender: 'Male', dateOfBirth: '2009-05-18', guardianContact: '+212 665 990 011', createdAt: '2026-09-01' },
-      { id: 's6', studentId: 'STU-1006', firstName: 'Salma', lastName: 'Tahiri', className: 'Grade 10-B', gender: 'Female', dateOfBirth: '2009-08-30', guardianContact: '+212 666 223 344', createdAt: '2026-09-01' },
-      { id: 's7', studentId: 'STU-1007', firstName: 'Hamza', lastName: 'Kabbaj', className: 'Grade 10-B', gender: 'Male', dateOfBirth: '2009-04-09', guardianContact: '+212 667 445 566', createdAt: '2026-09-01' },
-      { id: 's8', studentId: 'STU-1008', firstName: 'Nour', lastName: 'Fassi', className: 'Grade 10-B', gender: 'Female', dateOfBirth: '2009-12-14', guardianContact: '+212 668 667 788', createdAt: '2026-09-01' },
-      { id: 's9', studentId: 'STU-1101', firstName: 'Amine', lastName: 'Zouiten', className: 'Grade 11-A', gender: 'Male', dateOfBirth: '2008-02-10', guardianContact: '+212 669 889 900', createdAt: '2026-09-01' },
-      { id: 's10', studentId: 'STU-1102', firstName: 'Lina', lastName: 'Ghannam', className: 'Grade 11-A', gender: 'Female', dateOfBirth: '2008-06-25', guardianContact: '+212 670 112 233', createdAt: '2026-09-01' },
-      { id: 's11', studentId: 'STU-1103', firstName: 'Reda', lastName: 'Tazi', className: 'Grade 11-A', gender: 'Male', dateOfBirth: '2008-09-17', guardianContact: '+212 671 334 455', createdAt: '2026-09-01' },
-      { id: 's12', studentId: 'STU-1104', firstName: 'Hiba', lastName: 'Filali', className: 'Grade 11-A', gender: 'Female', dateOfBirth: '2008-10-03', guardianContact: '+212 672 556 677', createdAt: '2026-09-01' },
-      { id: 's13', studentId: 'STU-1105', firstName: 'Walid', lastName: 'Bennani', className: 'Grade 11-B', gender: 'Male', dateOfBirth: '2008-03-29', guardianContact: '+212 673 778 899', createdAt: '2026-09-01' },
-      { id: 's14', studentId: 'STU-1106', firstName: 'Kenza', lastName: 'Bouzid', className: 'Grade 11-B', gender: 'Female', dateOfBirth: '2008-07-11', guardianContact: '+212 674 990 011', createdAt: '2026-09-01' },
-      { id: 's15', studentId: 'STU-1201', firstName: 'Anas', lastName: 'Mansouri', className: 'Grade 12-A', gender: 'Male', dateOfBirth: '2007-04-14', guardianContact: '+212 675 223 344', createdAt: '2026-09-01' },
-      { id: 's16', studentId: 'STU-1202', firstName: 'Rania', lastName: 'Slaoui', className: 'Grade 12-A', gender: 'Female', dateOfBirth: '2007-08-19', guardianContact: '+212 676 445 566', createdAt: '2026-09-01' },
-      { id: 's17', studentId: 'STU-1203', firstName: 'Saad', lastName: 'Chakib', className: 'Grade 12-A', gender: 'Male', dateOfBirth: '2007-11-02', guardianContact: '+212 677 667 788', createdAt: '2026-09-01' },
-      { id: 's18', studentId: 'STU-1204', firstName: 'Zineb', lastName: 'Mejjati', className: 'Grade 12-B', gender: 'Female', dateOfBirth: '2007-01-28', guardianContact: '+212 678 889 900', createdAt: '2026-09-01' },
-      { id: 's19', studentId: 'STU-1205', firstName: 'Taha', lastName: 'Rachidi', className: 'Grade 12-B', gender: 'Male', dateOfBirth: '2007-05-06', guardianContact: '+212 679 112 233', createdAt: '2026-09-01' },
-      { id: 's20', studentId: 'STU-1206', firstName: 'Malak', lastName: 'Zerouali', className: 'Grade 12-B', gender: 'Female', dateOfBirth: '2007-10-15', guardianContact: '+212 680 334 455', createdAt: '2026-09-01' },
+      { id: 's1', studentId: 'STU-1001', firstName: 'Youssef', lastName: 'Benali', className: 'TC-Sciences-1', gender: 'Male', dateOfBirth: '2009-03-12', guardianContact: '+212 661 112 233', createdAt: '2026-09-01' },
+      { id: 's2', studentId: 'STU-1002', firstName: 'Sara', lastName: 'El Idrissi', className: 'TC-Sciences-1', gender: 'Female', dateOfBirth: '2009-07-22', guardianContact: '+212 662 334 455', createdAt: '2026-09-01' },
+      { id: 's3', studentId: 'STU-1003', firstName: 'Mehdi', lastName: 'Alami', className: 'TC-Sciences-1', gender: 'Male', dateOfBirth: '2009-01-15', guardianContact: '+212 663 556 677', createdAt: '2026-09-01' },
+      { id: 's4', studentId: 'STU-1004', firstName: 'Imane', lastName: 'Chraibi', className: 'TC-Sciences-1', gender: 'Female', dateOfBirth: '2009-11-04', guardianContact: '+212 664 778 899', createdAt: '2026-09-01' },
+      { id: 's5', studentId: 'STU-1005', firstName: 'Omar', lastName: 'Berrada', className: 'TC-Sciences-2', gender: 'Male', dateOfBirth: '2009-05-18', guardianContact: '+212 665 990 011', createdAt: '2026-09-01' },
+      { id: 's6', studentId: 'STU-1006', firstName: 'Salma', lastName: 'Tahiri', className: 'TC-Sciences-2', gender: 'Female', dateOfBirth: '2009-08-30', guardianContact: '+212 666 223 344', createdAt: '2026-09-01' },
+      { id: 's7', studentId: 'STU-1007', firstName: 'Hamza', lastName: 'Kabbaj', className: 'TC-Sciences-2', gender: 'Male', dateOfBirth: '2009-04-09', guardianContact: '+212 667 445 566', createdAt: '2026-09-01' },
+      { id: 's8', studentId: 'STU-1008', firstName: 'Nour', lastName: 'Fassi', className: 'TC-Sciences-2', gender: 'Female', dateOfBirth: '2009-12-14', guardianContact: '+212 668 667 788', createdAt: '2026-09-01' },
+      { id: 's9', studentId: 'STU-1101', firstName: 'Amine', lastName: 'Zouiten', className: '1BAC-Sciences expérimentales-1', gender: 'Male', dateOfBirth: '2008-02-10', guardianContact: '+212 669 889 900', createdAt: '2026-09-01' },
+      { id: 's10', studentId: 'STU-1102', firstName: 'Lina', lastName: 'Ghannam', className: '1BAC-Sciences expérimentales-1', gender: 'Female', dateOfBirth: '2008-06-25', guardianContact: '+212 670 112 233', createdAt: '2026-09-01' },
+      { id: 's11', studentId: 'STU-1103', firstName: 'Reda', lastName: 'Tazi', className: '1BAC-Sciences expérimentales-1', gender: 'Male', dateOfBirth: '2008-09-17', guardianContact: '+212 671 334 455', createdAt: '2026-09-01' },
+      { id: 's12', studentId: 'STU-1104', firstName: 'Hiba', lastName: 'Filali', className: '1BAC-Sciences expérimentales-1', gender: 'Female', dateOfBirth: '2008-10-03', guardianContact: '+212 672 556 677', createdAt: '2026-09-01' },
+      { id: 's13', studentId: 'STU-1105', firstName: 'Walid', lastName: 'Bennani', className: '1BAC-Sciences expérimentales-2', gender: 'Male', dateOfBirth: '2008-03-29', guardianContact: '+212 673 778 899', createdAt: '2026-09-01' },
+      { id: 's14', studentId: 'STU-1106', firstName: 'Kenza', lastName: 'Bouzid', className: '1BAC-Sciences expérimentales-2', gender: 'Female', dateOfBirth: '2008-07-11', guardianContact: '+212 674 990 011', createdAt: '2026-09-01' },
+      { id: 's15', studentId: 'STU-1201', firstName: 'Anas', lastName: 'Mansouri', className: '2BAC-Sciences physiques-1', gender: 'Male', dateOfBirth: '2007-04-14', guardianContact: '+212 675 223 344', createdAt: '2026-09-01' },
+      { id: 's16', studentId: 'STU-1202', firstName: 'Rania', lastName: 'Slaoui', className: '2BAC-Sciences physiques-1', gender: 'Female', dateOfBirth: '2007-08-19', guardianContact: '+212 676 445 566', createdAt: '2026-09-01' },
+      { id: 's17', studentId: 'STU-1203', firstName: 'Saad', lastName: 'Chakib', className: '2BAC-Sciences physiques-1', gender: 'Male', dateOfBirth: '2007-11-02', guardianContact: '+212 677 667 788', createdAt: '2026-09-01' },
+      { id: 's18', studentId: 'STU-1204', firstName: 'Zineb', lastName: 'Mejjati', className: '2BAC-Sciences physiques-2', gender: 'Female', dateOfBirth: '2007-01-28', guardianContact: '+212 678 889 900', createdAt: '2026-09-01' },
+      { id: 's19', studentId: 'STU-1205', firstName: 'Taha', lastName: 'Rachidi', className: '2BAC-Sciences physiques-2', gender: 'Male', dateOfBirth: '2007-05-06', guardianContact: '+212 679 112 233', createdAt: '2026-09-01' },
+      { id: 's20', studentId: 'STU-1206', firstName: 'Malak', lastName: 'Zerouali', className: '2BAC-Sciences physiques-2', gender: 'Female', dateOfBirth: '2007-10-15', guardianContact: '+212 680 334 455', createdAt: '2026-09-01' },
     ];
 
     const today = getTodayStr();
@@ -1148,6 +1186,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateSettings,
         saveConversation,
         askCampusAI,
+        requestStudentAI,
         deleteConversation,
         clearAllConversations,
         pendingAIPrompt,

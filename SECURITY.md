@@ -39,4 +39,11 @@ Student reports start pending. Only an administrator can publish a report to the
 - `CAMPUS_REJECTED_ADMIN_PASSWORD_SHA256` can block known exposed passwords.
 - `CAMPUS_ALLOWED_ORIGINS` optionally lists additional trusted HTTPS origins separated by commas. Same-origin requests work by default. The existing `APP_URL` is also accepted when configured.
 
-Campus AI reads the roster and attendance on the server. It keeps exact identity and contact fields out of the model’s school-data context and redacts known identifiers from chat turns. Keep secrets and unrelated personal information out of free-form prompts. Conversation history is stored privately when enabled. Voice input and read-aloud depend on browser speech support.
+Campus AI is administrator-only. It supplies all student fields and attendance records to the configured Gemini provider so administrators can ask questions and propose edits. It never supplies account hashes, credentials, sessions, or recovery codes. Photo scanning sends a compressed JPEG/PNG/WebP inline to Gemini; Campus OS does not persist the image. Keep secrets and unrelated personal information out of free-form prompts. Conversation history is stored privately when enabled. Voice input and read-aloud depend on browser speech support.
+
+
+## Reviewed AI edits and document imports
+
+`POST /api/admin/ai/scan` extracts Arabic/French roster or absence-sheet rows without writing records or sending email. `POST /api/admin/ai/preview` checks identities against current server records and returns a draft. Chat replies can also contain drafts. `POST /api/admin/ai/apply` requires an administrator session, explicit confirmation, allowed student/attendance fields, and matching record versions. One private Blob transaction saves the validated batch, activity/audit entries, idempotency receipt, and any eligible attendance outbox entries. Replaying the same operation does not create duplicate students or notices. Historical attendance imports do not enqueue new email notices.
+
+Moroccan class presets cover primary years 1–6, collège years 1–3, tronc commun and bac years 1–2. Class sections and lycée branches are editable. Existing groups and records are retained. `classNumber` is a class-local roll number; `studentId` is the unique school-wide identifier. Imports without a Massar/student ID receive a deterministic `LOCAL-` identifier, never a fabricated Massar code. Ambiguous, missing or conflicting rows require correction. Extraction uses structured prompts and examples, not fine-tuning. No training dataset is collected.

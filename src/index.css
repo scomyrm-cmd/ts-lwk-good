@@ -1854,3 +1854,20 @@
     transform: none;
   }
 }
+
+/* School document review: one readable card per extracted row. */
+.scan-label { display: flex; flex-direction: column; gap: .45rem; font-size: .75rem; font-weight: 600; }
+.scan-label .workspace-field { min-width: 0; width: 100%; font-weight: 400; }
+.scan-upload-area { padding: 1.5rem; border: 1px dashed var(--color-brand-300); border-radius: 1.25rem; background: color-mix(in srgb, var(--color-brand-100) 35%, transparent); }
+.scan-notice { padding: .9rem 1rem; border-radius: .85rem; background: color-mix(in srgb, var(--color-brand-100) 55%, transparent); font-size: .8rem; line-height: 1.6; }
+.scan-row, .scan-change { padding: 1rem; border-radius: 1rem; border: 1px solid var(--color-slate-200); animation: scan-row-in .32s ease both; }
+.dark .scan-row, .dark .scan-change { border-color: var(--color-slate-700); }
+.scan-rows { display: grid; gap: 1rem; }
+.scan-diff { display: grid; grid-template-columns: minmax(7rem, 1fr) minmax(0, 2fr); gap: 1rem; }
+.scan-error { padding: .9rem; border-radius: .85rem; background: #fef2f2; color: #b91c1c; font-size: .85rem; }
+.scan-success { display: flex; gap: .6rem; align-items: center; padding: 1rem; border-radius: .85rem; background: #ecfdf5; color: #065f46; font-size: .9rem; }
+.dark .scan-notice, .dark .scan-upload-area { background: color-mix(in srgb, var(--color-brand-950) 50%, transparent); }
+.dark .scan-error { background: #450a0a; color: #fca5a5; }
+.dark .scan-success { background: #052e16; color: #86efac; }
+@keyframes scan-row-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .scan-row, .scan-change { animation: none; } }

@@ -1,3 +1,4 @@
+import { periodLabels } from '../../utils/lessonPeriods';
 import { DocumentScanner } from '../ai/DocumentScanner';
 import React, { useState } from 'react';
 import {
@@ -363,7 +364,7 @@ export const AttendanceView: React.FC = () => {
                               )}
                             </td>
                             <td className="py-3 px-4 text-slate-400 text-xs">
-                              {rec?.time || '—'}
+                              <bdi dir="ltr">{periodLabels(rec?.absencePeriods) || rec?.time || '—'}</bdi>
                             </td>
                             <td data-empty={!rec?.reason && !rec?.notes} className="py-3 px-4 text-xs text-slate-500 max-w-xs truncate">
                               {rec?.reason || rec?.notes || '—'}
@@ -497,7 +498,7 @@ export const AttendanceView: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-slate-400 text-xs">
-                        {record.time || '—'}
+                        <bdi dir="ltr">{periodLabels(record.absencePeriods) || record.time || '—'}</bdi>
                       </td>
                       <td className="py-3 px-4 text-xs text-slate-500">
                         {record.reason || '—'}

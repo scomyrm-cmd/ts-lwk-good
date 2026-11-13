@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Check, ClipboardCheck, LoaderCircle, X } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
+import { periodLabels } from '../../utils/lessonPeriods';
 import type { AIProposal } from '../../types';
 import { studentTools } from '../../i18n/studentTools';
 import { WorkspaceDialog } from '../common/WorkspaceDialog';
@@ -40,8 +41,9 @@ export function ProposalReview({ proposal, onSaved }: { proposal: AIProposal; on
         const old = attendance.find(row => row.studentId === change.studentId && row.date === change.date);
         return <section className="scan-change" key={'attendance-' + i}>
           <h4 className="font-semibold">{student ? `${student.firstName} ${student.lastName}` : change.studentId}</h4>
-          <p className="text-sm mt-2">{change.studentId} · {change.date}</p>
+          <p className="text-sm mt-2">{student?.className} · #{student?.classNumber || '—'} · {change.studentId} · {change.date}</p>
           <p className="text-sm mt-1">{old ? copy[old.status] : '—'} → <strong>{copy[change.status]}</strong></p>
+          {change.absencePeriods !== undefined && <p className="text-sm mt-1">{copy.scope}: <bdi dir="ltr">{old ? (periodLabels(old.absencePeriods) || copy.day) : '—'}</bdi> → <strong><bdi dir="ltr">{periodLabels(change.absencePeriods) || copy.day}</bdi></strong></p>}
           {change.reason !== undefined && <p className="text-sm mt-1">{t.reason}: {old?.reason || '—'} → {change.reason || '—'}</p>}
           {change.notes !== undefined && <p className="text-sm mt-1">{t.notes}: {old?.notes || '—'} → {change.notes || '—'}</p>}
         </section>;

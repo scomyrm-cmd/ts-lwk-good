@@ -1,3 +1,4 @@
+import { periodLabels } from '../../utils/lessonPeriods';
 import React from 'react';
 import {
   X,
@@ -218,6 +219,7 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({
                         <span className="font-semibold text-slate-800 dark:text-slate-200">
                           {formatDateWithPattern(rec.date, settings.dateFormat)}
                         </span>
+                        {rec.absencePeriods?.length ? <span className="block mt-1" dir="ltr">{periodLabels(rec.absencePeriods)}</span> : null}
                         {rec.reason && (
                           <span className="text-slate-500 dark:text-slate-400 ms-2">
                             — {rec.reason}

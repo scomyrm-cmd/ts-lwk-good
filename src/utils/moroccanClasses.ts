@@ -3,6 +3,7 @@ import type { Language, Student } from '../types';
 export const MOROCCAN_LEVELS = [
   ...Array.from({ length: 6 }, (_, i) => ({ code: `${i + 1}AP`, fr: `${i + 1}e primaire`, en: `Primary year ${i + 1}`, ar: `${i + 1} ابتدائي` })),
   ...Array.from({ length: 3 }, (_, i) => ({ code: `${i + 1}AC`, fr: `${i + 1}e année collège`, en: `Collège year ${i + 1}`, ar: `${i + 1} إعدادي` })),
+  ...Array.from({ length: 3 }, (_, i) => ({ code: `${i + 1}APIC`, fr: `${i + 1}e collège · parcours international`, en: `Collège year ${i + 1} · international`, ar: `${i + 1} إعدادي · مسار دولي` })),
   { code: 'TC', fr: 'Tronc commun', en: 'Tronc commun', ar: 'الجذع المشترك' },
   { code: '1BAC', fr: '1re année bac', en: 'Baccalaureate year 1', ar: 'الأولى بكالوريا' },
   { code: '2BAC', fr: '2e année bac', en: 'Baccalaureate year 2', ar: 'الثانية بكالوريا' },
@@ -15,7 +16,7 @@ export function latinDigits(value: string) {
 }
 
 export function classLabel(value: string, language: Language) {
-  const match = /^(\dAP|[123]AC|TC|[12]BAC)(?:-(.+))?-(\d+)$/.exec(value);
+  const match = /^(\dAP|[123]AC|[123]APIC|TC|[12]BAC)(?:-(.+))?-(\d+)$/.exec(value);
   const level = MOROCCAN_LEVELS.find(item => item.code === match?.[1]);
   return level && match ? `${level[language]} · ${match[2] ? match[2] + ' · ' : ''}${match[3]}` : value;
 }
@@ -30,4 +31,4 @@ export function availableClasses(students: Student[], configured?: string[]) {
   return [...new Set([...(configured ?? DEFAULT_CLASS_GROUPS), ...students.map(student => student.className)])].sort(sortClasses);
 }
 
-export const MOROCCAN_DOCUMENT_GUIDE = `Moroccan levels: 1AP through 6AP = primary years 1–6; 1AC, 2AC, 3AC = collège / الأولى، الثانية، الثالثة إعدادي; TC = tronc commun / الجذع المشترك; 1BAC and 2BAC = الأولى والثانية بكالوريا. Canonical class format is LEVEL-SECTION, for example 2AC-3. If a lycée branch is explicitly printed, preserve it: TC-Sciences-2, 1BAC-Sciences expérimentales-1, 2BAC-Sciences physiques-3. Never infer an ambiguous grade or missing section. Never convert a numeric class such as 2/3 without an explicit cycle or administrator-provided class. Preserve names in their original Arabic/French script. Massar is a school-wide identifier; numéro d'ordre / الرقم الترتيبي is ONLY a roll number within the class. Convert Arabic digits to Western digits, preserving leading zeros in identifiers.`;
+export const MOROCCAN_DOCUMENT_GUIDE = `Moroccan levels: 1AP through 6AP = primary years 1–6; 1AC, 2AC, 3AC = collège / الأولى، الثانية، الثالثة إعدادي; TC = tronc commun / الجذع المشترك; 1BAC and 2BAC = الأولى والثانية بكالوريا. Keep printed APIC class codes distinct from AP and AC, for example 2APIC-6. Never merge differently named classes without an administrator edit. Canonical class format is LEVEL-SECTION, for example 2AC-3. If a lycée branch is explicitly printed, preserve it: TC-Sciences-2, 1BAC-Sciences expérimentales-1, 2BAC-Sciences physiques-3. Never infer an ambiguous grade or missing section. Never convert a numeric class such as 2/3 without an explicit cycle or administrator-provided class. Preserve names in their original Arabic/French script. Massar is a school-wide identifier; numéro d'ordre / الرقم الترتيبي is ONLY a roll number within the class. Convert Arabic digits to Western digits, preserving leading zeros in identifiers.`;

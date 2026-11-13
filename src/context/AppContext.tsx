@@ -792,6 +792,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const updated = [...prev];
         updated[existingIndex] = {
           ...updated[existingIndex],
+          absencePeriods: status === 'absent' && updated[existingIndex].status === 'absent' ? updated[existingIndex].absencePeriods : [],
           status,
           time: nowTime,
           reason: reason !== undefined ? reason : updated[existingIndex].reason,

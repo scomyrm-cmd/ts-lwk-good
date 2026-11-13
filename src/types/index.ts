@@ -22,6 +22,7 @@ export interface AttendanceRecord {
   date: string; // YYYY-MM-DD
   status: AttendanceStatus;
   time?: string;
+  absencePeriods?: string[]; // HH:mm-HH:mm; absence applies to these lessons only when nonempty.
   reason?: string;
   notes?: string;
   updatedAt: string;
@@ -147,7 +148,7 @@ export interface ChatMessage {
 
 export type StudentFields = Pick<Student, 'studentId' | 'firstName' | 'lastName' | 'className' | 'classNumber' | 'gender' | 'dateOfBirth' | 'guardianEmail' | 'guardianPhone' | 'guardianContact' | 'notes'>;
 export interface AIStudentChange { targetId: string; fields: Partial<StudentFields> }
-export interface AIAttendanceChange { studentId: string; date: string; status: AttendanceStatus; reason?: string; notes?: string }
+export interface AIAttendanceChange { studentId: string; date: string; status: AttendanceStatus; reason?: string; notes?: string; absencePeriods?: string[] }
 export interface AIProposal {
   id: string;
   studentChanges: AIStudentChange[];
@@ -157,6 +158,7 @@ export interface AIProposal {
 export interface ScanRow {
   studentId: string; firstName: string; lastName: string; className: string; classNumber: string;
   date: string; status: AttendanceStatus | ''; warning: string;
+  scope?: '' | 'day' | 'lesson'; period?: string;
 }
 
 export interface Conversation {

@@ -1,3 +1,4 @@
+import { periodLabels } from '../utils/lessonPeriods.js';
 import { randomUUID } from 'node:crypto';
 import { waitUntil } from '@vercel/functions';
 import type { AttendanceRecord, Student } from '../types/index.js';
@@ -57,10 +58,12 @@ export function emailParameters(db: SchoolState, student: Student, record: Atten
   const date = new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(record.date + 'T12:00:00Z'));
   const school = db.schoolInfo?.name || 'L’établissement scolaire';
   const absent = record.status === 'absent';
+  const periods = absent ? periodLabels(record.absencePeriods) : '';
+  const absenceDate = date + (periods ? ' pendant les cours de ' + periods : '');
   const subject = (absent ? 'Absence de ' : 'Retard de ') + name + ' — ' + date;
   const message = [
     'Madame, Monsieur,',
-    `Nous vous informons que votre enfant ${name}, scolarisé(e) en classe de ${student.className}, a été signalé(e) ${absent ? 'absent(e)' : 'en retard'} le ${date}${!absent && record.time ? ' à ' + record.time : ''}.`,
+    `Nous vous informons que votre enfant ${name}, scolarisé(e) en classe de ${student.className}, a été signalé(e) ${absent ? 'absent(e)' : 'en retard'} le ${absenceDate}${!absent && record.time ? ' à ' + record.time : ''}.`,
     absent && !record.reason?.trim()
       ? 'À ce jour, aucune justification concernant cette absence n’a été enregistrée. Nous vous prions de bien vouloir nous en communiquer le motif dans les meilleurs délais.'
       : 'Pour toute précision concernant ce signalement, nous vous invitons à contacter l’administration scolaire.',
@@ -70,7 +73,7 @@ export function emailParameters(db: SchoolState, student: Student, record: Atten
   const replyTo = db.schoolInfo?.email?.trim();
   return {
     to_email: studentContact(student).email, student_name: name, class_name: student.className,
-    attendance_date: date, attendance_status: absent ? 'absent(e)' : 'en retard', attendance_time: record.time || '',
+    attendance_date: absenceDate, attendance_date_only: date, attendance_periods: periods, attendance_status: absent ? 'absent(e)' : 'en retard', attendance_time: record.time || '',
     school_name: school, notification_subject: subject, attendance_message: message,
     email: replyTo && isEmailAddress(replyTo) ? replyTo : '',
   };

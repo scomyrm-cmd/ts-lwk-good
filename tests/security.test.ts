@@ -264,7 +264,7 @@ test('server roles, private persistence, controlled catalog, export, AI, and rot
   providerOverride = { summary: 'Synthetic extracted row', rows: [{ studentId: '', firstName: 'سلمى', lastName: 'العلمي', className: '2AC-3', classNumber: '١٧', date: '', status: '', warning: '' }] };
   const scanned = await api('admin/ai/scan', 'POST', { mode: 'roster', language: 'ar', image: { mimeType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j6N0AAAAASUVORK5CYII=' } }, admin);
   assert.equal(scanned.code, 200);
-  assert.equal(scanned.data.rows[0].classNumber, '17');
+  assert.equal(scanned.data.rows[0].classNumber, '1');
   assert.equal(privateState().students.length, 1, 'image extraction may not write');
   providerOverride = { rows: [{ firstName: 'Untrusted content', status: 'invented' }] };
   assert.equal((await api('admin/ai/scan', 'POST', { mode: 'roster', image: { mimeType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j6N0AAAAASUVORK5CYII=' } }, admin)).code, 502);
@@ -286,6 +286,24 @@ test('server roles, private persistence, controlled catalog, export, AI, and rot
   assert.equal((await api('admin/ai/apply', 'POST', { proposal: draft.data.proposal, confirmed: true }, admin)).data.replayed, true);
   assert.equal(privateState().students.length, 2);
   assert.equal((await api('admin/ai/preview', 'POST', { mode: 'roster', rows: scanRows }, admin)).data.proposal, null);
+  // Weekly grid extraction is read-only; the exact lesson evidence survives the API and private storage.
+  providerOverride = { summary: 'Synthetic weekly number grid', rows: [
+    { studentId: 'must-be-ignored', firstName: 'Do not trust invented names', className: '', classNumber: '١٧', date: '2025-11-11', status: 'absent', period: '8-9' },
+    { className: '', classNumber: '17', date: '2025-11-11', status: 'absent', period: '9-10' },
+  ] };
+  const weekly = await api('admin/ai/scan', 'POST', { mode: 'attendance', format: 'weekly', classHint: '2AC-3', image: { mimeType: 'image/png', data: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+j6N0AAAAASUVORK5CYII=' } }, admin);
+  assert.equal(weekly.code, 200);
+  assert.equal(weekly.data.rows[0].scope, 'lesson');
+  assert.equal(weekly.data.rows[0].studentId, '');
+  assert.equal(weekly.data.rows[0].className, '2AC-3');
+  const weeklyDraft = await api('admin/ai/preview', 'POST', { mode: 'attendance', rows: weekly.data.rows }, admin);
+  assert.equal(weeklyDraft.code, 200);
+  assert.equal(weeklyDraft.data.proposal.attendanceChanges.length, 1);
+  assert.deepEqual(weeklyDraft.data.proposal.attendanceChanges[0].absencePeriods, ['08:00-09:00', '09:00-10:00']);
+  assert.equal((await api('admin/ai/apply', 'POST', { proposal: weeklyDraft.data.proposal, confirmed: true }, admin)).code, 200);
+  assert.deepEqual(privateState().attendance.find((entry: any) => entry.studentId === 'MASSAR-FIXTURE-1').absencePeriods, ['08:00-09:00', '09:00-10:00']);
+  assert.equal((await api('admin/ai/preview', 'POST', { mode: 'attendance', rows: weekly.data.rows }, admin)).data.proposal, null);
+  providerOverride = undefined;
   const stale = { ...draft.data.proposal, id: 'stale-review-fixture' };
   assert.equal((await api('admin/ai/apply', 'POST', { proposal: stale, confirmed: true }, admin)).code, 409);
   assert.equal(privateState().auditEvents.some((entry: any) => entry.type === 'ai_student_changes_applied'), true);

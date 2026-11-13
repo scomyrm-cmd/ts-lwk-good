@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import type { AIProposal, AIStudentChange, AIAttendanceChange, ScanRow, Student } from '../types/index.js';
 import { latinDigits } from '../utils/moroccanClasses.js';
-import { applyUpdates, attendanceStatuses, isoDate, versionOf } from './records.js';
+import { applyUpdates, attendanceStatuses, absencePeriods, isoDate, versionOf } from './records.js';
+import { normalizePeriod } from '../utils/lessonPeriods.js';
 import { digest, field, choice, object, HttpError } from './security.js';
 import { addAuditEvent, type Account, type SchoolState } from './storage.js';
 import { queueChangedAttendanceEmails } from './attendanceEmail.js';
@@ -16,8 +17,8 @@ export function recordVersions(db: SchoolState) {
   return { students: versionOf(db.students), attendance: versionOf(db.attendance) };
 }
 
-function list(value: unknown): unknown[] {
-  if (!Array.isArray(value) || value.length > 150) throw new HttpError(400, 'Use at most 150 changes per batch');
+function list(value: unknown, max = 150): unknown[] {
+  if (!Array.isArray(value) || value.length > max) throw new HttpError(400, `Use at most ${max} changes per batch`);
   return value;
 }
 
@@ -33,9 +34,11 @@ export function parseChanges(value: unknown): Pick<AIProposal, 'studentChanges' 
   });
   const attendanceChanges: AIAttendanceChange[] = list(raw.attendanceChanges).map(entry => {
     const row = object(entry);
-    if (Object.keys(row).some(key => !['studentId', 'date', 'status', 'reason', 'notes'].includes(key))) throw new HttpError(400, 'Invalid attendance field');
+    if (Object.keys(row).some(key => !['studentId', 'date', 'status', 'reason', 'notes', 'absencePeriods'].includes(key))) throw new HttpError(400, 'Invalid attendance field');
+    if (row.absencePeriods != null && absencePeriods(row.absencePeriods).length && row.status !== 'absent') throw new HttpError(400, 'Lesson absence periods require absent status');
     return { studentId: field(row.studentId, 120, true), date: isoDate(row.date), status: choice(row.status, attendanceStatuses),
-      ...(row.reason != null && { reason: field(row.reason, 1000) }), ...(row.notes != null && { notes: field(row.notes, 4000) }) };
+      ...(row.reason != null && { reason: field(row.reason, 1000) }), ...(row.notes != null && { notes: field(row.notes, 4000) }),
+      ...(row.absencePeriods != null && { absencePeriods: absencePeriods(row.absencePeriods) }) };
   });
   return { studentChanges, attendanceChanges };
 }
@@ -129,44 +132,73 @@ export function applyStudentProposal(db: SchoolState, account: Account, input: u
 }
 
 export function parseScanRows(value: unknown): ScanRow[] {
-  return list(value).map(entry => {
+  return list(value, 500).map(entry => {
     const row = object(entry);
     return { studentId: latinDigits(field(row.studentId, 120)), firstName: field(row.firstName, 120), lastName: field(row.lastName, 120),
       className: latinDigits(field(row.className, 120)), classNumber: latinDigits(field(row.classNumber, 20)),
-      date: row.date ? isoDate(row.date) : '', status: row.status ? choice(row.status, attendanceStatuses) : '', warning: field(row.warning, 500) };
+      date: row.date ? isoDate(row.date) : '', status: row.status ? choice(row.status, attendanceStatuses) : '', warning: field(row.warning, 500),
+      scope: row.scope ? choice(row.scope, ['day', 'lesson'] as const) : '', period: latinDigits(field(row.period, 20)) };
   });
+}
+
+/** The photograph's reading order, never alphabetical order, defines the roll. */
+export function numberRosterRows(rows: ScanRow[], start = 1) {
+  if (!Number.isInteger(start) || start < 1 || start > 999) throw new HttpError(400, 'Starting roll number must be between 1 and 999');
+  return rows.map((row, index) => ({ ...row, classNumber: String(start + index) }));
 }
 
 export function prepareScan(db: SchoolState, value: unknown, mode: 'roster' | 'attendance') {
   const rows = parseScanRows(value);
   if (!rows.length) throw new HttpError(400, 'No student rows found. Try a clearer photo.');
-  const studentChanges: AIStudentChange[] = [], attendanceChanges: AIAttendanceChange[] = [];
+  const studentChanges: AIStudentChange[] = [];
+  const days = new Map<string, AIAttendanceChange>();
   const seen = new Set<string>();
   for (const [index, row] of rows.entries()) {
     const fail = (reason: string): never => { throw new HttpError(400, `Row ${index + 1}: ${reason}`); };
-    if (!row.firstName || !row.lastName || !row.className) fail('check the first name, family name and class.');
+    if (!row.className || (mode === 'roster' && (!row.firstName || !row.lastName))) fail('check the first name, family name and class.');
     if (!row.studentId && !row.classNumber) fail('enter a Massar/student ID or class roll number.');
     const candidates = db.students.filter(student => row.studentId ? normalize(student.studentId) === normalize(row.studentId)
       : normalize(student.className) === normalize(row.className) &&
-        (nameKey(student) === nameKey(row) || (student.classNumber && rollKey(student.classNumber) === rollKey(row.classNumber))));
+        ((row.firstName && row.lastName && nameKey(student) === nameKey(row)) || (student.classNumber && row.classNumber && rollKey(student.classNumber) === rollKey(row.classNumber))));
     if (candidates.length > 1) fail('several students match. Enter the exact student ID.');
     const existing = candidates[0];
-    if (existing && (nameKey(existing) !== nameKey(row) || normalize(existing.className) !== normalize(row.className))) {
+    if (existing && ((row.firstName && normalize(existing.firstName) !== normalize(row.firstName)) ||
+      (row.lastName && normalize(existing.lastName) !== normalize(row.lastName)) || normalize(existing.className) !== normalize(row.className))) {
       fail('the name or class conflicts with this student number. Correct the row or edit that student separately.');
     }
+    if (mode === 'attendance' && !existing) fail('no saved student matches this class and number. Import the class list first or correct the number.');
     if (!existing && db.students.some(student => nameKey(student) === nameKey(row) && normalize(student.className) === normalize(row.className))) {
       fail('this name already exists in the class with another ID. Use the existing student ID.');
     }
     if (existing?.classNumber && row.classNumber && rollKey(existing.classNumber) !== rollKey(row.classNumber)) fail('the roll number conflicts with the saved record.');
     const studentId = existing?.studentId || row.studentId || `LOCAL-${digest(normalize(row.className) + '/' + rollKey(row.classNumber)).slice(0, 12).toUpperCase()}`;
-    if (seen.has(studentId)) fail('duplicate student row. Keep one entry per student and scan one date at a time.');
+    if (mode === 'roster' && seen.has(studentId)) fail('duplicate student row.');
+    if (!seen.has(studentId)) {
+      if (!existing) studentChanges.push({ targetId: '', fields: { studentId, firstName: row.firstName, lastName: row.lastName, className: row.className, classNumber: row.classNumber } });
+      else if (row.classNumber && !existing.classNumber) studentChanges.push({ targetId: existing.id, fields: { classNumber: row.classNumber } });
+    }
     seen.add(studentId);
-    if (!existing) studentChanges.push({ targetId: '', fields: { studentId, firstName: row.firstName, lastName: row.lastName, className: row.className, classNumber: row.classNumber } });
-    else if (row.classNumber && !existing.classNumber) studentChanges.push({ targetId: existing.id, fields: { classNumber: row.classNumber } });
     if (mode === 'attendance') {
       if (!row.date || !row.status) fail('choose the recorded date and status; blank marks are not absences.');
-      attendanceChanges.push({ studentId, date: row.date, status: row.status as AIAttendanceChange['status'] });
+      const lesson = row.scope === 'lesson' || Boolean(row.period);
+      const period = lesson ? normalizePeriod(row.period || '') : undefined;
+      if (lesson && (!period || row.status !== 'absent')) fail('a lesson absence needs its exact time interval and absent status.');
+      const key = studentId + '/' + row.date;
+      const previous = days.get(key);
+      if (previous) {
+        if (!lesson || !previous.absencePeriods?.length || previous.status !== row.status) fail('conflicting or duplicate student row for this date.');
+        previous.absencePeriods = [...new Set([...previous.absencePeriods!, period!])].sort();
+      } else days.set(key, { studentId, date: row.date, status: row.status as AIAttendanceChange['status'], absencePeriods: period ? [period] : [] });
     }
   }
+  const attendanceChanges = [...days.values()].filter(change => {
+    const old = db.attendance.find(record => record.studentId === change.studentId && record.date === change.date);
+    if (change.absencePeriods?.length && old?.status === 'absent') {
+      // A prior whole-day absence subsumes lesson evidence. Never silently narrow it.
+      if (!old.absencePeriods?.length) return false;
+      change.absencePeriods = [...new Set([...old.absencePeriods, ...change.absencePeriods])].sort();
+    }
+    return old?.status !== change.status || JSON.stringify(old.absencePeriods || []) !== JSON.stringify(change.absencePeriods || []);
+  });
   return makeProposal(db, { studentChanges, attendanceChanges });
 }

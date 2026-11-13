@@ -2,6 +2,7 @@ import type { AdminProfile, AppSettings, AttendanceRecord, Student, UserReport }
 import { choice, digest, field, HttpError, object } from './security.js';
 import type { Account, SchoolState, StoredItem } from './storage.js';
 import { isEmailAddress } from '../utils/studentContact.js';
+import { normalizePeriod } from '../utils/lessonPeriods.js';
 export { schoolDate } from '../utils/dates.js';
 
 export const categories = ['Electronics', 'Clothing', 'Bags', 'Books', 'Accessories', 'School Supplies', 'Other'] as const;
@@ -62,11 +63,19 @@ function student(value: Record<string, unknown>): Student {
   };
 }
 
+export function absencePeriods(value: unknown): string[] {
+  if (!Array.isArray(value) || value.length > 16) throw new HttpError(400, 'Use at most 16 lesson periods per day');
+  const periods = value.map(item => normalizePeriod(field(item, 20, true)));
+  if (periods.some(period => !period)) throw new HttpError(400, 'Check the lesson time (for example 08:00-09:00)');
+  return [...new Set(periods as string[])].sort();
+}
+
 function attendanceRecord(value: Record<string, unknown>): AttendanceRecord {
   return {
     id: field(value.id, 120, true), studentId: field(value.studentId, 120, true),
     date: isoDate(value.date), status: choice(value.status, attendanceStatuses),
     time: field(value.time, 40), reason: field(value.reason, 1000), notes: field(value.notes, 4000),
+    ...(value.absencePeriods != null && { absencePeriods: value.status === 'absent' ? absencePeriods(value.absencePeriods) : [] }),
     updatedAt: timestamp(value.updatedAt),
   };
 }

@@ -227,7 +227,7 @@ export const CampusAIView: React.FC = () => {
       const errorMessage: ChatMessage = {
         id: 'msg_err_' + Date.now(),
         sender: 'assistant',
-        content: `Error communicating with AI service: ${err.message}. Please check that the server is active or review network status.`,
+        content: err instanceof Error ? err.message : 'Campus AI is temporarily unavailable. Please try again.',
         timestamp: new Date().toISOString(),
         isError: true,
       };

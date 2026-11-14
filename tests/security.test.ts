@@ -9,7 +9,7 @@ class BlobPreconditionFailedError extends Error {}
 class BlobNotFoundError extends Error {}
 const blobs = new Map<string, MockBlob>();
 let revision = 0;
-let providerRequests: Array<{ model: string; contents: unknown; config: { systemInstruction: string } }> = [];
+let providerRequests: Array<{ model: string; contents: unknown; config: { systemInstruction: string; responseJsonSchema?: unknown; thinkingConfig?: unknown; responseMimeType?: string } }> = [];
 const emailRequests: Array<Record<string, any>> = [];
 let emailResponse = 200;
 let providerOverride: unknown;
@@ -57,6 +57,8 @@ const mock = {
   provider(args: (typeof providerRequests)[number]) {
     providerRequests.push(args);
     if (args.model === 'retired-fixture-model') throw Object.assign(new Error('Fixture model not found'), { status: 404 });
+    if (JSON.stringify(args.contents).includes('Fixture invalid API key')) throw Object.assign(new Error('API key not valid. Please pass a valid API key.'), { status: 400 });
+    if (JSON.stringify(args.contents).includes('Fixture rejected schema') && args.config.responseJsonSchema) throw Object.assign(new Error('Invalid JSON schema'), { status: 400 });
     if (JSON.stringify(args.contents).includes('Fixture timeout')) throw new DOMException('Request timed out', 'TimeoutError');
     if (providerOverride !== undefined) return { text: JSON.stringify(providerOverride), candidates: [{ finishReason: 'STOP' }] };
     const instruction = args.config.systemInstruction;
@@ -249,6 +251,23 @@ test('server roles, private persistence, controlled catalog, export, AI, and rot
   assert.equal(limited.code, 200);
   assert.equal(limited.data.source, 'school-records');
   assert.match(limited.data.text, /Maya River[\s\S]*temporarily unavailable/);
+  providerRequests = [];
+  const compatible = await api('campus-ai', 'POST', {
+    conversationId: 'fixture-schema-retry', prompt: 'Fixture rejected schema. Tell me about the school.',
+  }, admin);
+  assert.equal(compatible.code, 200);
+  assert.equal(compatible.data.source, 'gemini-api');
+  assert.equal(providerRequests.length, 3, '404 model fallback, schema rejection, then JSON-only retry');
+  assert.ok(providerRequests[1].config.responseJsonSchema);
+  assert.equal(providerRequests[2].config.responseJsonSchema, undefined);
+  assert.equal(providerRequests[2].config.thinkingConfig, undefined);
+  assert.equal(providerRequests[2].config.responseMimeType, 'application/json');
+  const invalidKey = await api('campus-ai', 'POST', {
+    conversationId: 'fixture-invalid-key', prompt: 'Fixture invalid API key. Tell me about the school.',
+  }, admin);
+  assert.equal(invalidKey.code, 502);
+  assert.match(invalidKey.data.error, /update GEMINI_API_KEY/);
+  assert.equal(providerRequests.length, 5, 'an invalid key must not trigger a schema retry');
 
   // Photo/AI write boundaries: these calls use synthetic records and mocked private storage only.
   for (const route of ['admin/ai/scan', 'admin/ai/preview', 'admin/ai/apply']) {

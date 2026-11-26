@@ -19,7 +19,7 @@ Adds `cms.json` and private media objects to the existing environment-scoped Blo
 
 ## Validation
 
-Type checking and production compilation are run using the npm lockfile. Existing automated tests cover school authorization, session rotation, student changes, scanning, exports, private persistence and email deduplication. An added integration test covers editorial permissions, own-draft submission, restricted publication, public draft isolation, scheduling/expiry, XSS handling, version conflicts and spoofed media rejection. Deployment and browser verification are recorded in the delivery response.
+Type checking and production compilation are run using the npm lockfile. Existing automated tests cover school authorization, session rotation, student changes, scanning, exports, private persistence and email deduplication. An added integration test covers editorial permissions, own-draft submission, restricted publication, public draft isolation, scheduling/expiry, XSS handling, version conflicts and spoofed media rejection. All 28 tests pass, type checking and the production build succeed, and npm audit for production dependencies reports zero vulnerabilities. The deployed public homepage, gallery/detail page, French/English/Arabic switching, RTL, dark mode, photo loading and public AI were checked in the browser. Production health confirms configured storage and AI. Authenticated CMS and existing school workflows were verified with isolated test fixtures; real student records were not used for testing.
 
 ## Practical limits
 

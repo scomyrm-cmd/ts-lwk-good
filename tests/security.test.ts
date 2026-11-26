@@ -555,6 +555,19 @@ test('editorial workflow isolates drafts, enforces roles, schedules visibility, 
   assert.equal((await api('cms/content','POST',{version:state.version,item:{...future,source:'javascript:alert(1)'}},owner)).code,400);
   assert.equal((await api('cms/upload','POST',{data:Buffer.from('this is not a PNG file').toString('base64'),type:'image/png',consent:true,name:'spoof.png'},owner)).code,400);
   assert.equal((await api('public/media?id=00000000-0000-0000-0000-000000000000')).code,404);
+  const {default:sharp}=await import('sharp');
+  const photo=await sharp({create:{width:2,height:2,channels:3,background:'#ffffff'}}).png().withMetadata({exif:{IFD0:{Artist:'private-fixture-artist'}}}).toBuffer();
+  const upload=await api('cms/upload','POST',{name:'photo.png',type:'image/png',data:photo.toString('base64'),consent:true},owner);
+  assert.equal(upload.code,201);
+  const mediaRoute=upload.data.url.replace('/api/','');
+  assert.equal((await api(mediaRoute)).code,404,'Unpublished uploaded media is not public');
+  const ownerMedia=await api(mediaRoute,'GET',undefined,owner);assert.equal(ownerMedia.code,200);
+  assert.equal((await sharp(ownerMedia.data).metadata()).exif,undefined,'Image EXIF is removed');
+  state=(await api('cms/state','GET',undefined,owner)).data;
+  const photoItem={...item,id:undefined,slug:'approved-photo',kind:'photo',status:'published',consent:true,cover:upload.data.url,alt:text3('Image autorisée')};
+  assert.equal((await api('cms/content','POST',{version:state.version,item:photoItem},owner)).code,200);
+  const publicMedia=await api(mediaRoute);assert.equal(publicMedia.code,200);assert.equal(publicMedia.headers['content-type'],'image/webp');
+
   const { isPublished }=await import('../src/server/cms.js');
   assert.equal(isPublished({...published.data.item,expiresAt:new Date(Date.now()-1000).toISOString()}),false);
   assert.ok(state.revisions.length>=2);

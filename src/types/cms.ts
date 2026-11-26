@@ -34,7 +34,7 @@ export const defaultSiteSettings: SiteSettings = {
   title: text3('Collège Anwal', 'الثانوية الإعدادية أنوال', 'Anwal Middle School'),
   slogan: text3('Apprendre, créer, partager et innover.', 'نتعلم، نبدع، نتشارك ونبتكر.', 'Learn, create, share and innovate.'),
   introduction: text3('Un espace pour découvrir la vie du collège, partager les idées et accompagner les apprentissages à Khénifra.', 'فضاء لاكتشاف الحياة المدرسية ومشاركة الأفكار ودعم التعلم بخنيفرة.', 'A space to discover school life, share ideas and support learning in Khénifra.'),
-  heroImage: '', heroAlt: text3(), heroCredit: '', heroSource: '',
+  heroImage: '/images/anwal-facade.webp', heroAlt: text3('Détail du bâtiment d’Anwal, 2022','تفصيل من مبنى أنوال، 2022','Detail of the Anwal building, 2022'), heroCredit: 'Al3omk · 2022', heroSource: 'https://al3omk.com/735370.html',
   email: '', phone: '', address: text3('Khénifra, Maroc', 'خنيفرة، المغرب', 'Khénifra, Morocco'),
   official: false, navigation: ['about','news','journal','school-life','clubs','media','resources','contact'],
 };
@@ -49,3 +49,8 @@ const buildingPhoto: ContentItem = {
 };
 export const emptyCms = (): CmsState => ({ version: 0, items: [structuredClone(buildingPhoto)], settings: structuredClone(defaultSiteSettings), media: [], roles: {}, revisions: [], audit: [] });
 export function localText(value: LocalText, language: Language) { return value?.[language] || value?.fr || value?.ar || value?.en || ''; }
+
+export function contentPath(item: Pick<ContentItem,'kind'|'slug'>) {
+ const sections:Record<ContentKind,string>={article:'journal',news:'news',club:'clubs',video:'tv',podcast:'radio',album:'gallery',photo:'gallery',resource:'resources',event:'events',announcement:'news',page:'about',staff:'about'};
+ return '/' + sections[item.kind] + '/' + item.slug;
+}

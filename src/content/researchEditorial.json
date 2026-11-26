@@ -1,0 +1,1963 @@
+[
+  {
+    "slug": "prix-excellence-2022",
+    "kind": "news",
+    "sourceIds": [
+      "S16"
+    ],
+    "categoryKey": "excellence",
+    "year": 2022,
+    "eventDate": "2022-03-26",
+    "datePrecision": "inferred-day",
+    "title": {
+      "fr": "Célébrer les efforts, encourager la réussite",
+      "ar": "تشجيع الاجتهاد والاحتفاء بالتفوق",
+      "en": "Celebrating effort and achievement"
+    },
+    "summary": {
+      "fr": "Le collège et l’association des parents ont distingué les élèves du premier semestre lors d’une cérémonie dans la cour de l’établissement. Des prix et des certificats ont salué leur travail.",
+      "ar": "احتفت المؤسسة وجمعية الأمهات والآباء بمتفوقات ومتفوقي الأسدوس الأول في حفل بساحة المؤسسة، تخلله توزيع جوائز وشهادات تقديرية.",
+      "en": "The school and parents’ association celebrated first-semester achievement in the school courtyard, presenting pupils with prizes and certificates."
+    },
+    "accuracyNote": {
+      "fr": "Le 26 mars est déduit de « avant-hier samedi » dans l’article publié le 28 mars 2022.",
+      "ar": "يستنتج تاريخ 26 مارس من عبارة «أول أمس السبت» في مقال 28 مارس 2022.",
+      "en": "26 March follows from “the day before yesterday, Saturday” in the report published on 28 March 2022."
+    },
+    "relatedSlugs": [
+      "galerie-prix-2022"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "biodiversite-2022",
+    "kind": "news",
+    "sourceIds": [
+      "S17"
+    ],
+    "categoryKey": "environment",
+    "year": 2022,
+    "eventDate": "2022-05-27",
+    "datePrecision": "day",
+    "title": {
+      "fr": "La biodiversité entre dans la vie du collège",
+      "ar": "التنوع البيولوجي في قلب الحياة المدرسية",
+      "en": "Biodiversity comes to school"
+    },
+    "summary": {
+      "fr": "Une exposition photographique, un atelier de dessin et une présentation de sciences ont sensibilisé les élèves à la biodiversité, avec l’association locale des enseignants de SVT.",
+      "ar": "نظمت أنشطة للتحسيس بالتنوع البيولوجي شملت معرض صور وورشة رسم وعرضاً علمياً، بمشاركة الفرع المحلي لجمعية مدرسي علوم الحياة والأرض.",
+      "en": "A photo exhibition, drawing workshop and science presentation explored biodiversity with the local life-and-earth-sciences teachers’ association."
+    },
+    "accuracyNote": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "relatedSlugs": [
+      "galerie-biodiversite-2022"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "exposition-arts-2022",
+    "kind": "news",
+    "sourceIds": [
+      "S32"
+    ],
+    "categoryKey": "arts",
+    "year": 2022,
+    "eventDate": "",
+    "datePrecision": "publication-only",
+    "title": {
+      "fr": "Une exposition itinérante de créations d’élèves",
+      "ar": "معرض متنقل لإبداعات التلاميذ",
+      "en": "A travelling exhibition of pupils’ art"
+    },
+    "summary": {
+      "fr": "Le groupe Lamasat Fannia a fait étape à Anwal avec une exposition d’arts plastiques. La rencontre invitait les élèves à partager leurs créations et à développer leur sens esthétique.",
+      "ar": "حط المعرض التشكيلي المتنقل لمجموعة لمسات فنية بإعدادية أنوال، لتقاسم الإبداعات وتنمية الحس الجمالي وترسيخ قيم المواطنة.",
+      "en": "The Lamasat Fannia group brought a travelling art exhibition to Anwal, encouraging pupils to share creative work and explore visual expression."
+    },
+    "accuracyNote": {
+      "fr": "Article retrouvé, publié le 10 juin 2022. Il mentionne un mardi sans donner de date complète : aucun jour d’activité n’est attribué.",
+      "ar": "استعيد المقال المنشور في 10 يونيو 2022. يذكر يوم الثلاثاء دون تاريخ كامل، لذلك لا نعتمد يوماً محدداً للنشاط.",
+      "en": "The recovered article was published on 10 June 2022. It mentions Tuesday without a complete event date; no complete event date is assigned."
+    },
+    "relatedSlugs": [
+      "galerie-arts-2022"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "hommage-retraites-2024",
+    "kind": "news",
+    "sourceIds": [
+      "S19"
+    ],
+    "categoryKey": "school",
+    "year": 2024,
+    "eventDate": "2024-02",
+    "datePrecision": "month",
+    "title": {
+      "fr": "Un hommage aux éducatrices et éducateurs retraités",
+      "ar": "وفاء للأطر التربوية المتقاعدة",
+      "en": "Honouring retiring educators"
+    },
+    "summary": {
+      "fr": "La communauté scolaire et l’association des parents ont rendu hommage aux personnels partis à la retraite dans les cohortes 2023 et 2024, lors d’une rencontre de reconnaissance et de partage.",
+      "ar": "كرمت المؤسسة وجمعية الأمهات والآباء الأطر المحالة على التقاعد من فوجي 2023 و2024، في لقاء للاعتراف بعطائها التربوي.",
+      "en": "The school community and parents’ association honoured educators retiring in the 2023 and 2024 cohorts, recognising their contribution to school life."
+    },
+    "accuracyNote": {
+      "fr": "Compte rendu du 27 février 2024 ; le jour exact de la cérémonie n’est pas fixé ici.",
+      "ar": "نشر التقرير في 27 فبراير 2024؛ لا نعتمد يوماً محدداً للحفل.",
+      "en": "Report published on 27 February 2024; no exact ceremony day is assigned here."
+    },
+    "relatedSlugs": [
+      "galerie-hommage-2024"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "caravane-perseverance-2024",
+    "kind": "news",
+    "sourceIds": [
+      "S20"
+    ],
+    "categoryKey": "school",
+    "year": 2024,
+    "eventDate": "",
+    "datePrecision": "publication-only",
+    "title": {
+      "fr": "Mobiliser la communauté contre le décrochage",
+      "ar": "تعبئة المجتمع لمحاربة الهدر المدرسي",
+      "en": "A community effort to prevent school dropout"
+    },
+    "summary": {
+      "fr": "Un reportage de Flach 24 présente une étape de la caravane de mobilisation contre le décrochage à Anwal, avec des échanges et des activités culturelles.",
+      "ar": "يوثق تقرير فلاش 24 محطة لقافلة التعبئة ضد الهدر المدرسي بإعدادية أنوال، تضمنت لقاءات وأنشطة ثقافية.",
+      "en": "A Flach 24 report documents a community mobilisation stop against school dropout at Anwal, including discussions and cultural activities."
+    },
+    "accuracyNote": {
+      "fr": "Le 17 octobre 2024 est la date de publication de la vidéo, pas une date d’événement confirmée.",
+      "ar": "17 أكتوبر 2024 تاريخ نشر الفيديو، وليس تاريخاً مؤكداً للنشاط.",
+      "en": "17 October 2024 is the video’s publication date, not a confirmed event date."
+    },
+    "relatedSlugs": [
+      "video-caravane-2024"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "prix-excellence-2025",
+    "kind": "news",
+    "sourceIds": [
+      "S21"
+    ],
+    "categoryKey": "excellence",
+    "year": 2025,
+    "eventDate": "2025-04-12",
+    "datePrecision": "inferred-day",
+    "title": {
+      "fr": "Les réussites du premier semestre 2024–2025",
+      "ar": "الاحتفاء بنتائج الأسدوس الأول 2024–2025",
+      "en": "First-semester successes in 2024–2025"
+    },
+    "summary": {
+      "fr": "Des élèves ont reçu prix et certificats pour leurs résultats du premier semestre. Le collège et l’association des parents ont souligné le rôle de l’effort et de l’accompagnement.",
+      "ar": "تسلم التلاميذ المتفوقون في الأسدوس الأول جوائز وشهادات، في حفل نظمته المؤسسة وجمعية الأمهات والآباء لتشجيع الاجتهاد.",
+      "en": "First-semester high achievers received prizes and certificates at a celebration organised by the school and parents’ association."
+    },
+    "accuracyNote": {
+      "fr": "Le 12 avril est déduit de la formulation de l’article publié le 14 avril 2025.",
+      "ar": "يستنتج 12 أبريل من صياغة المقال المنشور في 14 أبريل 2025.",
+      "en": "12 April is inferred from the wording of the report published on 14 April 2025."
+    },
+    "relatedSlugs": [
+      "galerie-prix-2025"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "lecture-iblista-2025",
+    "kind": "news",
+    "sourceIds": [
+      "S22"
+    ],
+    "categoryKey": "reading",
+    "year": 2025,
+    "eventDate": "2025-05-02",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Lire et dialoguer autour d’« إبليسطا »",
+      "ar": "قراءة وحوار حول رواية «إبليسطا»",
+      "en": "Reading and conversation around «إبليسطا»"
+    },
+    "summary": {
+      "fr": "Mohamed Chahboun et Hamid Rkatha ont échangé avec les élèves autour du roman « إبليسطا ». La lecture et la signature ont donné place aux questions et à la discussion littéraire.",
+      "ar": "ناقش التلاميذ رواية «إبليسطا» بحضور مؤلفها محمد شهبون والناقد حميد ركاطة، ضمن لقاء للقراءة والتوقيع والحوار الأدبي.",
+      "en": "Mohamed Chahboun and Hamid Rkatha discussed the novel «إبليسطا» with pupils in a reading, signing and literary conversation."
+    },
+    "accuracyNote": {
+      "fr": "Date confirmée dans le texte indexé de l’éditeur ; la page directe n’a fourni qu’une réponse incomplète lors du contrôle.",
+      "ar": "أكد النص المفهرس للناشر التاريخ؛ لم تعرض الصفحة المباشرة سوى استجابة غير مكتملة أثناء المراجعة.",
+      "en": "The publisher’s indexed text confirms the date; direct access returned an incomplete page during review."
+    },
+    "relatedSlugs": [],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "sante-education-2025",
+    "kind": "news",
+    "sourceIds": [
+      "S23",
+      "S24"
+    ],
+    "categoryKey": "school",
+    "year": 2025,
+    "eventDate": "2025-12-27",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Santé, inclusion et expression artistique",
+      "ar": "الصحة والإدماج والتعبير الفني",
+      "en": "Health, inclusion and creative expression"
+    },
+    "summary": {
+      "fr": "Anwal a accueilli une rencontre avec l’association Les Rangs d’Honneur, associant accompagnement éducatif, sensibilisation à la santé, musique, théâtre et arts.",
+      "ar": "احتضنت أنوال لقاءً بشراكة مع جمعية صفوف الشرف، جمع المواكبة التربوية والتحسيس بالصحة والموسيقى والمسرح والفنون.",
+      "en": "Anwal hosted an event with Les Rangs d’Honneur, combining educational support, health awareness, music, theatre and visual arts."
+    },
+    "accuracyNote": {
+      "fr": "Les chiffres de la caravane médicale concernent l’hôpital et la population de la ville, pas les effectifs du collège.",
+      "ar": "حصيلة القافلة الطبية تخص المستشفى وساكنة المدينة، وليست عدد تلاميذ المؤسسة.",
+      "en": "The medical caravan’s totals concern the hospital and city population, not the school’s enrolment."
+    },
+    "relatedSlugs": [
+      "galerie-sante-2025"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "bibliotheque-mobile-2026",
+    "kind": "news",
+    "sourceIds": [
+      "S25"
+    ],
+    "categoryKey": "reading",
+    "year": 2026,
+    "eventDate": "2026-02-17",
+    "datePrecision": "day",
+    "title": {
+      "fr": "La bibliothèque vient à la rencontre des élèves",
+      "ar": "المكتبة المتنقلة تلتقي التلاميذ",
+      "en": "The library comes to the pupils"
+    },
+    "summary": {
+      "fr": "La bibliothèque mobile du centre culturel Abou El Kacem Ezzayani a proposé lecture, résumé de livres et développement personnel. Les ouvrages ont été mis à disposition pour un mois.",
+      "ar": "زارت مكتبة المركز الثقافي أبو القاسم الزياني المتنقلة المؤسسة، مع ورشات للقراءة وتلخيص الكتب والتنمية الذاتية، وإتاحة الكتب لمدة شهر.",
+      "en": "The Abou El Kacem Ezzayani cultural centre’s mobile library brought reading, book-summary and personal-development workshops, with books available for a month."
+    },
+    "accuracyNote": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "relatedSlugs": [
+      "galerie-bibliotheque-2026"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "atelier-journalisme-date-a-confirmer",
+    "kind": "news",
+    "sourceIds": [
+      "S26"
+    ],
+    "categoryKey": "reading",
+    "year": 2026,
+    "eventDate": "",
+    "datePrecision": "disputed",
+    "title": {
+      "fr": "Apprendre à construire un reportage",
+      "ar": "تعلم إنجاز التقرير الصحفي",
+      "en": "Learning to build a news report"
+    },
+    "summary": {
+      "fr": "Un atelier animé par Rachid El Kamel a fait travailler les élèves des trois niveaux sur l’écriture de reportages, entre repères théoriques, exercices et partage des productions.",
+      "ar": "أطر رشيد الكامل ورشة لتلاميذ المستويات الثلاثة حول التقرير الصحفي، جمعت بين التأطير النظري والتطبيق وتقاسم الإنتاجات.",
+      "en": "Rachid El Kamel led a reporting workshop for all three school levels, combining theory, practical writing and discussion of pupils’ work."
+    },
+    "accuracyNote": {
+      "fr": "Date de l’atelier non résolue : article du 2 mars 2026, mais corps du texte indiquant « vendredi 27 février 2027 ». Aucune correction de date n’est présumée.",
+      "ar": "تاريخ الورشة غير محسوم: نشر المقال في 2 مارس 2026، بينما يذكر المتن «الجمعة 27 فبراير 2027». لا نفترض تصحيحاً للتاريخ.",
+      "en": "Event date unresolved: the article is dated 2 March 2026 but its body says “Friday 27 February 2027”. No corrected event date is assumed."
+    },
+    "relatedSlugs": [
+      "galerie-journalisme"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "biorender-annonce-2026",
+    "kind": "announcement",
+    "sourceIds": [
+      "S27"
+    ],
+    "categoryKey": "school",
+    "year": 2026,
+    "eventDate": "",
+    "datePrecision": "announcement",
+    "title": {
+      "fr": "BioRender : une formation annoncée pour les enseignants",
+      "ar": "BioRender: إعلان تكوين للأساتذة",
+      "en": "BioRender: an announced teacher workshop"
+    },
+    "summary": {
+      "fr": "Une affiche annonce trois séances sur l’illustration scientifique avec BioRender, les 7, 14 et 25 mars 2026, animées par Amine Ouchkir et Ouali Baddas.",
+      "ar": "تعلن ملصقة عن ثلاث حصص حول الرسم العلمي ببرنامج BioRender، في 7 و14 و25 مارس 2026، بتأطير أمين أوشكير ووالي بداس.",
+      "en": "A poster announces BioRender scientific-illustration sessions on 7, 14 and 25 March 2026 with Amine Ouchkir and Ouali Baddas."
+    },
+    "accuracyNote": {
+      "fr": "Annonce archivée, pas compte rendu : la tenue effective des séances n’est pas confirmée.",
+      "ar": "إعلان مؤرشف وليس تقرير إنجاز؛ لا يوجد تأكيد لانعقاد الحصص.",
+      "en": "An archived announcement, not an event report: delivery of the sessions has not been confirmed."
+    },
+    "relatedSlugs": [],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "prix-excellence-2026",
+    "kind": "news",
+    "sourceIds": [
+      "S28"
+    ],
+    "categoryKey": "excellence",
+    "year": 2026,
+    "eventDate": "",
+    "datePrecision": "school-year",
+    "title": {
+      "fr": "2025–2026 : les élèves et leurs talents à l’honneur",
+      "ar": "2025–2026: احتفاء بالتفوق والمواهب",
+      "en": "2025–2026: celebrating pupils and their talents"
+    },
+    "summary": {
+      "fr": "La cérémonie des réussites du premier semestre a associé remise de prix, ensemble musical et prestation du club de théâtre. Le compte rendu mentionne aussi le titre régional de basketball.",
+      "ar": "جمع حفل تفوق الأسدوس الأول توزيع الجوائز وفقرات الفرقة الموسيقية ونادي المسرح. ويشير التقرير أيضاً إلى التتويج الجهوي في كرة السلة.",
+      "en": "The first-semester awards celebration included music and a theatre-club performance. The report also mentions the school’s regional basketball title."
+    },
+    "accuracyNote": {
+      "fr": "Année scolaire 2025–2026. Article du 3 avril 2026 indiquant « hier mercredi » : le jour de la cérémonie reste incertain.",
+      "ar": "الموسم الدراسي 2025–2026. يذكر مقال 3 أبريل 2026 «أمس الأربعاء»، لذلك يظل اليوم الدقيق للحفل غير محسوم.",
+      "en": "School year 2025–2026. The 3 April 2026 article says “yesterday Wednesday”; the exact ceremony day remains uncertain."
+    },
+    "relatedSlugs": [
+      "galerie-prix-2026",
+      "basketball-regional-2026"
+    ],
+    "featured": true,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "ecole-ete-2026",
+    "kind": "news",
+    "sourceIds": [
+      "S30"
+    ],
+    "categoryKey": "arts",
+    "year": 2026,
+    "eventDate": "2026-07-08",
+    "datePrecision": "day",
+    "title": {
+      "fr": "L’école d’été prend son départ à Anwal",
+      "ar": "انطلاق المدرسة الصيفية من أنوال",
+      "en": "Summer school launches at Anwal"
+    },
+    "summary": {
+      "fr": "Le collège a accueilli le lancement provincial de l’école d’été, avec soutien aux apprentissages et activités culturelles, artistiques et sportives.",
+      "ar": "احتضنت المؤسسة الانطلاقة الإقليمية للمدرسة الصيفية، التي تجمع دعم التعلمات والأنشطة الثقافية والفنية والرياضية.",
+      "en": "The school hosted the provincial summer-school launch, bringing learning support together with cultural, artistic and sporting activities."
+    },
+    "accuracyNote": {
+      "fr": "Le programme est réparti entre plusieurs centres. Ses quelque 500 bénéficiaires ne sont pas les effectifs d’Anwal ; le prix de la pièce invitée n’est pas attribué au collège.",
+      "ar": "البرنامج موزع على عدة مراكز. نحو 500 مستفيد حصيلة إقليمية، لا عدد تلاميذ أنوال؛ ولا تنسب جائزة المسرحية المستضافة إلى المؤسسة.",
+      "en": "The programme spans several centres. Its roughly 500 participants are a provincial total, not Anwal enrolment; the visiting play’s prize is not attributed to the school."
+    },
+    "relatedSlugs": [
+      "galerie-ete-2026"
+    ],
+    "featured": true,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "formation-ia-2026",
+    "kind": "news",
+    "sourceIds": [
+      "S31"
+    ],
+    "categoryKey": "school",
+    "year": 2026,
+    "eventDate": "2026-10-15",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Explorer l’intelligence artificielle en classe",
+      "ar": "استكشاف الذكاء الاصطناعي في التعليم",
+      "en": "Exploring artificial intelligence in teaching"
+    },
+    "summary": {
+      "fr": "La caravane nationale de l’association LOOP a fait étape à Anwal pour des ateliers pratiques destinés aux enseignants. Le programme visait trente participantes et participants.",
+      "ar": "حطت القافلة الوطنية لجمعية لوب بأنوال لتقديم ورشات تطبيقية للأساتذة حول الذكاء الاصطناعي، ضمن برنامج استهدف ثلاثين مشاركة ومشاركاً.",
+      "en": "The LOOP association’s national caravan visited Anwal for practical AI workshops for teachers, in a programme targeting thirty participants."
+    },
+    "accuracyNote": {
+      "fr": "Le trophée de robotique de 2022 cité en contexte appartient au collège 13 Novembre à Elhri, pas à Anwal.",
+      "ar": "جائزة الروبوتيك لسنة 2022 الواردة في سياق المقال تخص إعدادية 13 نونبر بلهري، لا أنوال.",
+      "en": "The 2022 robotics award mentioned as background belongs to 13 Novembre school in Elhri, not Anwal."
+    },
+    "relatedSlugs": [
+      "galerie-ia-2026"
+    ],
+    "featured": true,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "journee-orientation-2022",
+    "kind": "news",
+    "sourceIds": [
+      "S18"
+    ],
+    "categoryKey": "school",
+    "year": 2022,
+    "eventDate": "",
+    "datePrecision": "publication-only",
+    "title": {
+      "fr": "S’informer pour mieux choisir son parcours",
+      "ar": "المعلومة لمواكبة الاختيار الدراسي",
+      "en": "Information to support educational choices"
+    },
+    "summary": {
+      "fr": "Un court reportage de Rfik TV documente une journée d’information et d’orientation accueillie par le collège Anwal à Khénifra.",
+      "ar": "يوثق تقرير قصير لقناة Rfik TV يوماً إعلامياً للتوجيه احتضنته إعدادية أنوال بخنيفرة.",
+      "en": "A short Rfik TV report documents an information and guidance day hosted by Anwal in Khénifra."
+    },
+    "accuracyNote": {
+      "fr": "La vidéo a été publiée le 16 avril 2022 ; le jour de l’événement n’est pas confirmé séparément.",
+      "ar": "نشر الفيديو في 16 أبريل 2022؛ لا يتوفر تأكيد مستقل لليوم الدقيق للنشاط.",
+      "en": "The video was published on 16 April 2022; the event day is not independently confirmed."
+    },
+    "relatedSlugs": [
+      "video-orientation-2022"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "cross-provincial-2015",
+    "kind": "achievement",
+    "sourceIds": [
+      "S07"
+    ],
+    "categoryKey": "sports",
+    "year": 2015,
+    "eventDate": "2015-11-04",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Deux deuxièmes places au cross provincial",
+      "ar": "وصافتان في العدو الريفي الإقليمي",
+      "en": "Two runner-up results at provincial cross-country"
+    },
+    "summary": {
+      "fr": "أميمة العمراني et محمد المشطوب sont cités à la deuxième place, respectivement en catégories الصغيرات et الشبان, au championnat provincial de Khénifra.",
+      "ar": "وردت أميمة العمراني ثانية في فئة الصغيرات، ومحمد المشطوب ثانياً في فئة الشبان بالبطولة الإقليمية بخنيفرة.",
+      "en": "The provincial report places أميمة العمراني second in الصغيرات and محمد المشطوب second in الشبان."
+    },
+    "accuracyNote": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "relatedSlugs": [],
+    "featured": false,
+    "level": {
+      "fr": "Provincial",
+      "ar": "إقليمي",
+      "en": "Provincial"
+    },
+    "outcome": "runner-up",
+    "competition": {
+      "fr": "Cross-country · الصغيرات / الشبان",
+      "ar": "العدو الريفي · الصغيرات والشبان",
+      "en": "Cross-country · الصغيرات / الشبان"
+    }
+  },
+  {
+    "slug": "cross-maghreb-2017",
+    "kind": "achievement",
+    "sourceIds": [
+      "S08"
+    ],
+    "categoryKey": "sports",
+    "year": 2017,
+    "eventDate": "2017-02-04",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Des élèves d’Anwal dans la sélection marocaine",
+      "ar": "تلاميذ أنوال ضمن المنتخب المغربي",
+      "en": "Anwal runners in Morocco’s school team"
+    },
+    "summary": {
+      "fr": "وليد أيت حمو, حمزة السحماني, خديجة راكو et ليلى بلهادين sont nommés parmi les représentants d’Anwal au Kef. Le titre collectif mentionné revient à la sélection nationale.",
+      "ar": "يسمي المصدر وليد أيت حمو وحمزة السحماني وخديجة راكو وليلى بلهادين ضمن ممثلي أنوال بالكاف. اللقب الجماعي المذكور يخص المنتخب الوطني.",
+      "en": "The source names وليد أيت حمو, حمزة السحماني, خديجة راكو and ليلى بلهادين among Anwal’s runners in Le Kef. The overall team title belongs to Morocco."
+    },
+    "accuracyNote": {
+      "fr": "Participation confirmée. Le texte consulté ne permet pas d’attribuer individuellement les médailles de la sélection. Le football de la même réception concerne d’autres établissements.",
+      "ar": "المشاركة مؤكدة؛ لا يسمح النص المتاح بإسناد ميداليات المنتخب فردياً. نتائج كرة القدم في الاستقبال نفسه تخص مؤسسات أخرى.",
+      "en": "Participation is confirmed; the retrieved text does not assign the national team’s medals to individual pupils. Its football results concern other schools."
+    },
+    "relatedSlugs": [
+      "galerie-reception-2017"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "Maghrébin · sélection nationale",
+      "ar": "مغاربي · منتخب وطني",
+      "en": "Maghreb · national-team participation"
+    },
+    "outcome": "participation",
+    "competition": {
+      "fr": "Cross-country scolaire",
+      "ar": "العدو الريفي المدرسي",
+      "en": "School cross-country"
+    }
+  },
+  {
+    "slug": "cross-national-2018",
+    "kind": "achievement",
+    "sourceIds": [
+      "S09"
+    ],
+    "categoryKey": "sports",
+    "year": 2018,
+    "eventDate": "2018-12-15",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Une première place nationale pour وليد أيت حمو",
+      "ar": "الرتبة الأولى وطنياً لوليد أيت حمو",
+      "en": "National first place for وليد أيت حمو"
+    },
+    "summary": {
+      "fr": "Le compte rendu de Marrakech attribue à وليد أيت حمو la première place individuelle masculine dans la catégorie des garçons nés en 2002–2003.",
+      "ar": "ينسب تقرير بطولة مراكش إلى وليد أيت حمو الرتبة الأولى فردياً في فئة الذكور مواليد 2002–2003.",
+      "en": "The Marrakech report lists وليد أيت حمو as the individual winner in the boys’ 2002–2003 birth-year category."
+    },
+    "accuracyNote": {
+      "fr": "La date du 15 décembre est corroborée par le compte rendu de réception S10.",
+      "ar": "يؤكد تقرير الاستقبال S10 تاريخ 15 دجنبر.",
+      "en": "The 15 December competition date is corroborated by reception report S10."
+    },
+    "relatedSlugs": [
+      "reconnaissance-cross-2018"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "National",
+      "ar": "وطني",
+      "en": "National"
+    },
+    "outcome": "champion",
+    "competition": {
+      "fr": "Cross-country · individuel garçons 2002–2003",
+      "ar": "العدو الريفي · فردي ذكور 2002–2003",
+      "en": "Cross-country · individual boys 2002–2003"
+    }
+  },
+  {
+    "slug": "reconnaissance-cross-2018",
+    "kind": "achievement",
+    "sourceIds": [
+      "S10"
+    ],
+    "categoryKey": "sports",
+    "year": 2018,
+    "eventDate": "2018-12-27",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Une réception régionale pour les coureurs d’Anwal",
+      "ar": "تكريم جهوي لعدائي أنوال",
+      "en": "Regional recognition for Anwal’s runners"
+    },
+    "summary": {
+      "fr": "La réception cite وليد أيت حمو, فؤاد حاكمي et نجاة واعزيز parmi les élèves d’Anwal distingués après le championnat national de cross-country.",
+      "ar": "يذكر تقرير الاستقبال وليد أيت حمو وفؤاد حاكمي ونجاة واعزيز ضمن تلاميذ أنوال المحتفى بهم بعد البطولة الوطنية.",
+      "en": "The reception report names وليد أيت حمو, فؤاد حاكمي and نجاة واعزيز among Anwal pupils honoured following the national cross-country championship."
+    },
+    "accuracyNote": {
+      "fr": "Cette liste de réception ne précise pas le classement de chacun.",
+      "ar": "لا تحدد لائحة التكريم ترتيب كل مشارك.",
+      "en": "The reception list does not establish each pupil’s individual placing."
+    },
+    "relatedSlugs": [],
+    "featured": false,
+    "level": {
+      "fr": "Reconnaissance régionale",
+      "ar": "تكريم جهوي",
+      "en": "Regional recognition"
+    },
+    "outcome": "recognition",
+    "competition": {
+      "fr": "Réception de champions scolaires",
+      "ar": "استقبال أبطال الرياضة المدرسية",
+      "en": "School champions’ reception"
+    }
+  },
+  {
+    "slug": "dictee-francaise-2019",
+    "kind": "achievement",
+    "sourceIds": [
+      "S14"
+    ],
+    "categoryKey": "reading",
+    "year": 2019,
+    "eventDate": "",
+    "datePrecision": "publication-only",
+    "title": {
+      "fr": "Une distinction en dictée française",
+      "ar": "تميز في الإملاء باللغة الفرنسية",
+      "en": "A French dictation distinction"
+    },
+    "summary": {
+      "fr": "إكرام المعدودي, élève d’Anwal, figure parmi les participantes distinguées en dictée française lors du compte rendu du gala provincial de l’excellence.",
+      "ar": "ورد اسم إكرام المعدودي من إعدادية أنوال ضمن المتميزين في الإملاء باللغة الفرنسية في تقرير حفل التميز الإقليمي.",
+      "en": "إكرام المعدودي of Anwal is listed among pupils recognised in French dictation in the report of the provincial excellence celebration."
+    },
+    "accuracyNote": {
+      "fr": "Compte rendu du 5 juillet 2019. Rang, date de la dictée et niveau exact du concours non précisés.",
+      "ar": "تقرير 5 يوليوز 2019؛ لم يحدد ترتيب المسابقة أو تاريخها أو مستواها الدقيق.",
+      "en": "Reported on 5 July 2019. The dictation’s rank, event date and exact competition level are not specified."
+    },
+    "relatedSlugs": [],
+    "featured": false,
+    "level": {
+      "fr": "Niveau du concours non précisé",
+      "ar": "مستوى المسابقة غير محدد",
+      "en": "Competition level unspecified"
+    },
+    "outcome": "distinction",
+    "competition": {
+      "fr": "Dictée en français",
+      "ar": "الإملاء باللغة الفرنسية",
+      "en": "French dictation"
+    }
+  },
+  {
+    "slug": "selection-cross-2019",
+    "kind": "achievement",
+    "sourceIds": [
+      "S11"
+    ],
+    "categoryKey": "sports",
+    "year": 2019,
+    "eventDate": "2019-11-06",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Une sélection pour l’équipe nationale scolaire",
+      "ar": "اختيار ضمن المنتخب الوطني المدرسي",
+      "en": "Selection for the national school team"
+    },
+    "summary": {
+      "fr": "Un compte rendu de Profeps annonce la sélection de وليد أيت حمو après le stage national organisé les 6 et 7 novembre à Rabat.",
+      "ar": "أعلن تقرير Profeps اختيار وليد أيت حمو بعد التربص الوطني المنظم بالرباط يومي 6 و7 نونبر.",
+      "en": "A Profeps report records وليد أيت حمو’s selection following the national camp held in Rabat on 6–7 November."
+    },
+    "accuracyNote": {
+      "fr": "Source : blog éducatif non officiel. Il s’agit d’une sélection, pas d’un titre en compétition.",
+      "ar": "المصدر مدونة تربوية غير رسمية؛ النتيجة اختيار للمنتخب وليست لقب بطولة.",
+      "en": "Source: an unofficial education blog. This records selection, not a competition title."
+    },
+    "relatedSlugs": [
+      "galerie-selection-2019"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "National · sélection",
+      "ar": "وطني · انتقاء",
+      "en": "National · selection"
+    },
+    "outcome": "selection",
+    "competition": {
+      "fr": "Cross-country · stage national",
+      "ar": "العدو الريفي · تربص وطني",
+      "en": "Cross-country · national camp"
+    }
+  },
+  {
+    "slug": "cross-equipe-national-2019",
+    "kind": "achievement",
+    "sourceIds": [
+      "S12",
+      "S13"
+    ],
+    "categoryKey": "sports",
+    "year": 2019,
+    "eventDate": "2019-12-25",
+    "datePrecision": "range",
+    "title": {
+      "fr": "Cross-country : un titre national par équipes",
+      "ar": "أنوال أولاً وطنياً حسب الفرق في فئة الفتيان",
+      "en": "Anwal wins the national boys’ team category"
+    },
+    "summary": {
+      "fr": "Anwal est classé premier par équipes en catégorie الفتيان à la 55e édition du championnat national scolaire de cross-country, à Casablanca.",
+      "ar": "احتلت أنوال المرتبة الأولى حسب الفرق في فئة الفتيان، بالدورة 55 للبطولة الوطنية المدرسية للعدو الريفي بالدار البيضاء.",
+      "en": "Anwal placed first in the الفتيان boys’ team category at the 55th national school cross-country championship in Casablanca."
+    },
+    "accuracyNote": {
+      "fr": "Compétition du 25 au 29 décembre 2019. L’article publié le 4 janvier 2020 ne change pas l’année de ce résultat.",
+      "ar": "جرت المنافسة من 25 إلى 29 دجنبر 2019. نشر المقال في 4 يناير 2020 لا يغير سنة الإنجاز.",
+      "en": "Competition: 25–29 December 2019. The report’s 4 January 2020 publication date does not change the achievement year."
+    },
+    "relatedSlugs": [
+      "galerie-cross-2019",
+      "cross-bronze-2019"
+    ],
+    "featured": true,
+    "level": {
+      "fr": "National",
+      "ar": "وطني",
+      "en": "National"
+    },
+    "outcome": "champion",
+    "competition": {
+      "fr": "Cross-country · équipes garçons / الفتيان",
+      "ar": "العدو الريفي · فرق الفتيان",
+      "en": "Cross-country · boys’ team / الفتيان"
+    }
+  },
+  {
+    "slug": "cross-bronze-2019",
+    "kind": "achievement",
+    "sourceIds": [
+      "S12",
+      "S13"
+    ],
+    "categoryKey": "sports",
+    "year": 2019,
+    "eventDate": "2019-12-25",
+    "datePrecision": "range",
+    "title": {
+      "fr": "Un bronze individuel en cross-country",
+      "ar": "برونزية فردية في العدو الريفي",
+      "en": "Individual cross-country bronze"
+    },
+    "summary": {
+      "fr": "Le même championnat classe إسماعيل شيخشيخ, d’Anwal, troisième en catégorie الفتيان. Le nom est conservé selon l’orthographe d’Atlasscoop.",
+      "ar": "صنف إسماعيل شيخشيخ من أنوال ثالثاً في فئة الفتيان في البطولة نفسها، مع الاحتفاظ بتهجئة الاسم الواردة بأطلس سكوب.",
+      "en": "The same championship report places إسماعيل شيخشيخ of Anwal third in الفتيان. The name follows Atlasscoop’s spelling."
+    },
+    "accuracyNote": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "relatedSlugs": [
+      "galerie-cross-2019",
+      "cross-equipe-national-2019"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "National",
+      "ar": "وطني",
+      "en": "National"
+    },
+    "outcome": "bronze",
+    "competition": {
+      "fr": "Cross-country · individuel garçons / الفتيان",
+      "ar": "العدو الريفي · فردي الفتيان",
+      "en": "Cross-country · individual boys / الفتيان"
+    }
+  },
+  {
+    "slug": "lecture-qualification-2020",
+    "kind": "achievement",
+    "sourceIds": [
+      "S15"
+    ],
+    "categoryKey": "reading",
+    "year": 2020,
+    "eventDate": "2020-10-07",
+    "datePrecision": "range",
+    "title": {
+      "fr": "Une qualification au défi de la lecture",
+      "ar": "تأهل في تحدي القراءة العربي",
+      "en": "Qualification in the Arab Reading Challenge"
+    },
+    "summary": {
+      "fr": "هاجر إيشو, élève d’Anwal, est citée parmi les qualifiés pour l’étape nationale après les sélections régionales des 7 et 8 octobre 2020.",
+      "ar": "وردت هاجر إيشو من أنوال ضمن المتأهلين إلى المرحلة الوطنية، بعد الإقصائيات الجهوية يومي 7 و8 أكتوبر 2020.",
+      "en": "هاجر إيشو of Anwal is listed among the national-stage qualifiers following the regional rounds on 7–8 October 2020."
+    },
+    "accuracyNote": {
+      "fr": "Qualification pour l’étape nationale ; aucun titre de la finale nationale n’est établi.",
+      "ar": "تأهل للمرحلة الوطنية؛ لا توجد نتيجة تثبت الفوز بالنهائي الوطني.",
+      "en": "Qualification for the national stage; no national-final championship is established."
+    },
+    "relatedSlugs": [
+      "galerie-lecture-2020"
+    ],
+    "featured": true,
+    "level": {
+      "fr": "Régional → étape nationale",
+      "ar": "جهوي ← المرحلة الوطنية",
+      "en": "Regional → national stage"
+    },
+    "outcome": "qualification",
+    "competition": {
+      "fr": "Défi de la lecture arabe",
+      "ar": "تحدي القراءة العربي",
+      "en": "Arab Reading Challenge"
+    }
+  },
+  {
+    "slug": "basketball-regional-2026",
+    "kind": "achievement",
+    "sourceIds": [
+      "S28"
+    ],
+    "categoryKey": "sports",
+    "year": 2026,
+    "eventDate": "",
+    "datePrecision": "school-year",
+    "title": {
+      "fr": "Basketball : un titre régional et une qualification",
+      "ar": "كرة السلة: لقب جهوي وتأهل",
+      "en": "Basketball: a regional title and qualification"
+    },
+    "summary": {
+      "fr": "Le compte rendu de la cérémonie 2025–2026 rapporte, dans une intervention enseignante, le titre régional d’Anwal et sa qualification au championnat national.",
+      "ar": "ينقل تقرير حفل 2025–2026 عن كلمة للأساتذة تتويج أنوال جهوياً وتأهلها للبطولة الوطنية في كرة السلة.",
+      "en": "The 2025–2026 awards report cites a teacher’s statement that Anwal won the regional basketball championship and qualified for nationals."
+    },
+    "accuracyNote": {
+      "fr": "Catégorie, jour de compétition et résultat de la finale nationale non précisés.",
+      "ar": "لم تحدد الفئة أو يوم المنافسة أو نتيجة النهائي الوطني.",
+      "en": "The category, competition day and national-final result are unspecified."
+    },
+    "relatedSlugs": [
+      "prix-excellence-2026",
+      "galerie-prix-2026"
+    ],
+    "featured": true,
+    "level": {
+      "fr": "Régional · qualification nationale",
+      "ar": "جهوي · تأهل وطني",
+      "en": "Regional · national qualification"
+    },
+    "outcome": "champion",
+    "competition": {
+      "fr": "Basketball · catégorie non précisée",
+      "ar": "كرة السلة · الفئة غير محددة",
+      "en": "Basketball · category unspecified"
+    }
+  },
+  {
+    "slug": "volleyball-u15-2026",
+    "kind": "achievement",
+    "sourceIds": [
+      "S29"
+    ],
+    "categoryKey": "sports",
+    "year": 2026,
+    "eventDate": "2026-04-02",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Volleyball U15 : vice-champions interrégionaux",
+      "ar": "الكرة الطائرة U15: وصافة ما بين الجهات",
+      "en": "U15 volleyball: interregional runners-up"
+    },
+    "summary": {
+      "fr": "Anwal est classé deuxième dans la catégorie garçons U15 au tournoi interrégional scolaire de Béni Mellal.",
+      "ar": "حلت أنوال ثانية في فئة الذكور U15 ضمن بطولة ما بين الجهات المدرسية ببني ملال.",
+      "en": "Anwal placed second in the boys’ U15 category at the interregional school volleyball tournament in Béni Mellal."
+    },
+    "accuracyNote": {
+      "fr": "Le compte rendu réserve la qualification nationale aux équipes premières ; aucune qualification d’Anwal n’est déduite de cette deuxième place.",
+      "ar": "يخصص التقرير التأهل الوطني للفرق الأولى؛ لا نستنتج تأهل أنوال من المرتبة الثانية.",
+      "en": "The report assigns national qualification to first-placed teams; Anwal’s second place is not presented as qualification."
+    },
+    "relatedSlugs": [],
+    "featured": false,
+    "level": {
+      "fr": "Interrégional",
+      "ar": "ما بين الجهات",
+      "en": "Interregional"
+    },
+    "outcome": "runner-up",
+    "competition": {
+      "fr": "Volleyball · garçons U15",
+      "ar": "الكرة الطائرة · ذكور U15",
+      "en": "Volleyball · boys U15"
+    }
+  },
+  {
+    "slug": "reconnaissance-riada-2026",
+    "kind": "achievement",
+    "sourceIds": [
+      "S01"
+    ],
+    "categoryKey": "excellence",
+    "year": 2026,
+    "eventDate": "",
+    "datePrecision": "document-year",
+    "title": {
+      "fr": "Anwal dans la liste ministérielle des établissements pionniers",
+      "ar": "أنوال ضمن اللائحة الوزارية لمؤسسات الريادة",
+      "en": "Anwal in the Ministry’s pioneer-school list"
+    },
+    "summary": {
+      "fr": "L’édition ministérielle 2026 cite le collège sous le code 26225E, entrée 412, page 19, parmi les établissements détenteurs du label de pionnier.",
+      "ar": "ترد المؤسسة بالرمز 26225E، رقم 412، الصفحة 19، في الإصدار الوزاري لسنة 2026 للمؤسسات الحاصلة على علامة الريادة.",
+      "en": "The Ministry’s 2026 edition lists the school under code 26225E, entry 412 on page 19, among institutions holding the pioneer-school label."
+    },
+    "accuracyNote": {
+      "fr": "2026 est l’année de l’édition consultée. La date initiale d’attribution du label n’est pas établie.",
+      "ar": "2026 سنة إصدار اللائحة التي جرى فحصها؛ تاريخ منح العلامة أول مرة غير مثبت.",
+      "en": "2026 is the edition year of the inspected list. The original label-award date is not established."
+    },
+    "relatedSlugs": [],
+    "featured": true,
+    "level": {
+      "fr": "Reconnaissance institutionnelle nationale",
+      "ar": "اعتراف مؤسساتي وطني",
+      "en": "National institutional recognition"
+    },
+    "outcome": "recognition",
+    "competition": {
+      "fr": "Label « établissement pionnier »",
+      "ar": "علامة مؤسسة الريادة",
+      "en": "Pioneer-school label"
+    }
+  },
+  {
+    "slug": "video-orientation-2022",
+    "kind": "video",
+    "sourceIds": [
+      "S18"
+    ],
+    "categoryKey": "school",
+    "year": 2022,
+    "eventDate": "",
+    "datePrecision": "publication-only",
+    "title": {
+      "fr": "Une journée pour s’orienter",
+      "ar": "يوم إعلامي للتوجيه",
+      "en": "A guidance day at Anwal"
+    },
+    "summary": {
+      "fr": "Un court reportage de Rfik TV documente une journée d’information et d’orientation accueillie par le collège Anwal à Khénifra.",
+      "ar": "يوثق تقرير قصير لقناة Rfik TV يوماً إعلامياً للتوجيه احتضنته إعدادية أنوال بخنيفرة.",
+      "en": "A short Rfik TV report documents an information and guidance day hosted by Anwal in Khénifra."
+    },
+    "accuracyNote": {
+      "fr": "La vidéo a été publiée le 16 avril 2022 ; le jour de l’événement n’est pas confirmé séparément.",
+      "ar": "نشر الفيديو في 16 أبريل 2022؛ لا يتوفر تأكيد مستقل لليوم الدقيق للنشاط.",
+      "en": "The video was published on 16 April 2022; the event day is not independently confirmed."
+    },
+    "relatedSlugs": [
+      "journee-orientation-2022"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "video-caravane-2024",
+    "kind": "video",
+    "sourceIds": [
+      "S20"
+    ],
+    "categoryKey": "school",
+    "year": 2024,
+    "eventDate": "",
+    "datePrecision": "publication-only",
+    "title": {
+      "fr": "La caravane contre le décrochage",
+      "ar": "قافلة محاربة الهدر المدرسي",
+      "en": "The dropout-prevention caravan"
+    },
+    "summary": {
+      "fr": "Un reportage de Flach 24 présente une étape de la caravane de mobilisation contre le décrochage à Anwal, avec des échanges et des activités culturelles.",
+      "ar": "يوثق تقرير فلاش 24 محطة لقافلة التعبئة ضد الهدر المدرسي بإعدادية أنوال، تضمنت لقاءات وأنشطة ثقافية.",
+      "en": "A Flach 24 report documents a community mobilisation stop against school dropout at Anwal, including discussions and cultural activities."
+    },
+    "accuracyNote": {
+      "fr": "Le 17 octobre 2024 est la date de publication de la vidéo, pas une date d’événement confirmée.",
+      "ar": "17 أكتوبر 2024 تاريخ نشر الفيديو، وليس تاريخاً مؤكداً للنشاط.",
+      "en": "17 October 2024 is the video’s publication date, not a confirmed event date."
+    },
+    "relatedSlugs": [
+      "caravane-perseverance-2024"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  },
+  {
+    "slug": "galerie-prix-2026",
+    "kind": "album",
+    "sourceIds": [
+      "S28"
+    ],
+    "categoryKey": "excellence",
+    "year": 2026,
+    "eventDate": "",
+    "datePrecision": "school-year",
+    "title": {
+      "fr": "2025–2026 : les élèves et leurs talents à l’honneur",
+      "ar": "2025–2026: احتفاء بالتفوق والمواهب",
+      "en": "2025–2026: celebrating pupils and their talents"
+    },
+    "summary": {
+      "fr": "La cérémonie des réussites du premier semestre a associé remise de prix, ensemble musical et prestation du club de théâtre. Le compte rendu mentionne aussi le titre régional de basketball.",
+      "ar": "جمع حفل تفوق الأسدوس الأول توزيع الجوائز وفقرات الفرقة الموسيقية ونادي المسرح. ويشير التقرير أيضاً إلى التتويج الجهوي في كرة السلة.",
+      "en": "The first-semester awards celebration included music and a theatre-club performance. The report also mentions the school’s regional basketball title."
+    },
+    "accuracyNote": {
+      "fr": "Année scolaire 2025–2026. Article du 3 avril 2026 indiquant « hier mercredi » : le jour de la cérémonie reste incertain.",
+      "ar": "الموسم الدراسي 2025–2026. يذكر مقال 3 أبريل 2026 «أمس الأربعاء»، لذلك يظل اليوم الدقيق للحفل غير محسوم.",
+      "en": "School year 2025–2026. The 3 April 2026 article says “yesterday Wednesday”; the exact ceremony day remains uncertain."
+    },
+    "relatedSlugs": [
+      "prix-excellence-2026"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P01",
+      "P02",
+      "P03",
+      "P04",
+      "P05",
+      "P06",
+      "P07"
+    ],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-prix-2025",
+    "kind": "album",
+    "sourceIds": [
+      "S21"
+    ],
+    "categoryKey": "excellence",
+    "year": 2025,
+    "eventDate": "2025-04-12",
+    "datePrecision": "inferred-day",
+    "title": {
+      "fr": "Les réussites du premier semestre 2024–2025",
+      "ar": "الاحتفاء بنتائج الأسدوس الأول 2024–2025",
+      "en": "First-semester successes in 2024–2025"
+    },
+    "summary": {
+      "fr": "Des élèves ont reçu prix et certificats pour leurs résultats du premier semestre. Le collège et l’association des parents ont souligné le rôle de l’effort et de l’accompagnement.",
+      "ar": "تسلم التلاميذ المتفوقون في الأسدوس الأول جوائز وشهادات، في حفل نظمته المؤسسة وجمعية الأمهات والآباء لتشجيع الاجتهاد.",
+      "en": "First-semester high achievers received prizes and certificates at a celebration organised by the school and parents’ association."
+    },
+    "accuracyNote": {
+      "fr": "Le 12 avril est déduit de la formulation de l’article publié le 14 avril 2025.",
+      "ar": "يستنتج 12 أبريل من صياغة المقال المنشور في 14 أبريل 2025.",
+      "en": "12 April is inferred from the wording of the report published on 14 April 2025."
+    },
+    "relatedSlugs": [
+      "prix-excellence-2025"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P08",
+      "P09",
+      "P10",
+      "P11",
+      "P12",
+      "P13"
+    ],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-prix-2022",
+    "kind": "album",
+    "sourceIds": [
+      "S16"
+    ],
+    "categoryKey": "excellence",
+    "year": 2022,
+    "eventDate": "2022-03-26",
+    "datePrecision": "inferred-day",
+    "title": {
+      "fr": "Célébrer les efforts, encourager la réussite",
+      "ar": "تشجيع الاجتهاد والاحتفاء بالتفوق",
+      "en": "Celebrating effort and achievement"
+    },
+    "summary": {
+      "fr": "Le collège et l’association des parents ont distingué les élèves du premier semestre lors d’une cérémonie dans la cour de l’établissement. Des prix et des certificats ont salué leur travail.",
+      "ar": "احتفت المؤسسة وجمعية الأمهات والآباء بمتفوقات ومتفوقي الأسدوس الأول في حفل بساحة المؤسسة، تخلله توزيع جوائز وشهادات تقديرية.",
+      "en": "The school and parents’ association celebrated first-semester achievement in the school courtyard, presenting pupils with prizes and certificates."
+    },
+    "accuracyNote": {
+      "fr": "Le 26 mars est déduit de « avant-hier samedi » dans l’article publié le 28 mars 2022.",
+      "ar": "يستنتج تاريخ 26 مارس من عبارة «أول أمس السبت» في مقال 28 مارس 2022.",
+      "en": "26 March follows from “the day before yesterday, Saturday” in the report published on 28 March 2022."
+    },
+    "relatedSlugs": [
+      "prix-excellence-2022"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P14",
+      "P15",
+      "P16",
+      "P17",
+      "P18",
+      "P19",
+      "P20",
+      "P21",
+      "P22",
+      "P23",
+      "P24",
+      "P25"
+    ],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-hommage-2024",
+    "kind": "album",
+    "sourceIds": [
+      "S19"
+    ],
+    "categoryKey": "school",
+    "year": 2024,
+    "eventDate": "2024-02",
+    "datePrecision": "month",
+    "title": {
+      "fr": "Un hommage aux éducatrices et éducateurs retraités",
+      "ar": "وفاء للأطر التربوية المتقاعدة",
+      "en": "Honouring retiring educators"
+    },
+    "summary": {
+      "fr": "La communauté scolaire et l’association des parents ont rendu hommage aux personnels partis à la retraite dans les cohortes 2023 et 2024, lors d’une rencontre de reconnaissance et de partage.",
+      "ar": "كرمت المؤسسة وجمعية الأمهات والآباء الأطر المحالة على التقاعد من فوجي 2023 و2024، في لقاء للاعتراف بعطائها التربوي.",
+      "en": "The school community and parents’ association honoured educators retiring in the 2023 and 2024 cohorts, recognising their contribution to school life."
+    },
+    "accuracyNote": {
+      "fr": "Compte rendu du 27 février 2024 ; le jour exact de la cérémonie n’est pas fixé ici.",
+      "ar": "نشر التقرير في 27 فبراير 2024؛ لا نعتمد يوماً محدداً للحفل.",
+      "en": "Report published on 27 February 2024; no exact ceremony day is assigned here."
+    },
+    "relatedSlugs": [
+      "hommage-retraites-2024"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P26"
+    ],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-bibliotheque-2026",
+    "kind": "album",
+    "sourceIds": [
+      "S25"
+    ],
+    "categoryKey": "reading",
+    "year": 2026,
+    "eventDate": "2026-02-17",
+    "datePrecision": "day",
+    "title": {
+      "fr": "La bibliothèque vient à la rencontre des élèves",
+      "ar": "المكتبة المتنقلة تلتقي التلاميذ",
+      "en": "The library comes to the pupils"
+    },
+    "summary": {
+      "fr": "La bibliothèque mobile du centre culturel Abou El Kacem Ezzayani a proposé lecture, résumé de livres et développement personnel. Les ouvrages ont été mis à disposition pour un mois.",
+      "ar": "زارت مكتبة المركز الثقافي أبو القاسم الزياني المتنقلة المؤسسة، مع ورشات للقراءة وتلخيص الكتب والتنمية الذاتية، وإتاحة الكتب لمدة شهر.",
+      "en": "The Abou El Kacem Ezzayani cultural centre’s mobile library brought reading, book-summary and personal-development workshops, with books available for a month."
+    },
+    "accuracyNote": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "relatedSlugs": [
+      "bibliotheque-mobile-2026"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P27",
+      "P28"
+    ],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-journalisme",
+    "kind": "album",
+    "sourceIds": [
+      "S26"
+    ],
+    "categoryKey": "reading",
+    "year": 2026,
+    "eventDate": "",
+    "datePrecision": "disputed",
+    "title": {
+      "fr": "Apprendre à construire un reportage",
+      "ar": "تعلم إنجاز التقرير الصحفي",
+      "en": "Learning to build a news report"
+    },
+    "summary": {
+      "fr": "Un atelier animé par Rachid El Kamel a fait travailler les élèves des trois niveaux sur l’écriture de reportages, entre repères théoriques, exercices et partage des productions.",
+      "ar": "أطر رشيد الكامل ورشة لتلاميذ المستويات الثلاثة حول التقرير الصحفي، جمعت بين التأطير النظري والتطبيق وتقاسم الإنتاجات.",
+      "en": "Rachid El Kamel led a reporting workshop for all three school levels, combining theory, practical writing and discussion of pupils’ work."
+    },
+    "accuracyNote": {
+      "fr": "Date de l’atelier non résolue : article du 2 mars 2026, mais corps du texte indiquant « vendredi 27 février 2027 ». Aucune correction de date n’est présumée.",
+      "ar": "تاريخ الورشة غير محسوم: نشر المقال في 2 مارس 2026، بينما يذكر المتن «الجمعة 27 فبراير 2027». لا نفترض تصحيحاً للتاريخ.",
+      "en": "Event date unresolved: the article is dated 2 March 2026 but its body says “Friday 27 February 2027”. No corrected event date is assumed."
+    },
+    "relatedSlugs": [
+      "atelier-journalisme-date-a-confirmer"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P29"
+    ],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-ia-2026",
+    "kind": "album",
+    "sourceIds": [
+      "S31"
+    ],
+    "categoryKey": "school",
+    "year": 2026,
+    "eventDate": "2026-10-15",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Explorer l’intelligence artificielle en classe",
+      "ar": "استكشاف الذكاء الاصطناعي في التعليم",
+      "en": "Exploring artificial intelligence in teaching"
+    },
+    "summary": {
+      "fr": "La caravane nationale de l’association LOOP a fait étape à Anwal pour des ateliers pratiques destinés aux enseignants. Le programme visait trente participantes et participants.",
+      "ar": "حطت القافلة الوطنية لجمعية لوب بأنوال لتقديم ورشات تطبيقية للأساتذة حول الذكاء الاصطناعي، ضمن برنامج استهدف ثلاثين مشاركة ومشاركاً.",
+      "en": "The LOOP association’s national caravan visited Anwal for practical AI workshops for teachers, in a programme targeting thirty participants."
+    },
+    "accuracyNote": {
+      "fr": "Le trophée de robotique de 2022 cité en contexte appartient au collège 13 Novembre à Elhri, pas à Anwal.",
+      "ar": "جائزة الروبوتيك لسنة 2022 الواردة في سياق المقال تخص إعدادية 13 نونبر بلهري، لا أنوال.",
+      "en": "The 2022 robotics award mentioned as background belongs to 13 Novembre school in Elhri, not Anwal."
+    },
+    "relatedSlugs": [
+      "formation-ia-2026"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P30"
+    ],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-sante-2025",
+    "kind": "album",
+    "sourceIds": [
+      "S23"
+    ],
+    "categoryKey": "arts",
+    "year": 2025,
+    "eventDate": "2025-12-27",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Santé, inclusion et expression artistique",
+      "ar": "الصحة والإدماج والتعبير الفني",
+      "en": "Health, inclusion and creative expression"
+    },
+    "summary": {
+      "fr": "Anwal a accueilli une rencontre avec l’association Les Rangs d’Honneur, associant accompagnement éducatif, sensibilisation à la santé, musique, théâtre et arts.",
+      "ar": "احتضنت أنوال لقاءً بشراكة مع جمعية صفوف الشرف، جمع المواكبة التربوية والتحسيس بالصحة والموسيقى والمسرح والفنون.",
+      "en": "Anwal hosted an event with Les Rangs d’Honneur, combining educational support, health awareness, music, theatre and visual arts."
+    },
+    "accuracyNote": {
+      "fr": "Les chiffres de la caravane médicale concernent l’hôpital et la population de la ville, pas les effectifs du collège.",
+      "ar": "حصيلة القافلة الطبية تخص المستشفى وساكنة المدينة، وليست عدد تلاميذ المؤسسة.",
+      "en": "The medical caravan’s totals concern the hospital and city population, not the school’s enrolment."
+    },
+    "relatedSlugs": [
+      "sante-education-2025"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P31",
+      "P32",
+      "P33",
+      "P34",
+      "P35",
+      "P36"
+    ],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-ete-2026",
+    "kind": "album",
+    "sourceIds": [
+      "S30"
+    ],
+    "categoryKey": "arts",
+    "year": 2026,
+    "eventDate": "2026-07-08",
+    "datePrecision": "day",
+    "title": {
+      "fr": "L’école d’été prend son départ à Anwal",
+      "ar": "انطلاق المدرسة الصيفية من أنوال",
+      "en": "Summer school launches at Anwal"
+    },
+    "summary": {
+      "fr": "Le collège a accueilli le lancement provincial de l’école d’été, avec soutien aux apprentissages et activités culturelles, artistiques et sportives.",
+      "ar": "احتضنت المؤسسة الانطلاقة الإقليمية للمدرسة الصيفية، التي تجمع دعم التعلمات والأنشطة الثقافية والفنية والرياضية.",
+      "en": "The school hosted the provincial summer-school launch, bringing learning support together with cultural, artistic and sporting activities."
+    },
+    "accuracyNote": {
+      "fr": "Le programme est réparti entre plusieurs centres. Ses quelque 500 bénéficiaires ne sont pas les effectifs d’Anwal ; le prix de la pièce invitée n’est pas attribué au collège.",
+      "ar": "البرنامج موزع على عدة مراكز. نحو 500 مستفيد حصيلة إقليمية، لا عدد تلاميذ أنوال؛ ولا تنسب جائزة المسرحية المستضافة إلى المؤسسة.",
+      "en": "The programme spans several centres. Its roughly 500 participants are a provincial total, not Anwal enrolment; the visiting play’s prize is not attributed to the school."
+    },
+    "relatedSlugs": [
+      "ecole-ete-2026"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P37",
+      "P38",
+      "P39",
+      "P40",
+      "P41",
+      "P42",
+      "P43",
+      "P44",
+      "P45"
+    ],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-cross-2019",
+    "kind": "album",
+    "sourceIds": [
+      "S12"
+    ],
+    "categoryKey": "sports",
+    "year": 2019,
+    "eventDate": "2019-12-25",
+    "datePrecision": "range",
+    "title": {
+      "fr": "Cross-country : un titre national par équipes",
+      "ar": "أنوال أولاً وطنياً حسب الفرق في فئة الفتيان",
+      "en": "Anwal wins the national boys’ team category"
+    },
+    "summary": {
+      "fr": "Anwal est classé premier par équipes en catégorie الفتيان à la 55e édition du championnat national scolaire de cross-country, à Casablanca.",
+      "ar": "احتلت أنوال المرتبة الأولى حسب الفرق في فئة الفتيان، بالدورة 55 للبطولة الوطنية المدرسية للعدو الريفي بالدار البيضاء.",
+      "en": "Anwal placed first in the الفتيان boys’ team category at the 55th national school cross-country championship in Casablanca."
+    },
+    "accuracyNote": {
+      "fr": "Compétition du 25 au 29 décembre 2019. L’article publié le 4 janvier 2020 ne change pas l’année de ce résultat.",
+      "ar": "جرت المنافسة من 25 إلى 29 دجنبر 2019. نشر المقال في 4 يناير 2020 لا يغير سنة الإنجاز.",
+      "en": "Competition: 25–29 December 2019. The report’s 4 January 2020 publication date does not change the achievement year."
+    },
+    "relatedSlugs": [
+      "cross-equipe-national-2019"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P46",
+      "P47",
+      "P48"
+    ],
+    "scope": "shared",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-lecture-2020",
+    "kind": "album",
+    "sourceIds": [
+      "S15"
+    ],
+    "categoryKey": "reading",
+    "year": 2020,
+    "eventDate": "2020-10-07",
+    "datePrecision": "range",
+    "title": {
+      "fr": "Une qualification au défi de la lecture",
+      "ar": "تأهل في تحدي القراءة العربي",
+      "en": "Qualification in the Arab Reading Challenge"
+    },
+    "summary": {
+      "fr": "هاجر إيشو, élève d’Anwal, est citée parmi les qualifiés pour l’étape nationale après les sélections régionales des 7 et 8 octobre 2020.",
+      "ar": "وردت هاجر إيشو من أنوال ضمن المتأهلين إلى المرحلة الوطنية، بعد الإقصائيات الجهوية يومي 7 و8 أكتوبر 2020.",
+      "en": "هاجر إيشو of Anwal is listed among the national-stage qualifiers following the regional rounds on 7–8 October 2020."
+    },
+    "accuracyNote": {
+      "fr": "Qualification pour l’étape nationale ; aucun titre de la finale nationale n’est établi.",
+      "ar": "تأهل للمرحلة الوطنية؛ لا توجد نتيجة تثبت الفوز بالنهائي الوطني.",
+      "en": "Qualification for the national stage; no national-final championship is established."
+    },
+    "relatedSlugs": [
+      "lecture-qualification-2020"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P49"
+    ],
+    "scope": "shared",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-selection-2019",
+    "kind": "album",
+    "sourceIds": [
+      "S11"
+    ],
+    "categoryKey": "sports",
+    "year": 2019,
+    "eventDate": "2019-11-06",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Une sélection pour l’équipe nationale scolaire",
+      "ar": "اختيار ضمن المنتخب الوطني المدرسي",
+      "en": "Selection for the national school team"
+    },
+    "summary": {
+      "fr": "Un compte rendu de Profeps annonce la sélection de وليد أيت حمو après le stage national organisé les 6 et 7 novembre à Rabat.",
+      "ar": "أعلن تقرير Profeps اختيار وليد أيت حمو بعد التربص الوطني المنظم بالرباط يومي 6 و7 نونبر.",
+      "en": "A Profeps report records وليد أيت حمو’s selection following the national camp held in Rabat on 6–7 November."
+    },
+    "accuracyNote": {
+      "fr": "Source : blog éducatif non officiel. Il s’agit d’une sélection, pas d’un titre en compétition.",
+      "ar": "المصدر مدونة تربوية غير رسمية؛ النتيجة اختيار للمنتخب وليست لقب بطولة.",
+      "en": "Source: an unofficial education blog. This records selection, not a competition title."
+    },
+    "relatedSlugs": [
+      "selection-cross-2019"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P50",
+      "P51"
+    ],
+    "scope": "shared",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-reception-2017",
+    "kind": "album",
+    "sourceIds": [
+      "S08"
+    ],
+    "categoryKey": "sports",
+    "year": 2017,
+    "eventDate": "2017-02-04",
+    "datePrecision": "day",
+    "title": {
+      "fr": "Des élèves d’Anwal dans la sélection marocaine",
+      "ar": "تلاميذ أنوال ضمن المنتخب المغربي",
+      "en": "Anwal runners in Morocco’s school team"
+    },
+    "summary": {
+      "fr": "وليد أيت حمو, حمزة السحماني, خديجة راكو et ليلى بلهادين sont nommés parmi les représentants d’Anwal au Kef. Le titre collectif mentionné revient à la sélection nationale.",
+      "ar": "يسمي المصدر وليد أيت حمو وحمزة السحماني وخديجة راكو وليلى بلهادين ضمن ممثلي أنوال بالكاف. اللقب الجماعي المذكور يخص المنتخب الوطني.",
+      "en": "The source names وليد أيت حمو, حمزة السحماني, خديجة راكو and ليلى بلهادين among Anwal’s runners in Le Kef. The overall team title belongs to Morocco."
+    },
+    "accuracyNote": {
+      "fr": "Participation confirmée. Le texte consulté ne permet pas d’attribuer individuellement les médailles de la sélection. Le football de la même réception concerne d’autres établissements.",
+      "ar": "المشاركة مؤكدة؛ لا يسمح النص المتاح بإسناد ميداليات المنتخب فردياً. نتائج كرة القدم في الاستقبال نفسه تخص مؤسسات أخرى.",
+      "en": "Participation is confirmed; the retrieved text does not assign the national team’s medals to individual pupils. Its football results concern other schools."
+    },
+    "relatedSlugs": [
+      "cross-maghreb-2017"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P52",
+      "P53",
+      "P54",
+      "P55",
+      "P56"
+    ],
+    "scope": "shared",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-biodiversite-2022",
+    "kind": "album",
+    "sourceIds": [
+      "S17"
+    ],
+    "categoryKey": "environment",
+    "year": 2022,
+    "eventDate": "2022-05-27",
+    "datePrecision": "day",
+    "title": {
+      "fr": "La biodiversité entre dans la vie du collège",
+      "ar": "التنوع البيولوجي في قلب الحياة المدرسية",
+      "en": "Biodiversity comes to school"
+    },
+    "summary": {
+      "fr": "Une exposition photographique, un atelier de dessin et une présentation de sciences ont sensibilisé les élèves à la biodiversité, avec l’association locale des enseignants de SVT.",
+      "ar": "نظمت أنشطة للتحسيس بالتنوع البيولوجي شملت معرض صور وورشة رسم وعرضاً علمياً، بمشاركة الفرع المحلي لجمعية مدرسي علوم الحياة والأرض.",
+      "en": "A photo exhibition, drawing workshop and science presentation explored biodiversity with the local life-and-earth-sciences teachers’ association."
+    },
+    "accuracyNote": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "relatedSlugs": [
+      "biodiversite-2022"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [
+      "P57",
+      "P58",
+      "P59",
+      "P60",
+      "P61",
+      "P62",
+      "P63"
+    ],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "galerie-arts-2022",
+    "kind": "album",
+    "sourceIds": [
+      "S32"
+    ],
+    "categoryKey": "arts",
+    "year": 2022,
+    "eventDate": "",
+    "datePrecision": "publication-only",
+    "title": {
+      "fr": "Une exposition itinérante de créations d’élèves",
+      "ar": "معرض متنقل لإبداعات التلاميذ",
+      "en": "A travelling exhibition of pupils’ art"
+    },
+    "summary": {
+      "fr": "Le groupe Lamasat Fannia a fait étape à Anwal avec une exposition d’arts plastiques. La rencontre invitait les élèves à partager leurs créations et à développer leur sens esthétique.",
+      "ar": "حط المعرض التشكيلي المتنقل لمجموعة لمسات فنية بإعدادية أنوال، لتقاسم الإبداعات وتنمية الحس الجمالي وترسيخ قيم المواطنة.",
+      "en": "The Lamasat Fannia group brought a travelling art exhibition to Anwal, encouraging pupils to share creative work and explore visual expression."
+    },
+    "accuracyNote": {
+      "fr": "Article retrouvé, publié le 10 juin 2022. Il mentionne un mardi sans donner de date complète : aucun jour d’activité n’est attribué.",
+      "ar": "استعيد المقال المنشور في 10 يونيو 2022. يذكر يوم الثلاثاء دون تاريخ كامل، لذلك لا نعتمد يوماً محدداً للنشاط.",
+      "en": "The recovered article was published on 10 June 2022. It mentions Tuesday without a complete event date; no complete event date is assigned."
+    },
+    "relatedSlugs": [
+      "exposition-arts-2022"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "imageIds": [],
+    "scope": "school",
+    "externalGallery": true
+  },
+  {
+    "slug": "anwal-identite-histoire",
+    "kind": "page",
+    "sourceIds": [
+      "S01",
+      "S06"
+    ],
+    "categoryKey": "school",
+    "year": 2026,
+    "eventDate": "",
+    "datePrecision": "document-year",
+    "title": {
+      "fr": "Anwal, un collège à Khénifra",
+      "ar": "أنوال، مؤسسة إعدادية بخنيفرة",
+      "en": "Anwal, a middle school in Khénifra"
+    },
+    "summary": {
+      "fr": "La liste ministérielle identifie la الثانوية الإعدادية أنوال à Khénifra, dans la région Béni Mellal–Khénifra. Un bilan provincial publié en juillet 2015 rapporte son ouverture pendant l’année scolaire 2014–2015.",
+      "ar": "تثبت اللائحة الوزارية اسم الثانوية الإعدادية أنوال بخنيفرة، جهة بني ملال–خنيفرة. ويشير تقرير إقليمي منشور في يوليوز 2015 إلى افتتاحها خلال الموسم 2014–2015.",
+      "en": "The Ministry list identifies الثانوية الإعدادية أنوال in Khénifra, Béni Mellal–Khénifra. A provincial review published in July 2015 reports its opening during the 2014–2015 school year."
+    },
+    "accuracyNote": {
+      "fr": "L’histoire d’ouverture repose sur ce compte rendu, pas sur un décret de fondation. Aucun effectif, logo officiel, contact ou compte social non confirmé n’est ajouté.",
+      "ar": "خبر الافتتاح مستند إلى التقرير وليس إلى مرسوم تأسيس. لا نضيف أعداداً أو شعاراً رسمياً أو بيانات اتصال أو حسابات اجتماعية غير مؤكدة.",
+      "en": "The opening history is attributed to that report, not a founding decree. No unconfirmed enrolment, official logo, contacts or social accounts are added."
+    },
+    "relatedSlugs": [
+      "reconnaissance-riada-2026"
+    ],
+    "featured": false,
+    "level": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    },
+    "outcome": "",
+    "competition": {
+      "fr": "",
+      "ar": "",
+      "en": ""
+    }
+  }
+]

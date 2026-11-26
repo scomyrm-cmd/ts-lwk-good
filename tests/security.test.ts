@@ -572,6 +572,17 @@ test('editorial workflow isolates drafts, enforces roles, schedules visibility, 
   assert.equal(isPublished({...published.data.item,expiresAt:new Date(Date.now()-1000).toISOString()}),false);
   assert.ok(state.revisions.length>=2);
   assert.equal((await api('admin/state','GET',undefined,owner)).code,200,'Existing school state is preserved');
+  const beforeResearchEdit=(await api('cms/state','GET',undefined,owner)).data;
+  assert.equal((await api('cms/roles','PUT',{version:beforeResearchEdit.version,userId:signup.data.user.id,role:'editor'},owner)).code,200);
+  const editorResearch=(await api('cms/state','GET',undefined,journalist)).data;
+  const researched=editorResearch.items.find((entry:any)=>entry.research);
+  assert.ok(researched,'Imported research is visible to editors');
+  assert.equal((await api('cms/content','POST',{version:editorResearch.version,item:researched},journalist)).code,403,'Only administrators can edit imported research');
+  const finalOwnerState=(await api('cms/state','GET',undefined,owner)).data;
+  const ownerResearch=finalOwnerState.items.find((entry:any)=>entry.id===researched.id);
+  const editedResearch=await api('cms/content','POST',{version:finalOwnerState.version,item:{...ownerResearch,research:{eventDate:'invented-client-date'}}},owner);
+  assert.equal(editedResearch.code,200);
+  assert.deepEqual(editedResearch.data.item.research,ownerResearch.research,'Client payload cannot forge the verified provenance metadata');
   const publicAi=await api('public/assistant','POST',{prompt:'Where are the educational resources?',language:'en'});
   assert.equal(publicAi.code,200);
   const publicInstruction=providerRequests.at(-1)!.config.systemInstruction;

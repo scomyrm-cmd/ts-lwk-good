@@ -6,7 +6,7 @@ import {
   type ContentItem,
   type LocalText,
   type ResearchCategory,
-} from "../types/cms";
+} from "../types/cms.js";
 
 export const RESEARCH_VERSION = 1;
 const sourceById = new Map(

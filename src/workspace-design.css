@@ -165,12 +165,12 @@
   }
 }
 @media (prefers-reduced-transparency: reduce) {
-  :root { --glass: var(--surface); }
+  :root,:root.dark { --glass: var(--surface); }
   .workspace-topbar,.mobile-navigation,.portal-shell > header { backdrop-filter: none; }
   .workspace-dialog::backdrop,.sidebar-drawer::backdrop { backdrop-filter: none; background: #101c18ad; }
 }
 @media (prefers-contrast: more) {
-  :root { --line: #687365; --glass: var(--surface); --glass-line: var(--ink); }
+  :root,:root.dark { --line: #687365; --glass: var(--surface); --glass-line: var(--ink); }
   :root.dark { --line: #a9b6a5; }
   .workspace-topbar,.mobile-navigation { backdrop-filter: none; }
 }

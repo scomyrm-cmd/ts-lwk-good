@@ -56,7 +56,7 @@ export function LoginPage() {
 
   const switchMode = (nextMode: AuthMode) => {
     if (nextMode === mode) return;
-    const path = nextMode.startsWith('admin-') ? '/admin/login' : '/';
+    const path = nextMode.startsWith('admin-') ? '/admin/login' : '/login';
     if (window.location.pathname !== path) window.history.pushState(null, '', path);
     resetForm();
     setMode(nextMode);

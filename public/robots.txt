@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /student
+Disallow: /login
+Disallow: /editor
+Disallow: /campus
+Disallow: /api/
+Sitemap: https://ts-lwk-good.vercel.app/sitemap.xml

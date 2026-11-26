@@ -1,5 +1,5 @@
 {
-  "name": "react-example",
+  "name": "anwal-campus-os",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -32,6 +32,7 @@
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "readable-stream": "^4.8.0",
+    "sharp": "^0.35.5",
     "vite": "^8.3.0"
   },
   "overrides": {
@@ -49,5 +50,6 @@
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
     "typescript": "^7.0.2"
-  }
+  },
+  "packageManager": "npm@11.19.1"
 }

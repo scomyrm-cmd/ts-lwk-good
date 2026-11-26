@@ -1,3 +1,4 @@
+import { cmsRoute } from '../src/server/cms.js';
 import { randomUUID } from 'node:crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { UserReport } from '../src/types/index.js';
@@ -21,6 +22,15 @@ import { applyStudentProposal, prepareScan } from '../src/server/studentOperatio
 
 const routes: Record<string, { methods: readonly string[]; bytes?: number }> = {
   health: { methods: ['GET'] },
+  'public/site': { methods: ['GET'] },
+  'public/media': { methods: ['GET'] },
+  'public/assistant': { methods: ['POST'] },
+  'cms/assistant': { methods: ['POST'], bytes: 80_000 },
+  'cms/state': { methods: ['GET'] },
+  'cms/content': { methods: ['POST'], bytes: 500_000 },
+  'cms/settings': { methods: ['PUT'], bytes: 50_000 },
+  'cms/roles': { methods: ['PUT'] },
+  'cms/upload': { methods: ['POST'], bytes: 3_800_000 },
   'cron/attendance-emails': { methods: ['GET'] },
   'admin/attendance-emails': { methods: ['GET', 'POST'] },
   'auth/me': { methods: ['GET'] },
@@ -191,6 +201,8 @@ async function route(req: VercelRequest, res: VercelResponse) {
   if (!spec) throw new HttpError(404, 'Unknown endpoint');
   if (!guardRequest(req, res, spec.methods, spec.bytes ?? 8192)) return;
   const method = req.method || 'GET';
+
+  if (name.startsWith('public/') || name.startsWith('cms/')) return cmsRoute(name, req, res);
 
   if (name === 'health') return res.status(200).json({
     status: 'ok', storageConfigured: storeReady(), aiConfigured: Boolean(process.env.GEMINI_API_KEY),

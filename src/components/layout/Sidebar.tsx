@@ -2,6 +2,8 @@ import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import {
   ClipboardCheck,
+  Newspaper,
+  ExternalLink,
   History,
   LayoutDashboard,
   LogOut,
@@ -21,7 +23,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
-  const { activeTab, setActiveTab, adminProfile, logout, t, schoolInfo } = useApp();
+  const { activeTab, setActiveTab, adminProfile, logout, t, schoolInfo, settings } = useApp();
   const drawer = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -54,6 +56,10 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
       ],
     },
     {
+      label: {fr:'Site & médias',ar:'الموقع والإعلام',en:'Website & media'}[settings.language],
+      items: [{id:'content',label:{fr:'Gestion des publications',ar:'إدارة المنشورات',en:'Manage publications'}[settings.language],icon:Newspaper}],
+    },
+    {
       label: t.workspaceTools,
       items: [
         { id: 'users', label: t.navUsers, icon: UserCog },
@@ -76,6 +82,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
       </div>
 
       <nav className="sidebar-navigation" aria-label={t.workspaceLabel}>
+        <a href="/" className="sidebar-link"><ExternalLink size={19}/><span>{{fr:"Site public",ar:"الموقع العام",en:"Public website"}[settings.language]}</span></a>
         {groups.map((group) => (
           <div className="sidebar-group" key={group.label}>
             <p className="sidebar-label">{group.label}</p>

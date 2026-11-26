@@ -150,19 +150,13 @@ const defaultAdminProfile: AdminProfile = {
 };
 
 const defaultSchoolInfo: SchoolInfo = {
-  name: 'Al-Manar International Academy',
-  address: 'Avenue des Nations Unies, Hay Riad',
-  city: 'Rabat',
-  country: 'Morocco',
-  email: 'administration@almanar-academy.ma',
-  phone: '+212 537 778 899',
-  website: 'https://almanar-academy.ma',
-  logoUrl: '',
+  name: 'Collège Anwal — Khénifra', address: '', city: 'Khénifra', country: 'Morocco',
+  email: '', phone: '', website: '', logoUrl: '',
 };
 
 const defaultSettings: AppSettings = {
   theme: 'light',
-  language: 'en',
+  language: 'fr',
   dateFormat: 'DD/MM/YYYY',
   timeFormat: '24h',
   timeZone: 'Africa/Casablanca',
@@ -244,7 +238,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [adminProfile, setAdminProfile] = useState<AdminProfile>(defaultAdminProfile);
   const [schoolInfo, setSchoolInfo] = useState<SchoolInfo>(defaultSchoolInfo);
-  const [settings, setSettings] = useState<AppSettings>(defaultSettings);
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    try { const lang = localStorage.getItem('anwal-language'); const theme = localStorage.getItem('anwal-theme'); return {...defaultSettings,...(['fr','ar','en'].includes(lang || '')?{language:lang as Language}:{}),...(['light','dark','system'].includes(theme || '')?{theme:theme as AppSettings['theme']}: {})}; } catch { return defaultSettings; }
+  });
   const hydrated = useRef(false);
   const persisted = useRef<Record<string, string>>({});
   const versions = useRef<Record<string, string>>({});
@@ -319,6 +315,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [isAuthenticated, currentUser?.id, currentUser?.role, currentUser?.mustChangePassword]);
 
   useEffect(() => {
+    try { localStorage.setItem('anwal-language',settings.language); localStorage.setItem('anwal-theme',settings.theme); } catch {}
     document.documentElement.lang = settings.language;
     document.documentElement.dir = settings.language === 'ar' ? 'rtl' : 'ltr';
   }, [settings.language]);

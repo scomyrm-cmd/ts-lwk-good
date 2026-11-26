@@ -24,7 +24,7 @@ export function MobileNavigation({ onOpenMore }: { onOpenMore: () => void }) {
             <motion.span
               layoutId="mobile-nav-active"
               className="mobile-nav-active"
-              transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+              transition={{ type: 'spring', bounce: 0, visualDuration: 0.3 }}
             />
           )}
           <Icon size={20} aria-hidden="true" />

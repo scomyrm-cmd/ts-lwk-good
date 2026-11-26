@@ -200,14 +200,14 @@ const MainLayout: React.FC = () => {
           id="main-content"
           className={`workspace-content flex-1 ${activeTab === 'campus-ai' ? 'workspace-chat-content' : ''}`}
         >
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence initial={false}>
             <motion.div
               key={activeTab}
               className="workspace-route"
               initial={{ opacity: 0, y: reducedMotion ? 0 : 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: reducedMotion ? 0 : -6 }}
-              transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.22, 1, 0.36, 1] }}
+              exit={{ opacity: 0, position: 'absolute', inset: 0, pointerEvents: 'none' }}
+              transition={reducedMotion ? { duration: 0.12 } : { type: 'spring', bounce: 0, visualDuration: 0.3 }}
             >
               {!isValidAdminTab && (
                 <AccessDeniedView onReturnToPortal={() => setActiveTab('dashboard')} />

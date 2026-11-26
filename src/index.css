@@ -2,17 +2,17 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-slate-50: #f5f7fa;
-  --color-slate-100: #eff1f7;
-  --color-slate-200: #e4e7f0;
-  --color-slate-300: #cdd2e1;
-  --color-slate-400: #9098ae;
-  --color-slate-500: #69738c;
-  --color-slate-600: #515d77;
-  --color-slate-700: #3d4862;
-  --color-slate-800: #29324b;
-  --color-slate-900: #14283f;
-  --color-slate-950: #0d1c2c;
+  --color-slate-50: #f5f6f3;
+  --color-slate-100: #edf0eb;
+  --color-slate-200: #e0e5de;
+  --color-slate-300: #cbd3c9;
+  --color-slate-400: #949e92;
+  --color-slate-500: #697466;
+  --color-slate-600: #515e4f;
+  --color-slate-700: #3b4939;
+  --color-slate-800: #29352b;
+  --color-slate-900: #1d2921;
+  --color-slate-950: #111a14;
   --color-brand-50: #edf5f0;
   --color-brand-100: #d8ece2;
   --color-brand-200: #b9ddca;
@@ -34,36 +34,42 @@
 
 :root {
   color-scheme: light;
-  --canvas: #f5f7fa;
+  --canvas: #f7f8f5;
   --surface: #fff;
-  --subtle: #f5f6fb;
-  --line: #e8eaf3;
-  --ink: #252b45;
-  --muted: #69738c;
+  --subtle: #f1f3ee;
+  --line: #e3e7df;
+  --ink: #242d25;
+  --muted: #687365;
   --accent: #176b52;
   --accent-soft: #edf5f0;
   --focus: #278363;
-  --nav: #fff;
-  --nav-line: #eeeff6;
-  --nav-muted: #69738c;
+  --nav: #f0f3ed;
+  --nav-line: #e0e6dc;
+  --nav-muted: #6d7968;
   --nav-accent: #176b52;
+  --glass: #ffffffcb;
+  --glass-line: #ffffffd9;
+  --shadow-glass: 0 8px 36px #24312408, 0 1px 4px #24312404;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 :root.dark {
   color-scheme: dark;
-  --canvas: #0d1c2c;
-  --surface: #14283f;
-  --subtle: #232b43;
-  --line: #303952;
-  --ink: #f0f1fa;
-  --muted: #a5aec5;
+  --canvas: #111713;
+  --surface: #1b231d;
+  --subtle: #232d25;
+  --line: #334035;
+  --ink: #ecf0e9;
+  --muted: #a9b6a5;
   --accent: #91cdb4;
   --accent-soft: #193d34;
   --focus: #6bb99a;
-  --nav: #191f34;
-  --nav-line: #2c344d;
-  --nav-muted: #9aa4bd;
+  --nav: #172019;
+  --nav-line: #2d3930;
+  --nav-muted: #a4b0a0;
   --nav-accent: #91cdb4;
+  --glass: #1b231dd9;
+  --glass-line: #ffffff12;
+  --shadow-glass: 0 8px 36px #00000020;
 }
 
 @layer base {
@@ -72,7 +78,7 @@
     background: var(--canvas);
     color: var(--ink);
     font-family:
-      'Plus Jakarta Sans',
+      system-ui,
       -apple-system,
       BlinkMacSystemFont,
       'Segoe UI',
@@ -83,11 +89,11 @@
   h2,
   .brand-name,
   .metric-value {
-    font-family: 'Plus Jakarta Sans', 'Plus Jakarta Sans', sans-serif;
+    font-family: system-ui, system-ui, sans-serif;
   }
   [dir='rtl'],
   [dir='rtl'] :is(h1, h2, .brand-name, .metric-value) {
-    font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Noto Sans Arabic', system-ui, sans-serif;
     letter-spacing: normal;
   }
   :focus-visible {
@@ -165,7 +171,7 @@
   .brand-name {
     font-size: 1.05rem;
     line-height: 1.25;
-    font-weight: 800;
+    font-weight: 650;
     letter-spacing: -0.04em;
   }
   .brand-caption {
@@ -360,19 +366,7 @@
     gap: 1.4rem;
   }
   .workspace-page > * {
-    animation: surface-in 0.65s var(--ease-out) both;
-  }
-  .workspace-page > :nth-child(2) {
-    animation-delay: 0.05s;
-  }
-  .workspace-page > :nth-child(3) {
-    animation-delay: 0.1s;
-  }
-  .workspace-page > :nth-child(4) {
-    animation-delay: 0.15s;
-  }
-  .workspace-page > :nth-child(n + 5) {
-    animation-delay: 0.2s;
+    min-width: 0;
   }
   .workspace-heading {
     display: flex;
@@ -384,7 +378,7 @@
   .workspace-heading h1 {
     color: var(--ink);
     font-size: clamp(1.6rem, 2.4vw, 2rem);
-    font-weight: 800;
+    font-weight: 650;
     letter-spacing: -0.045em;
     line-height: 1.25;
   }
@@ -414,7 +408,7 @@
   .workspace-panel-header h2 {
     color: var(--ink);
     font-size: 0.9rem;
-    font-weight: 800;
+    font-weight: 650;
     letter-spacing: -0.02em;
   }
   .workspace-panel-header p {
@@ -440,10 +434,10 @@
     border-radius: 1.1rem;
     background: var(--accent-soft);
     color: var(--accent);
-    transform: rotate(-5deg);
+
   }
   .workspace-empty-icon svg {
-    transform: rotate(5deg);
+
   }
   .workspace-empty h3 {
     font-size: 0.9375rem;
@@ -473,11 +467,10 @@
     transition:
       transform 0.35s var(--ease-out),
       box-shadow 0.35s;
-    animation: surface-in 0.65s var(--ease-out) both;
-    animation-delay: calc(var(--card-index, 0) * 65ms);
+
   }
   .workspace-metric:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     box-shadow: 0 12px 28px #3c32600a;
   }
   .metric-label {
@@ -527,7 +520,7 @@
   .metric-value {
     color: var(--ink);
     font-size: 2.1rem;
-    font-weight: 800;
+    font-weight: 650;
     letter-spacing: -0.06em;
     line-height: 1.15;
     font-variant-numeric: tabular-nums;
@@ -572,7 +565,7 @@
       transform 0.35s var(--ease-out);
   }
   .workspace-action-row:hover .shortcut-icon {
-    transform: rotate(-7deg);
+
     background: var(--accent-soft);
     color: var(--accent);
   }
@@ -669,7 +662,7 @@
     color: var(--ink);
   }
   .sidebar-link:hover svg {
-    transform: scale(1.12) rotate(-4deg);
+    transform: scale(1.05);
   }
   .sidebar-link[aria-current='page'] {
     color: var(--nav-accent);
@@ -774,7 +767,7 @@
     margin: 0;
     padding: 0;
     border: 0;
-    animation: drawer-in 0.35s var(--ease-out);
+
   }
   .sidebar-drawer::backdrop,
   .workspace-dialog::backdrop {
@@ -794,7 +787,7 @@
     background: var(--surface);
     color: var(--ink);
     box-shadow: var(--shadow-xl);
-    animation: dialog-in 0.35s var(--ease-out);
+
   }
   .workspace-dialog .workspace-panel {
     border: 0;
@@ -837,7 +830,7 @@
     animation: surface-in 0.5s var(--ease-out) both;
   }
   .workspace-item-card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
   }
   .workspace-item-card img {
@@ -928,7 +921,7 @@
     box-shadow: 0 8px 24px #176b5238;
   }
   .ai-floating > button:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
   }
   .ai-workspace {
     height: calc(100dvh - 13rem);
@@ -1117,9 +1110,9 @@
     gap: 0.3rem;
   }
   .attendance-donut strong {
-    font-family: 'Plus Jakarta Sans', 'Plus Jakarta Sans', sans-serif;
+    font-family: system-ui, system-ui, sans-serif;
     font-size: 2rem;
-    font-weight: 800;
+    font-weight: 650;
     letter-spacing: -0.06em;
   }
   .attendance-donut small {
@@ -1244,7 +1237,7 @@
     margin-top: 0.6rem;
     font-size: 1.3rem;
     line-height: 1.45;
-    font-weight: 800;
+    font-weight: 650;
     letter-spacing: -0.035em;
   }
   .dashboard-ai-card > p:last-of-type {
@@ -1344,7 +1337,7 @@
     background: #edf5f0;
     color: #176b52;
     box-shadow: 0 10px 25px #123f3240;
-    animation: float-card 7s ease-in-out infinite;
+
   }
   .auth-float-card:first-child {
     top: -1.5rem;
@@ -1355,7 +1348,7 @@
     bottom: -0.5rem;
     right: -1rem;
     rotate: 12deg;
-    animation-delay: -3.5s;
+
     background: #fbe9c8;
     color: #ad741b;
   }
@@ -1401,7 +1394,7 @@
   }
   .auth-heading {
     font-size: clamp(1.9rem, 3vw, 2.4rem);
-    font-weight: 800;
+    font-weight: 650;
     letter-spacing: -0.05em;
     line-height: 1.3;
   }
@@ -1495,7 +1488,7 @@
   }
   .portal-shell article:hover,
   .workspace-page article:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
   }
   @media (max-width: 39.99rem) {

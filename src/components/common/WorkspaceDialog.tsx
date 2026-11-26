@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { useDialogMotion } from './FluidMotion';
 
 export function WorkspaceDialog({
   label,
@@ -11,14 +12,8 @@ export function WorkspaceDialog({
   className?: string;
   children: ReactNode;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    dialog.showModal();
-    return () => dialog.close();
-  }, []);
+  const [open, setOpen] = useState(true);
+  const ref = useDialogMotion(open, false, onClose);
 
   return (
     <dialog
@@ -27,10 +22,10 @@ export function WorkspaceDialog({
       aria-label={label}
       onCancel={(event) => {
         event.preventDefault();
-        onClose();
+        setOpen(false);
       }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
+        if (event.target === event.currentTarget) setOpen(false);
       }}
     >
       {children}

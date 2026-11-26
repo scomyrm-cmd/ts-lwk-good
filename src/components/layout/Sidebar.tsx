@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { motion } from 'motion/react';
+import { fluidSpring, useDialogMotion } from '../common/FluidMotion';
 import {
   ClipboardCheck,
   Newspaper,
@@ -24,26 +25,17 @@ interface SidebarProps {
 
 export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
   const { activeTab, setActiveTab, adminProfile, logout, t, schoolInfo, settings } = useApp();
-  const drawer = useRef<HTMLDialogElement>(null);
+  const drawer = useDialogMotion(mobileOpen, true);
 
   useEffect(() => {
-    const dialog = drawer.current;
-    if (!dialog) return;
-    if (!mobileOpen) {
-      if (dialog.open) dialog.close();
-      return;
-    }
-
     const desktop = window.matchMedia('(min-width: 48rem)');
-    if (desktop.matches) return;
-    if (!dialog.open) dialog.showModal();
-
     const onResize = () => {
-      if (desktop.matches && dialog.open) dialog.close();
+      if (desktop.matches && mobileOpen) onCloseMobile();
     };
+    onResize();
     desktop.addEventListener('change', onResize);
     return () => desktop.removeEventListener('change', onResize);
-  }, [mobileOpen]);
+  }, [mobileOpen, onCloseMobile]);
 
   const groups = [
     {
@@ -97,7 +89,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
                   if (mobile) onCloseMobile();
                 }}
               >
-                {activeTab === id && <motion.span className="sidebar-active" layoutId={mobile ? 'mobile-sidebar-active' : 'desktop-sidebar-active'} transition={{ type: 'spring', stiffness: 400, damping: 35 }} />}
+                {activeTab === id && <motion.span className="sidebar-active" layoutId={mobile ? 'mobile-sidebar-active' : 'desktop-sidebar-active'} transition={fluidSpring} />}
                 <Icon size={19} strokeWidth={1.8} aria-hidden="true" />
                 <span className="relative min-w-0 flex-1">{label}</span>{id === 'campus-ai' && <span className="sidebar-ai-dot" aria-hidden="true" />}
               </button>
@@ -133,6 +125,7 @@ export function Sidebar({ mobileOpen, onCloseMobile }: SidebarProps) {
         id="workspace-navigation"
         className="sidebar-drawer"
         aria-label={t.workspaceLabel}
+        onCancel={(event) => { event.preventDefault(); onCloseMobile(); }}
         onClose={onCloseMobile}
         onClick={(event) => {
           if (event.target === event.currentTarget) onCloseMobile();

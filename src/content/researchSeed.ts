@@ -1,5 +1,5 @@
-import editorial from "./researchEditorial.json";
-import inventory from "../../public/research/source-inventory.json";
+import editorial from "./researchEditorial.json" with { type: "json" };
+import inventory from "../../public/research/source-inventory.json" with { type: "json" };
 import {
   text3,
   type CmsState,

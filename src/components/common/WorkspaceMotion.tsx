@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from 'motion/react';
+import { fluidSpring } from './FluidMotion';
 
 /** Animate only a small numeric text node; the accessible value stays stable. */
 export function AnimatedNumber({ value, language }: { value: number; language: string }) {
@@ -13,7 +14,7 @@ export function AnimatedNumber({ value, language }: { value: number; language: s
       counter.set(value);
       return;
     }
-    const animation = animate(counter, value, { duration: 0.85, ease: [0.22, 1, 0.36, 1] });
+    const animation = animate(counter, value, fluidSpring);
     return () => animation.stop();
   }, [value, counter, reducedMotion]);
 

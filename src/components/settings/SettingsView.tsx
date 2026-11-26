@@ -189,7 +189,7 @@ export const SettingsView: React.FC = () => {
                     : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                {isActive && <motion.span className="settings-active" layoutId="settings-active" transition={{ type: 'spring', stiffness: 400, damping: 35 }} />}
+                {isActive && <motion.span className="settings-active" layoutId="settings-active" transition={{ type: 'spring', bounce: 0, visualDuration: 0.3 }} />}
                 <Icon
                   className={`w-4 h-4 shrink-0 ${
                     isActive ? 'text-brand-600 dark:text-brand-400' : 'text-slate-400'

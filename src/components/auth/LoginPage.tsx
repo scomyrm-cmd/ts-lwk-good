@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { AlertCircle, ArrowRight, ClipboardCheck, Eye, EyeOff, GraduationCap, LoaderCircle, PackageSearch, ShieldCheck, Sparkles } from 'lucide-react';
+import { AlertCircle, ArrowLeft, ArrowRight, ClipboardCheck, Eye, EyeOff, GraduationCap, LoaderCircle, Moon, PackageSearch, ShieldCheck, Sparkles, Sun } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { motion } from 'motion/react';
 import { CampusBrand, LanguageControl } from '../common/WorkspaceUI';
@@ -26,7 +26,7 @@ function CampusIllustration() {
 }
 
 export function LoginPage() {
-  const { login, register, setUpAdministrator, t } = useApp();
+  const { login, register, setUpAdministrator, t, settings, updateSettings } = useApp();
   const [mode, setMode] = useState<AuthMode>(routeMode);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -100,7 +100,7 @@ export function LoginPage() {
   return (
     <div className="auth-layout">
       <aside className="auth-editorial">
-        <CampusBrand />
+        <a href="/" className="auth-brand-link"><CampusBrand /></a>
         <div className="auth-editorial-content">
           <h2>{t.workspaceTitle}</h2>
           <p className="auth-editorial-description">{t.workspaceDescription}</p>
@@ -115,8 +115,8 @@ export function LoginPage() {
 
       <div className="auth-main">
         <header className="auth-topbar">
-          <CampusBrand caption={t.workspaceLabel} />
-          <LanguageControl />
+          <a href="/" className="auth-back"><ArrowLeft size={16} className="rtl:rotate-180" />{{ fr: 'Retour au collège', ar: 'العودة إلى المؤسسة', en: 'Back to school' }[settings.language]}</a>
+          <div className="flex items-center gap-2"><button className="workspace-icon-button" aria-label={settings.theme === 'dark' ? t.lightTheme : t.darkTheme} onClick={() => updateSettings({theme: settings.theme === 'dark' ? 'light' : 'dark'})}>{settings.theme === 'dark' ? <Sun size={18}/> : <Moon size={18}/>}</button><LanguageControl /></div>
         </header>
 
         <main className="auth-content">
@@ -129,7 +129,7 @@ export function LoginPage() {
 
             <div className="auth-modes">
               <button type="button" disabled={isLoading} aria-pressed={!isAdmin} onClick={() => switchMode('user-login')}>
-                {!isAdmin && <motion.span className="auth-mode-active" layoutId="auth-mode-active" transition={{ type: 'spring', stiffness: 400, damping: 35 }} />}
+                {!isAdmin && <motion.span className="auth-mode-active" layoutId="auth-mode-active" transition={{ type: 'spring', bounce: 0, visualDuration: 0.3 }} />}
                 <GraduationCap size={17} aria-hidden="true" className="shrink-0" />
                 {t.userLoginBtn}
               </button>
@@ -140,7 +140,7 @@ export function LoginPage() {
                 aria-pressed={isAdmin}
                 onClick={() => switchMode('admin-login')}
               >
-                {isAdmin && <motion.span className="auth-mode-active" layoutId="auth-mode-active" transition={{ type: 'spring', stiffness: 400, damping: 35 }} />}
+                {isAdmin && <motion.span className="auth-mode-active" layoutId="auth-mode-active" transition={{ type: 'spring', bounce: 0, visualDuration: 0.3 }} />}
                 <ShieldCheck size={16} aria-hidden="true" className="shrink-0" />
                 {t.adminLoginBtn}
               </button>

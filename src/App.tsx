@@ -5,7 +5,7 @@ import { PublicSite } from './components/public/PublicSite';
 const WorkspaceApp = lazy(() => import('./WorkspaceApp'));
 const ContentManager = lazy(() => import('./components/cms/ContentManager').then(m => ({default:m.ContentManager})));
 export default function App() {
-  return <MotionConfig reducedMotion="user"><AppProvider><Suspense fallback={<div role="status" className="p-8">Campus OS…</div>}><SiteRouter /></Suspense></AppProvider></MotionConfig>;
+  return <MotionConfig reducedMotion="user" transition={{ type: 'spring', bounce: 0, visualDuration: 0.32 }}><AppProvider><Suspense fallback={<div role="status" className="app-loading"><img src="/campus-mark.svg" width="48" height="48" alt="" /><span>Campus OS</span></div>}><SiteRouter /></Suspense></AppProvider></MotionConfig>;
 }
 function SiteRouter() {
   const [path, setPath] = useState(window.location.pathname);

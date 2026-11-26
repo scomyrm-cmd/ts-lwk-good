@@ -40,6 +40,7 @@ export function TopNavbar({ mobileOpen, onOpenMobile }: TopNavbarProps) {
   }, [panel]);
 
   const titles: Record<string, string> = {
+    content: { fr: 'Publications', ar: 'المنشورات', en: 'Publications' }[settings.language],
     dashboard: t.navDashboard,
     students: t.navStudents,
     attendance: t.navAttendance,

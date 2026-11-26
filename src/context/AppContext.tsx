@@ -318,13 +318,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     try { localStorage.setItem('anwal-language',settings.language); localStorage.setItem('anwal-theme',settings.theme); } catch {}
     document.documentElement.lang = settings.language;
     document.documentElement.dir = settings.language === 'ar' ? 'rtl' : 'ltr';
-  }, [settings.language]);
+  }, [settings.language, settings.theme]);
 
   useEffect(() => {
     const preference = window.matchMedia('(prefers-color-scheme: dark)');
     const syncTheme = () => {
       const dark = settings.theme === 'dark' || (settings.theme === 'system' && preference.matches);
       document.documentElement.classList.toggle('dark', dark);
+      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#111713' : '#f7f8f5');
     };
     syncTheme();
     if (settings.theme !== 'system') return;

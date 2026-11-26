@@ -559,4 +559,10 @@ test('editorial workflow isolates drafts, enforces roles, schedules visibility, 
   assert.equal(isPublished({...published.data.item,expiresAt:new Date(Date.now()-1000).toISOString()}),false);
   assert.ok(state.revisions.length>=2);
   assert.equal((await api('admin/state','GET',undefined,owner)).code,200,'Existing school state is preserved');
+  const publicAi=await api('public/assistant','POST',{prompt:'Where are the educational resources?',language:'en'});
+  assert.equal(publicAi.code,200);
+  const publicInstruction=providerRequests.at(-1)!.config.systemInstruction;
+  assert.match(publicInstruction,/educationalResources/);
+  assert.doesNotMatch(publicInstruction,/passwordHash|guardianContact|parent@example.invalid|qa_cms_owner|science-in-the-school/);
+
 });

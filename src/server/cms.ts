@@ -121,7 +121,7 @@ export async function cmsRoute(name: string, req: VercelRequest, res: VercelResp
     const language = choice(body.language, ['fr','ar','en'] as const);
     const db = await readCms(); const site = projectPublic(db);
     // This endpoint never reads school state, student records, contacts, sessions or private drafts.
-    const context = { school: site.settings.title, introduction: site.settings.introduction, items: site.items.map(i => ({ title: i.title, summary: i.summary, kind: i.kind, path: '/'+(i.kind === 'article' ? 'journal' : 'news')+'/'+i.slug })) };
+    const context = { navigation: { home:'/', school:'/about', news:'/news', newspaper:'/journal', clubs:'/clubs', videos:'/tv', radio:'/radio', gallery:'/gallery', events:'/events', educationalResources:'/resources', contact:'/contact', studentLogin:'/student' }, school: site.settings.title, introduction: site.settings.introduction, items: site.items.map(i => ({ title: i.title, summary: i.summary, kind: i.kind, path: '/'+(i.kind === 'article' ? 'journal' : 'news')+'/'+i.slug })) };
     if (!process.env.GEMINI_API_KEY) throw new HttpError(503, 'The public assistant is not configured');
     const answer = await new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }).models.generateContent({
       model: DEFAULT_GEMINI_MODEL,

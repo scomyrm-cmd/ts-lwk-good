@@ -8,9 +8,10 @@ import type { Account } from './storage.js';
 import { choice, clientIp, enforceLimit, field, HttpError, object } from './security.js';
 import { contentPath, contentKinds, contentStatuses, defaultSiteSettings, emptyCms, type CmsState, type ContentItem, type LocalText, type SiteSettings } from '../types/cms.js';
 import { DEFAULT_GEMINI_MODEL, detectLanguage, languageNames } from './aiMultilingual.js';
+import { migrateResearchCms } from '../content/researchSeed.js';
 
-export const readCms = () => updateBlob('cms.json', emptyCms, (value) => ({ result: value, skipWrite: true }));
-const editCms = <T>(apply: (db: CmsState) => T) => updateBlob('cms.json', emptyCms, (db) => { const result = apply(db); db.version++; return { result }; });
+export const readCms = () => updateBlob('cms.json', emptyCms, (value) => ({ result: value, skipWrite: !migrateResearchCms(value) }));
+const editCms = <T>(apply: (db: CmsState) => T) => updateBlob('cms.json', emptyCms, (db) => { migrateResearchCms(db); const result = apply(db); db.version++; return { result }; });
 const stamp = () => new Date().toISOString();
 function audit(db: CmsState, user: Account, action: string) {
   db.audit.unshift({ actorId: user.id, action, at: stamp() }); db.audit = db.audit.slice(0, 1000);
@@ -20,6 +21,7 @@ export function isPublished(item: ContentItem, now = Date.now()) {
     Date.parse(item.publishedAt) <= now && (!item.expiresAt || Date.parse(item.expiresAt) > now);
 }
 export function projectPublic(db: CmsState) {
+  migrateResearchCms(db);
   return { settings: db.settings, items: db.items.filter((item) => isPublished(item)).map((item) => {
     const { ownerId, consent, revision, ...entry } = item; return entry;
   }) };
@@ -51,6 +53,7 @@ function cleanText(input: unknown, max: number) { return field(input, max).repla
 export function validateContent(input: unknown, previous: ContentItem | undefined, user: Account, db: CmsState): ContentItem {
   const b = object(input); const access = editorialAccess(db, user);
   if (!access.contribute) throw new HttpError(403, 'Editorial permission required');
+  if (previous?.research && user.role !== 'admin') throw new HttpError(403, 'An administrator must edit researched school records');
   if (previous && !access.publish && (previous.ownerId !== user.id || !['draft','rejected','submitted'].includes(previous.status))) throw new HttpError(403, 'You may edit only your unpublished submissions');
   const kind = choice(b.kind, contentKinds);
   if (!access.publish && !['article','resource','news','video','podcast','photo'].includes(kind)) throw new HttpError(403, 'This section requires an editor');
@@ -73,6 +76,7 @@ export function validateContent(input: unknown, previous: ContentItem | undefine
     featured: b.featured === true, priority: choice(b.priority || 'normal', ['normal','important','urgent'] as const),
     consent: b.consent === true, updatedAt: stamp(), revision: (previous?.revision || 0) + 1,
     seoTitle: translated(b.seoTitle || b.title, 240), seoDescription: translated(b.seoDescription || b.summary, 1000),
+    ...(previous?.research ? { research: structuredClone(previous.research) } : {}),
   };
   // Plain text with a small Markdown renderer on the client: raw HTML is never executable.
   for (const key of ['title','summary','body','alt','seoTitle','seoDescription'] as const) {
@@ -121,7 +125,7 @@ export async function cmsRoute(name: string, req: VercelRequest, res: VercelResp
     const language = choice(body.language, ['fr','ar','en'] as const);
     const db = await readCms(); const site = projectPublic(db);
     // This endpoint never reads school state, student records, contacts, sessions or private drafts.
-    const context = { navigation: { home:'/', school:'/about', news:'/news', newspaper:'/journal', clubs:'/clubs', videos:'/tv', radio:'/radio', gallery:'/gallery', events:'/events', educationalResources:'/resources', contact:'/contact', studentLogin:'/student' }, school: site.settings.title, introduction: site.settings.introduction, items: site.items.map(i => ({ title: i.title, summary: i.summary, kind: i.kind, path: contentPath(i) })) };
+    const context = { navigation: { home:'/', school:'/about', news:'/news', achievements:'/achievements', sources:'/sources', newspaper:'/journal', clubs:'/clubs', videos:'/tv', radio:'/radio', gallery:'/gallery', events:'/events', educationalResources:'/resources', contact:'/contact', studentLogin:'/student' }, school: site.settings.title, introduction: site.settings.introduction, items: site.items.map(i => ({ title: i.title, summary: i.summary, kind: i.kind, path: contentPath(i), eventDate:i.research?.dateLabel, accuracy:i.research?.accuracyNote })) };
     if (!process.env.GEMINI_API_KEY) throw new HttpError(503, 'The public assistant is not configured');
     const answer = await new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY }).models.generateContent({
       model: DEFAULT_GEMINI_MODEL,

@@ -47,3 +47,7 @@ Inspect the source pages and generated contact sheets before accepting a newly g
 ## Automated validation
 
 TypeScript, the production build and 31 tests pass. Added coverage checks dossier completeness, safe external-media decisions, event-date uncertainty, competition outcomes, idempotent import, preservation of custom CMS data and administrator-only research edits. Existing authentication, school-record, attendance, export, scanning, AI privacy and editorial tests remain included.
+
+Preview verification also exercised French, Arabic RTL and English; category/year gallery filters; arrow-key navigation, Escape and focus restoration; the source search; the journalism uncertainty notice; and both click-to-load video players with persistent watch links. Browser zoom exercised 454 px and 340 px CSS widths, including the Arabic gallery, achievements, source register and article layout, with no document overflow. This is a responsive-width check, not a physical-device test. The players loaded their titles and controls; sustained video streaming was not confirmed in this browser.
+
+The preview exposed native Node ESM requirements that the local TSX tests mask. JSON imports now declare their types and the server-side CMS import includes its `.js` extension. A separate native ESM import probe successfully instantiated all 45 records; the corrected Vercel API returned all 45 records.

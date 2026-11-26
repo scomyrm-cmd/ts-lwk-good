@@ -20,7 +20,10 @@ for r in audit:
 for source in sources:
  if source['id']=='S05':source['rights']='Map text CC BY-SA 4.0; page photographs have separate licences and depict nearby landmarks, not verified Anwal photographs.'
  if source['id']=='S04':source['connection']='Directory lead only; no address or contacts imported as official school details.'
- if source['id']=='S32':source['dateNote']='Article recovered: published 10 June 2022; the exact activity date remains unconfirmed.'
+ if source['id']=='S32':
+  source['dateNote']='Article recovered: published 10 June 2022; the exact activity date remains unconfirmed.'
+  source['notes']='Full article recovered and reviewed during this audit; the earlier report recorded it as unavailable.'
+ if source['id']=='S22':source['notes']='Direct page returned incomplete HTML; publisher-indexed text and archive corroborate the event and publication dates.'
 source_map={r['id']:r for r in sources};images=[]
 collages={'P30','P32','P33','P34','P35','P36','P45','P49'}
 for gallery in [r for r in editorial if r['kind']=='album']:

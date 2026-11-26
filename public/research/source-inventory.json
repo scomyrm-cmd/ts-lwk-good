@@ -330,7 +330,7 @@
       "rights": "No photo republication permission established; see publisher",
       "httpStatus": 200,
       "checkedAt": "2026-11-26T22:48:36.621514+00:00",
-      "notes": "Archive and indexed article read; full article blocked"
+      "notes": "Direct page returned incomplete HTML; publisher-indexed text and archive corroborate the event and publication dates."
     },
     {
       "id": "S23",
@@ -480,7 +480,7 @@
       "rights": "No photo republication permission established; see publisher",
       "httpStatus": 200,
       "checkedAt": "2026-11-26T22:48:39.134747+00:00",
-      "notes": "Title and article link in publisher archive; full text unavailable"
+      "notes": "Full article recovered and reviewed during this audit; the earlier report recorded it as unavailable."
     },
     {
       "id": "S33",

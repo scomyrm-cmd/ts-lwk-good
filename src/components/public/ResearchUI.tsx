@@ -55,9 +55,13 @@ export const researchLabels = {
       "Les photos de presse s’ouvrent sur le site de leur éditeur, avec leurs crédits.",
     pressGallery: "Galerie de presse",
     shared: "Événement partagé",
-    sharedNote: "Cette couverture concerne plusieurs établissements. Les personnes photographiées ne sont pas toutes identifiées comme élèves d’Anwal.",
+    sharedNote:
+      "Cette couverture concerne plusieurs établissements. Les personnes photographiées ne sont pas toutes identifiées comme élèves d’Anwal.",
     schoolScope: "Événement à Anwal",
-    photoRefs: "références image",
+    photoRefs: "références d’images",
+    collage: "Collage photographique",
+    overlap: "Contient aussi des photographies de",
+    collections: "collections",
     read: "Lire l’article",
     collection: "Collection",
     close: "Fermer",
@@ -140,9 +144,13 @@ export const researchLabels = {
       "تفتح الصور الصحفية في موقع ناشرها مع الحفاظ على نسبتها إليه.",
     pressGallery: "معرض صحفي",
     shared: "حدث مشترك",
-    sharedNote: "تشمل هذه التغطية مؤسسات متعددة، ولم تثبت هوية جميع الأشخاص المصورين كتلاميذ لأنوال.",
+    sharedNote:
+      "تشمل هذه التغطية مؤسسات متعددة، ولم تثبت هوية جميع الأشخاص المصورين كتلاميذ لأنوال.",
     schoolScope: "نشاط بأنوال",
-    photoRefs: "مرجعاً للصور",
+    photoRefs: "مراجع الصور",
+    collage: "تركيب من صور متعددة",
+    overlap: "يتضمن أيضاً صوراً من",
+    collections: "مجموعات",
     read: "اقرأ المقال",
     collection: "مجموعة",
     close: "إغلاق",
@@ -227,9 +235,13 @@ export const researchLabels = {
       "Press photographs open on their publisher’s website, with their credits.",
     pressGallery: "Press gallery",
     shared: "Shared event",
-    sharedNote: "This coverage includes several schools. The photographed people are not all identified as Anwal pupils.",
+    sharedNote:
+      "This coverage includes several schools. The photographed people are not all identified as Anwal pupils.",
     schoolScope: "Event at Anwal",
     photoRefs: "image references",
+    collage: "Photo collage",
+    overlap: "Also contains photographs from",
+    collections: "collections",
     read: "Read the article",
     collection: "Collection",
     close: "Close",
@@ -674,7 +686,7 @@ export function GalleryBrowser({
             </label>
             <span role="status">
               {new Intl.NumberFormat(language).format(shown.length)}{" "}
-              {t.collection}
+              {shown.length === 1 ? t.collection : t.collections}
             </span>
           </div>
         </>
@@ -726,7 +738,7 @@ export function GalleryBrowser({
                 <small>
                   {item.credit}
                   {item.research?.imageIds?.length
-                    ? ` · ${item.research.imageIds.length} ${t.photoRefs}`
+                    ? ` · ${t.photoRefs}: ${item.research.imageIds.length}`
                     : ""}
                 </small>
                 <a
@@ -918,8 +930,10 @@ export function ResearchDetails({
           <div>
             <h2>{t.pressGallery}</h2>
             <p>
-              {t.imageRights} {meta.imageIds?.length || ""}{" "}
-              {meta.imageIds?.length ? t.photoRefs : ""}
+              {t.imageRights}{" "}
+              {meta.imageIds?.length
+                ? `${t.photoRefs}: ${meta.imageIds.length}`
+                : ""}
             </p>
             <a
               className="anwal-button"
@@ -1108,7 +1122,15 @@ export function SourceInventoryView({ language }: { language: Lang }) {
     : [];
   const title = (r: InventoryRecord) =>
     typeof r.title === "string" ? r.title : r.title[language];
-  const credit = (r: InventoryRecord) => r.credit.replace(' · photographer not identified', {fr:' · photographe non identifié',ar:' · المصور غير محدد',en:' · photographer not identified'}[language]);
+  const credit = (r: InventoryRecord) =>
+    r.credit.replace(
+      " · photographer not identified",
+      {
+        fr: " · photographe non identifié",
+        ar: " · المصور غير محدد",
+        en: " · photographer not identified",
+      }[language],
+    );
   const status = (r: InventoryRecord) =>
     r.mediaType === "source"
       ? t.sourceReviewed
@@ -1205,6 +1227,9 @@ export function SourceInventoryView({ language }: { language: Lang }) {
                   <span className="research-badge">{r.id}</span>
                   <span>{status(r)}</span>
                 </header>
+                {r.mediaType === "photo-collage" && (
+                  <span className="research-badge">{t.collage}</span>
+                )}
                 <h2>{title(r)}</h2>
                 <p>{credit(r)}</p>
                 <dl>
@@ -1243,7 +1268,9 @@ export function SourceInventoryView({ language }: { language: Lang }) {
                   </details>
                 )}
                 {Boolean(r.overlapsWith?.length) && (
-                  <small>{r.overlapsWith?.join(", ")}</small>
+                  <small>
+                    {t.overlap}: {r.overlapsWith?.join(", ")}
+                  </small>
                 )}
                 <footer>
                   <a

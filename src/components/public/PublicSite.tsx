@@ -267,7 +267,7 @@ export function PublicSite() {
       <BookOpen size={25} />
       <p>
         {state === "loading"
-          ? "…"
+          ? rt.loading
           : state === "error"
             ? t.unavailable
             : t.empty}
@@ -630,7 +630,9 @@ export function PublicSite() {
     );
   };
   const detailView = () =>
-    detail ? (
+    state !== "ready" ? (
+      empty
+    ) : detail ? (
       <article className="anwal-detail">
         <A to={"/" + section} className="anwal-back">
           ← {t.back}
